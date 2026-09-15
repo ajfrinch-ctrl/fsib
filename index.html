@@ -28,7 +28,7 @@ if(settings.template===legacyTemplate) settings.template=treasuryTemplate;
 settings.manager=settings.manager||'Harun Or Rashid'; settings.managerDesignation=settings.managerDesignation||'Manager';
 let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), deferred, locked=false, activity;
 const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
-function save(){localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings))}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
+function save(){localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));if(settings.autoSync&&navigator.onLine&&getJsonbinKey()){clearTimeout(window._syncT);window._syncT=setTimeout(()=>pushCloud().catch(()=>{}),1500)}}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page))}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
 function renderDashboard(){let t=today(), now=records.find(r=>r.date===t), start=new Date();start.setDate(start.getDate()-6);let week=records.filter(r=>new Date(r.date+'T12:00')>=start), month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7)), sum=a=>a.reduce((x,r)=>x+total(r),0), best=[...records].sort((a,b)=>total(b)-total(a))[0], bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];let officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));let bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];$('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="small">${dateText(t)}</span></div><div class="grid metrics"><div class="card metric accent"><label>Today’s Deposit</label><strong>৳ ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div><div class="card metric green"><label>Today’s Visits</label><strong>${now?visits(now):0}</strong></div><div class="card metric"><label>Weekly Deposit</label><strong>৳ ${money(sum(week))}</strong></div><div class="card metric"><label>Monthly Deposit</label><strong>৳ ${money(sum(month))}</strong></div><div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong></div><div class="card metric"><label>Account Deposit</label><strong>৳ ${money(now?accountsTotal(now):0)}</strong></div></div>`}
@@ -108,11 +108,120 @@ function downloadPDF(d){
   const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
   let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
 function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{settings.pin='';save();toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){records=[];save();renderSettings();renderDashboard();toast('Data cleared')}})}
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync (JSONBin)</h2></div><div class="card"><p class="small">Works on GitHub Pages. Free key from jsonbin.io → API Keys. Same Key + Bin ID on phone &amp; computer = synced data. Offline LocalStorage still works.</p><div class="formgroup"><label>JSONBin Master API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}" placeholder="Paste X-Master-Key from jsonbin.io"></div><div class="formgroup"><label>Bin ID (auto after first Push — share this as Sync Code)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Leave empty on first device, then Push"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-push when online after save</label><p class="small">Last cloud sync: ${settings.lastSync?new Date(settings.lastSync).toLocaleString():'Never'}</p><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">Push to Cloud (Public)</button><button class="outline" id="pullCloud">Pull from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Push once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{const k=($('#sJsonbinKey').value||'').trim();const b=($('#sBinId').value||'').trim();setJsonbinKey(k);setBinId(b);settings.autoSync=!!$('#sAutoSync')?.checked;settings.binId=b;save();toast(k?'JSONBin key saved':'Key cleared')};
+if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
+if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
+if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
+function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{settings.pin='';save();toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){records=[];save();renderSettings();renderDashboard();toast('Data cleared')}})}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
 function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0)records.push(x)});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
 function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);save();toast('Record restored');renderSettings()}}
 function protectedAction(fn){if(!settings.pin)return fn();askPin(fn)}function setPin(){let a=prompt('Set a 4-digit PIN');if(!/^\d{4}$/.test(a||''))return toast('PIN must be exactly 4 digits');let b=prompt('Confirm PIN');if(a!==b)return toast('PIN did not match');settings.pin=a;save();toast('PIN enabled');renderSettings()}function askPin(ok){$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){$('#pinModal').classList.remove('show');ok()}else toast('Incorrect PIN')}}function lock(){if(!settings.pin)return;locked=true;$('#pinTitle').textContent='App Locked';$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){locked=false;$('#pinModal').classList.remove('show');resetLock()}else toast('Incorrect PIN')}}function resetLock(){clearTimeout(activity);if(settings.pin&&num(settings.autoLock)>0)activity=setTimeout(lock,num(settings.autoLock)*60000)}document.addEventListener('click',resetLock);document.addEventListener('input',resetLock);
+
+
+const JSONBIN_API='https://api.jsonbin.io/v3/b';
+function getJsonbinKey(){return localStorage.getItem(K+'jsonbinKey')||''}
+function setJsonbinKey(v){localStorage.setItem(K+'jsonbinKey',(v||'').trim())}
+function getBinId(){return localStorage.getItem(K+'binId')||settings.binId||''}
+function setBinId(v){v=(v||'').trim();localStorage.setItem(K+'binId',v);if(v){settings.binId=v;localStorage.setItem(K+'settings',JSON.stringify(settings))}}
+function getSyncCode(){return getBinId()}
+function setSyncCode(v){setBinId(v)}
+function jsonbinHeaders(){
+  const key=getJsonbinKey();
+  return {'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Private':'false'};
+}
+async function pullCloud(){
+  const key=getJsonbinKey(), bin=getBinId();
+  if(!key){toast('Settings → paste JSONBin API Key first');return null}
+  if(!bin){toast('No Bin ID — Push once on this or other device first');return null}
+  if(!navigator.onLine){toast('Offline — cannot sync');return null}
+  try{
+    const r=await fetch(JSONBIN_API+'/'+encodeURIComponent(bin)+'/latest',{headers:jsonbinHeaders()});
+    if(!r.ok){const t=await r.text();toast('Pull failed ('+r.status+')');console.error(t);return null}
+    const j=await r.json();
+    const d=j.record||j;
+    if(!d||(!d.records&&!d.settings)){toast('Cloud empty — Push first');return d}
+    const localUpdated=Math.max(0,...records.map(x=>Date.parse(x.updated||0)||0),Date.parse(settings.lastSync||0)||0);
+    const cloudUpdated=Date.parse(d.updated_at||0)||0;
+    if(cloudUpdated>=localUpdated || !records.length){
+      records=Array.isArray(d.records)?d.records:records;
+      trash=Array.isArray(d.trash)?d.trash:trash;
+      if(d.settings&&typeof d.settings==='object'){
+        const keepPin=settings.pin, keepTheme=settings.theme, keepKey=getJsonbinKey();
+        settings={...settings,...d.settings,pin:keepPin||d.settings.pin||'',theme:keepTheme||d.settings.theme||'system'};
+        if(keepKey) setJsonbinKey(keepKey);
+      }
+      if(d.binId) setBinId(d.binId);
+      localStorage.setItem(K+'records',JSON.stringify(records));
+      localStorage.setItem(K+'trash',JSON.stringify(trash));
+      localStorage.setItem(K+'settings',JSON.stringify(settings));
+      toast('Synced from cloud ('+records.length+' records)');
+      renderDashboard();
+    }else toast('Local data is newer — use Push to Cloud');
+    settings.lastSync=new Date().toISOString();
+    localStorage.setItem(K+'settings',JSON.stringify(settings));
+    return d;
+  }catch(e){toast('Sync failed — check API Key');console.error(e);return null}
+}
+async function pushCloud(){
+  const key=getJsonbinKey();
+  if(!key){toast('Settings → paste JSONBin API Key first');return null}
+  if(!navigator.onLine){toast('Offline — cannot sync');return null}
+  const payload={records,trash,settings:{...settings,pin:''},updated_at:new Date().toISOString(),app:'FSIB Marketing'};
+  try{
+    let bin=getBinId();
+    let r;
+    if(bin){
+      r=await fetch(JSONBIN_API+'/'+encodeURIComponent(bin),{method:'PUT',headers:jsonbinHeaders(),body:JSON.stringify(payload)});
+    }else{
+      r=await fetch(JSONBIN_API,{method:'POST',headers:{...jsonbinHeaders(),'X-Bin-Name':'FSIB Marketing Report'},body:JSON.stringify(payload)});
+    }
+    if(!r.ok){const t=await r.text();toast('Push failed ('+r.status+')');console.error(t);return null}
+    const j=await r.json();
+    const newId=(j.metadata&&j.metadata.id)||(j.record&&j.record.metadata&&j.record.metadata.id)||bin;
+    if(newId){setBinId(newId);const link=location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+encodeURIComponent(newId);settings.publicLink=link;localStorage.setItem(K+'settings',JSON.stringify(settings));toast('Public link ready — copy from Settings');if(navigator.clipboard)navigator.clipboard.writeText(link).catch(()=>{});}
+    else toast('Pushed to cloud');
+    settings.lastSync=payload.updated_at;settings.binId=getBinId();
+    localStorage.setItem(K+'settings',JSON.stringify(settings));
+    return j;
+  }catch(e){toast('Push failed');console.error(e);return null}
+}
+async function autoSync(){
+  if(!getJsonbinKey()||!navigator.onLine)return;
+  try{await pushCloud()}catch(e){}
+}
+
+async function loadPublicView(binId){
+  try{
+    const r=await fetch(JSONBIN_API+'/'+encodeURIComponent(binId)+'/latest');
+    if(!r.ok){toast('Could not load public report');return}
+    const j=await r.json();
+    const d=j.record||j;
+    records=Array.isArray(d.records)?d.records:[];
+    trash=[];
+    if(d.settings&&typeof d.settings==='object'){
+      settings={...settings,...d.settings,pin:'',autoLock:0};
+    }
+    document.body.classList.add('public-view');
+    const ban=document.createElement('div');
+    ban.id='publicBanner';
+    ban.style.cssText='position:sticky;top:0;z-index:50;background:#06377d;color:#fff;padding:10px 14px;font-size:13px;font-weight:700;text-align:center';
+    ban.textContent='Public view — read only · FSIB Branch Marketing Report';
+    document.body.insertBefore(ban,document.body.firstChild);
+    // hide install, pin-sensitive, settings edit is ok but disable save cloud
+    const ib=document.getElementById('installBtn');if(ib)ib.classList.add('hidden');
+    renderDashboard();
+    // override nav to allow dashboard history reports only
+    toast('Public report loaded ('+records.length+' days)');
+  }catch(e){console.error(e);toast('Public load failed')}
+}
+function getViewBinFromUrl(){
+  try{return new URLSearchParams(location.search).get('view')||''}catch(e){return ''}
+}
+
+
+
 function network(){let on=navigator.onLine;$('#netStatus').textContent=on?'ONLINE':'OFFLINE MODE';$('#netStatus').classList.toggle('offline',!on)}addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
@@ -152,4 +261,5 @@ if("serviceWorker" in navigator){
   });
 }
 theme();network();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();resetLock();
+(function(){const vb=getViewBinFromUrl();if(vb){loadPublicView(vb);return}if(getJsonbinKey()&&getBinId()&&navigator.onLine){setTimeout(()=>pullCloud().catch(()=>{}),800)}})();
 </script></body></html>
