@@ -23,7 +23,7 @@
 
 /* Cloud config — shared by all devices. Bin ID: set after first Push, then re-upload once. */
 const CLOUD_KEY='$2a$10$eUycK.PzKwznownRwW66AenSOyG/S6Mf0r40Z./NhC4WwWMk2F/1i';
-const CLOUD_BIN=''; // <-- first Push এর পর Bin ID এখানে বসাবেন, সব মোবাইলে একই ডেটা হবে
+const CLOUD_BIN='6aa9a195ac6210605ad1dc70'; // <-- first Push এর পর Bin ID এখানে বসাবেন, সব মোবাইলে একই ডেটা হবে
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',pin:'',autoLock:0,lastBackup:''};
