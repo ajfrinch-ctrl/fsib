@@ -1,4 +1,4 @@
-const CACHE_NAME = "fsib-branch-marketing-v3";
+const CACHE_NAME = "fsib-branch-marketing-v4";
 
 const APP_SHELL = [
   "./",
