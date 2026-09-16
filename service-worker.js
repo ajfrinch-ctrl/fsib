@@ -1,4 +1,4 @@
-const CACHE_NAME = "fsib-branch-marketing-v1";
+const CACHE_NAME = "fsib-branch-marketing-v2";
 
 const APP_SHELL = [
   "./",
@@ -32,6 +32,9 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+
+  // Never cache the cloud sync API: cached GETs would serve stale bin data across devices.
+  if (event.request.url.indexOf("api.jsonbin.io") !== -1) return;
 
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
