@@ -13,28 +13,56 @@
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <title>FSIB Branch Marketing Report</title>
 <style>
-:root{--bg:#f3f7fc;--card:#fff;--ink:#14233b;--muted:#66778f;--line:#dce5f0;--blue:#1264d6;--blue2:#0a479d;--soft:#eaf3ff;--green:#0b9562;--red:#d9465f;--shadow:0 9px 28px #1d4c8a16}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px "Segoe UI",Arial,sans-serif;padding-bottom:82px}body.dark{--bg:#000;--card:#000;--ink:#f5f5f5;--muted:#aaa;--line:#303030;--blue:#468fff;--soft:#101010;--shadow:none}.app{max-width:1040px;margin:auto}.top{position:sticky;z-index:30;top:0;color:#fff;background:linear-gradient(125deg,#06377d,#1264d6);padding:14px 16px;display:flex;justify-content:space-between;gap:10px;box-shadow:0 4px 12px #0003}.dark .top{background:linear-gradient(125deg,#000,#061d43)}.bank{font-size:10px;letter-spacing:1.1px;font-weight:800;opacity:.9}.branch{font-size:15px;font-weight:800;margin:3px 0}.reportname{font-size:11px;letter-spacing:.5px;color:#e8f2ff}.head-actions{display:flex;align-items:center;gap:8px}.iconbtn,.top button{border:1px solid #ffffff55;background:#ffffff1d;color:#fff;border-radius:10px;min-width:40px;min-height:40px;font:inherit;cursor:pointer}.theme{font-size:19px}.status{font-size:10px;background:#ffffff22;border-radius:20px;padding:5px 7px}.offline{background:#a6404e!important}.page{padding:14px 12px;display:none}.page.active{display:block}.grid{display:grid;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:var(--shadow)}.metric label,.label{display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}.metric strong{font-size:19px;display:block;margin-top:7px}.accent{border-left:4px solid var(--blue)}.green{border-left-color:var(--green)}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 9px}.sectionhead h2{margin:0;font-size:16px}.small{font-size:12px;color:var(--muted)}button{cursor:pointer;font:inherit}.primary,.secondary,.danger{border:0;border-radius:10px;padding:12px 14px;font-weight:800;color:#fff;background:var(--blue);min-height:43px}.secondary{background:var(--green)}.danger{background:var(--red)}.outline{border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);padding:9px 11px;font-weight:700}.row{display:flex;gap:9px}.row>*{flex:1;min-width:0}label{font-weight:700;font-size:12px;color:var(--muted);display:block;margin:0 0 5px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:var(--card);color:var(--ink);font:inherit;min-height:43px}input:focus,select:focus,textarea:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #1264d620}.formgroup{margin-bottom:12px}.section{margin-top:18px;padding-top:2px}.sectiontitle{font-size:12px;font-weight:900;color:var(--blue);letter-spacing:.6px;text-transform:uppercase;margin:0 0 10px}.total{background:var(--soft);border:1px solid #1264d633;border-radius:12px;padding:12px;font-weight:800}.total b{font-size:19px;color:var(--blue)}.repeatrow{display:grid;grid-template-columns:1fr 1fr 42px;gap:7px;margin:7px 0}.visitrow{grid-template-columns:1fr 1fr 1.2fr 1.2fr 1fr 42px}.accountrow{display:grid;grid-template-columns:112px 1fr 1fr 40px;gap:7px;margin:7px 0}.remove{border:0;border-radius:9px;background:#fbe5e8;color:#c43e53;font-size:18px}.dark .remove{background:#2a1115}.add{width:100%;padding:10px;color:var(--blue);font-weight:800;background:var(--soft);border:1px dashed var(--blue);border-radius:10px}.preview{white-space:pre-wrap;line-height:1.65;max-height:300px;overflow:auto;font-family:monospace;background:var(--soft);padding:12px;border-radius:12px;border-left:4px solid var(--blue)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions>*{flex:1}.nav{position:fixed;z-index:35;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center}.navinner{max-width:720px;display:flex;width:100%}.nav button{flex:1;border:0;background:none;padding:10px 3px 8px;color:var(--muted);font-size:10px}.nav button span{font-size:19px;display:block}.nav button.active{color:var(--blue);font-weight:800}.record{margin-bottom:10px}.recordtop{display:flex;justify-content:space-between;gap:8px;font-weight:800}.record .actions{margin-top:9px}.pill{background:var(--soft);color:var(--blue);padding:4px 7px;border-radius:20px;font-size:11px;font-weight:800}.progress{height:10px;border-radius:20px;background:var(--line);overflow:hidden;margin-top:9px}.progress i{display:block;height:100%;background:var(--green)}.barwrap{height:145px;display:flex;gap:7px;align-items:end;border-bottom:1px solid var(--line);padding:0 4px}.bar{background:linear-gradient(#4c97ff,#1264d6);flex:1;min-width:10px;border-radius:5px 5px 0 0;position:relative}.bar em{position:absolute;bottom:-19px;width:100%;font-size:9px;text-align:center;color:var(--muted);font-style:normal}.toast{position:fixed;z-index:70;bottom:92px;left:50%;transform:translateX(-50%);padding:12px 16px;background:#102238;color:#fff;border-radius:10px;box-shadow:0 5px 20px #0004;display:none}.modal{position:fixed;z-index:80;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{width:min(420px,100%);background:var(--card);padding:20px;border-radius:16px}.modalbox h3{margin-top:0}.empty{text-align:center;color:var(--muted);padding:28px}.notice{padding:10px;border-radius:10px;background:#fff5d8;color:#755400;font-size:12px;margin-bottom:10px}.hidden{display:none!important}@media(max-width:560px){.visitrow{grid-template-columns:1fr 1fr}.visitrow .remove{grid-column:1/-1;min-height:40px}}@media(min-width:700px){.metrics{grid-template-columns:repeat(4,1fr)}.page{padding:20px}.formwide{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.formwide .full{grid-column:1/-1}.nav{top:0;bottom:auto;left:auto;width:240px;border:0;height:100vh;align-items:center}.navinner{display:block}.nav button{display:flex;align-items:center;gap:11px;width:100%;padding:13px 20px;text-align:left;font-size:14px}.app{margin-left:240px;max-width:1100px}.top{top:0}.page{padding-bottom:25px}}
+:root{--bg:#f3f7fc;--card:#fff;--ink:#14233b;--muted:#66778f;--line:#dce5f0;--blue:#1264d6;--blue2:#0a479d;--soft:#eaf3ff;--green:#0b9562;--red:#d9465f;--shadow:0 9px 28px #1d4c8a16}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px "Segoe UI",Arial,sans-serif;padding-bottom:82px}body.dark{--bg:#000;--card:#000;--ink:#f5f5f5;--muted:#aaa;--line:#303030;--blue:#468fff;--soft:#101010;--shadow:none}.app{max-width:1040px;margin:auto}.top{position:sticky;z-index:30;top:0;color:#fff;background:linear-gradient(125deg,#06377d,#1264d6);padding:14px 16px;display:flex;justify-content:space-between;gap:10px;box-shadow:0 4px 12px #0003}.dark .top{background:linear-gradient(125deg,#000,#061d43)}.bank{font-size:10px;letter-spacing:1.1px;font-weight:800;opacity:.9}.branch{font-size:15px;font-weight:800;margin:3px 0}.reportname{font-size:11px;letter-spacing:.5px;color:#e8f2ff}.head-actions{display:flex;align-items:center;gap:8px}.iconbtn,.top button{border:1px solid #ffffff55;background:#ffffff1d;color:#fff;border-radius:10px;min-width:40px;min-height:40px;font:inherit;cursor:pointer}.theme{font-size:19px}.status{font-size:10px;background:#ffffff22;border-radius:20px;padding:5px 7px}.offline{background:#a6404e!important}.page{padding:14px 12px;display:none}.page.active{display:block}.grid{display:grid;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:var(--shadow)}.metric label,.label{display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}.metric strong{font-size:19px;display:block;margin-top:7px}.accent{border-left:4px solid var(--blue)}.green{border-left-color:var(--green)}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 9px}.sectionhead h2{margin:0;font-size:16px}.small{font-size:12px;color:var(--muted)}button{cursor:pointer;font:inherit}.primary,.secondary,.danger{border:0;border-radius:10px;padding:12px 14px;font-weight:800;color:#fff;background:var(--blue);min-height:43px}.secondary{background:var(--green)}.danger{background:var(--red)}.outline{border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);padding:9px 11px;font-weight:700}.row{display:flex;gap:9px}.row>*{flex:1;min-width:0}label{font-weight:700;font-size:12px;color:var(--muted);display:block;margin:0 0 5px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:var(--card);color:var(--ink);font:inherit;min-height:43px}input:focus,select:focus,textarea:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #1264d620}.formgroup{margin-bottom:12px}.section{margin-top:18px;padding-top:2px}.sectiontitle{font-size:12px;font-weight:900;color:var(--blue);letter-spacing:.6px;text-transform:uppercase;margin:0 0 10px}.total{background:var(--soft);border:1px solid #1264d633;border-radius:12px;padding:12px;font-weight:800}.total b{font-size:19px;color:var(--blue)}.repeatrow{display:grid;grid-template-columns:1fr 1fr 42px;gap:7px;margin:7px 0}.visitrow{grid-template-columns:1fr 1fr 1.2fr 1.2fr 1fr 42px}.accountrow{display:grid;grid-template-columns:112px 1fr 1fr 40px;gap:7px;margin:7px 0}.remove{border:0;border-radius:9px;background:#fbe5e8;color:#c43e53;font-size:18px}.dark .remove{background:#2a1115}.add{width:100%;padding:10px;color:var(--blue);font-weight:800;background:var(--soft);border:1px dashed var(--blue);border-radius:10px}.preview{white-space:pre-wrap;line-height:1.65;max-height:300px;overflow:auto;font-family:monospace;background:var(--soft);padding:12px;border-radius:12px;border-left:4px solid var(--blue)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions>*{flex:1}.nav{position:fixed;z-index:35;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center}.navinner{max-width:720px;display:flex;width:100%}.nav button{flex:1;border:0;background:none;padding:10px 3px 8px;color:var(--muted);font-size:10px}.nav button span{font-size:19px;display:block}.nav button.active{color:var(--blue);font-weight:800}.record{margin-bottom:10px}.recordtop{display:flex;justify-content:space-between;gap:8px;font-weight:800}.record .actions{margin-top:9px}.pill{background:var(--soft);color:var(--blue);padding:4px 7px;border-radius:20px;font-size:11px;font-weight:800}.progress{height:10px;border-radius:20px;background:var(--line);overflow:hidden;margin-top:9px}.progress i{display:block;height:100%;background:var(--green)}.barwrap{height:145px;display:flex;gap:7px;align-items:end;border-bottom:1px solid var(--line);padding:0 4px}.bar{background:linear-gradient(#4c97ff,#1264d6);flex:1;min-width:10px;border-radius:5px 5px 0 0;position:relative}.bar em{position:absolute;bottom:-19px;width:100%;font-size:9px;text-align:center;color:var(--muted);font-style:normal}.toast{position:fixed;z-index:70;bottom:92px;left:50%;transform:translateX(-50%);padding:12px 16px;background:#102238;color:#fff;border-radius:10px;box-shadow:0 5px 20px #0004;display:none}.modal{position:fixed;z-index:80;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{width:min(420px,100%);background:var(--card);padding:20px;border-radius:16px}.modalbox h3{margin-top:0}.empty{text-align:center;color:var(--muted);padding:28px}.notice{padding:10px;border-radius:10px;background:#fff5d8;color:#755400;font-size:12px;margin-bottom:10px}.hidden{display:none!important}
+.syncbtn{font-size:12px;font-weight:800;padding:8px 10px;white-space:nowrap}
+.syncbtn.pending{background:#8a5a00;border-color:#ffffff88}
+.syncbtn.syncing{background:#0a479d;border-color:#ffffff88}
+.syncbtn.offline{opacity:.8}
+.syncbtn.error{background:#a6404e;border-color:#ffffff88}
+.syncmeta{font-size:12px;line-height:1.9}
+.syncmeta b{color:var(--blue)}
+.synclog{font-size:11px;color:var(--muted);max-height:130px;overflow:auto;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px;white-space:pre-wrap}
+@media(max-width:560px){.syncbtn{font-size:11px;padding:7px 8px}.head-actions{gap:6px}}@media(max-width:560px){.visitrow{grid-template-columns:1fr 1fr}.visitrow .remove{grid-column:1/-1;min-height:40px}}@media(min-width:700px){.metrics{grid-template-columns:repeat(4,1fr)}.page{padding:20px}.formwide{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.formwide .full{grid-column:1/-1}.nav{top:0;bottom:auto;left:auto;width:240px;border:0;height:100vh;align-items:center}.navinner{display:block}.nav button{display:flex;align-items:center;gap:11px;width:100%;padding:13px 20px;text-align:left;font-size:14px}.app{margin-left:240px;max-width:1100px}.top{top:0}.page{padding-bottom:25px}}
 </style></head><body><main class="app">
-<header class="top"><div><div class="bank">FIRST SECURITY ISLAMI BANK PLC</div><div class="branch" id="headerBranch">TANTAR BRANCH</div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
+<header class="top"><div><div class="bank">FIRST SECURITY ISLAMI BANK PLC</div><div class="branch" id="headerBranch">TANTAR BRANCH</div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
 </main><nav class="nav"><div class="navinner"><button class="active" data-page="dashboard"><span>⌂</span>Dashboard</button><button data-page="entry"><span>✚</span>Data Entry</button><button data-page="history"><span>◷</span>History</button><button data-page="reports"><span>▥</span>Reports</button><button data-page="settings"><span>⚙</span>Settings</button></div></nav><div class="toast" id="toast"></div>
-<div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small" id="pinText">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="reportModal"><div class="modalbox" style="max-height:88vh;overflow:auto"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
+<div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small" id="pinText">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="reportModal"><div class="modalbox" style="max-height:88vh;overflow:auto"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
 <script>
 
-/* Cloud config — shared by all devices. Bin ID: set after first Push, then re-upload once. */
-const CLOUD_KEY='$2a$10$eUycK.PzKwznownRwW66AenSOyG/S6Mf0r40Z./NhC4WwWMk2F/1i';
-const CLOUD_BIN='6aa9a195ac6210605ad1dc70'; // <-- first Push এর পর Bin ID এখানে বসাবেন, সব মোবাইলে একই ডেটা হবে
+/* Cloud config — shared by all devices. Bin ID: set after first Sync, then re-upload once. All mobiles share the same data.
+   SECURITY: never expose a JSONBin Master Key in a public page. Prefer a least-privilege
+   Access Key (read/update only). For sensitive production data use a server-side proxy instead. */
+const SYNC_CONFIG={
+  API_BASE:'https://api.jsonbin.io/v3',
+  BIN_ID:'6aa9a195ac6210605ad1dc70',
+  ACCESS_KEY:'$2a$10$eUycK.PzKwznownRwW66AenSOyG/S6Mf0r40Z./NhC4WwWMk2F/1i',
+  BIN_NAME:'FSIB Marketing Report',
+  SCHEMA_VERSION:2,
+  AUTO_SYNC_DEBOUNCE_MS:45000,
+  MAX_SYNC_LOG:30,
+  MAX_PAYLOAD_BYTES:400000,
+  TOMBSTONE_RETENTION_DAYS:90,
+  USE_MASTER_HEADER_FALLBACK:true
+};
+const CLOUD_KEY=SYNC_CONFIG.ACCESS_KEY;
+const CLOUD_BIN=SYNC_CONFIG.BIN_ID;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',pin:'',autoLock:0,lastBackup:''};
 const legacyTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\n{{officers}}';
 const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
 if(settings.template===legacyTemplate) settings.template=treasuryTemplate;
-if(CLOUD_KEY){settings.autoSync=true;}
+if(CLOUD_KEY&&settings.autoSync===undefined){settings.autoSync=true;}
 settings.manager=settings.manager||'Harun Or Rashid'; settings.managerDesignation=settings.managerDesignation||'Manager';
 let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), deferred, locked=false, activity;
 const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
-function save(){localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));if(settings.autoSync&&navigator.onLine&&getJsonbinKey()){clearTimeout(window._syncT);window._syncT=setTimeout(()=>pushCloud().catch(()=>{}),1500)}}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
+function save(){
+  try{settings._seq=(settings._seq||0)+1;}catch(e){}
+  try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
+  persistLocalAsync();
+  markDirtyAndSchedule();
+}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page))}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
 function renderDashboard(){let t=today(), now=records.find(r=>r.date===t), start=new Date();start.setDate(start.getDate()-6);let week=records.filter(r=>new Date(r.date+'T12:00')>=start), month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7)), sum=a=>a.reduce((x,r)=>x+total(r),0), best=[...records].sort((a,b)=>total(b)-total(a))[0], bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];let officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));let bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];$('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="small">${dateText(t)}</span></div><div class="grid metrics"><div class="card metric accent"><label>Today’s Deposit</label><strong>৳ ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div><div class="card metric green"><label>Today’s Visits</label><strong>${now?visits(now):0}</strong></div><div class="card metric"><label>Weekly Deposit</label><strong>৳ ${money(sum(week))}</strong></div><div class="card metric"><label>Monthly Deposit</label><strong>৳ ${money(sum(month))}</strong></div><div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong></div><div class="card metric"><label>Account Deposit</label><strong>৳ ${money(now?accountsTotal(now):0)}</strong></div></div>`}
@@ -68,9 +96,9 @@ function openShareModal(record){
   $('#sendDetail').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(details),'_blank');
 }
 function calcEntry(){if(!$('#form'))return;let r=currentForm();$('#depTotal').textContent='৳ '+money(total(r));$('#depLac').textContent='('+lac(total(r))+')';$('#acCount').textContent=accountsCount(r);$('#acTotal').textContent='৳ '+money(accountsTotal(r));let panel=$('#sharePanel');if(panel)panel.innerHTML=''}function bindEntry(){let f=$('#form');f.addEventListener('input',e=>{if(e.target.classList.contains('amount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9.]/g,'');e.target.setSelectionRange(p,p)}localStorage.setItem(K+'draft',JSON.stringify(currentForm()));$('#draftStatus').textContent='Draft saved · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});calcEntry()});f.addEventListener('change',e=>{if(e.target.classList.contains('oname'))e.target.closest('.officer').querySelector('.odes').value=officers[e.target.value]||'';calcEntry()});f.onclick=e=>{if(e.target.id==='addOfficer'){$('#officers').insertAdjacentHTML('beforeend',officerRow());calcEntry()}if(e.target.id==='addVisit'){$('#visits').insertAdjacentHTML('beforeend',visitRow());calcEntry()}if(e.target.id==='addAccount'){$('#accounts').insertAdjacentHTML('beforeend',accountRow());calcEntry()}if(e.target.classList.contains('remove')){e.target.parentElement.remove();calcEntry()}if(e.target.id==='copy'){navigator.clipboard?.writeText(message(currentForm()));toast('Current report copied')}if(e.target.id==='whatsapp')window.open('https://wa.me/?text='+encodeURIComponent(message(currentForm())),'_blank');if(e.target.id==='copyDetailed'){navigator.clipboard?.writeText(detailedMessage(currentForm()));toast('Detailed activity copied')}if(e.target.id==='whatsappDetailed')window.open('https://wa.me/?text='+encodeURIComponent(detailedMessage(currentForm())),'_blank')};f.onsubmit=e=>{e.preventDefault();saveRecord()}}
-function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>(a.no&&!a.amount)||(!a.no&&a.amount)))return toast('অসম্পূর্ণ account row সম্পন্ন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r)}
+function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>(a.no&&!a.amount)||(!a.no&&a.amount)))return toast('অসম্পূর্ণ account row সম্পন্ন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;queueRecordChange(r.date,(index>=0?'UPDATE':'CREATE'),r);save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r)}
 function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2><span class="small">${esc(settings.branch)}</span></div><span class="pill">${records.length} saved</span></div><input id="search" placeholder="Search date, officer, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts · ${(r.officers||[]).map(o=>o.name).join(', ')||'No officer'}</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
-function deleteRecord(d){if(!confirm('Delete this daily record? It can be restored from Trash.'))return;let i=records.findIndex(r=>r.date===d),r=records.splice(i,1)[0];trash.push({...r,deleted:new Date().toISOString()});save();toast('Deleted. Available in Trash.');renderHistory();renderDashboard()}
+function deleteRecord(d){if(!confirm('Delete this daily record? It can be restored from Trash.'))return;let i=records.findIndex(r=>r.date===d),r=records.splice(i,1)[0];trash.push({...r,deleted:new Date().toISOString()});queueRecordDelete(d);save();toast('Deleted. Available in Trash.');renderHistory();renderDashboard()}
 function reportRange(type, ref){
   if(type==='daily') return {label:'Daily Report · '+dateText(ref),records:records.filter(r=>r.date===ref)};
   if(type==='weekly'){let x=new Date(ref+'T12:00'),start=new Date(x);start.setDate(x.getDate()-x.getDay()),end=new Date(start);end.setDate(start.getDate()+4);let a=start.toISOString().slice(0,10),b=end.toISOString().slice(0,10);return {label:'Weekly Report · '+dateText(a)+' – '+dateText(b),records:records.filter(r=>r.date>=a&&r.date<=b)};}
@@ -114,89 +142,735 @@ function downloadPDF(d){
   const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
   let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
 function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">API Key is built into the app. All mobiles using this link share the same cloud data. Open app → enter data → Save → auto syncs when online.</p><div class="formgroup"><label>Bin ID (same on every phone)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Empty = first Push creates it" ${CLOUD_BIN?'readonly':''}></div><div class="formgroup" style="display:none"><label>API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-push when online after save</label><p class="small">Last cloud sync: ${settings.lastSync?new Date(settings.lastSync).toLocaleString():'Never'}</p><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">Push to Cloud (Public)</button><button class="outline" id="pullCloud">Pull from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Push once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Bin ID (same on every phone)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Empty = first Sync creates it" ${CLOUD_BIN?'readonly':''}></div><div class="formgroup" style="display:none"><label>API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync (one batch ~45s after edits, when online)</label><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Sync once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
 if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{const k=($('#sJsonbinKey').value||'').trim();const b=($('#sBinId').value||'').trim();setJsonbinKey(k);setBinId(b);settings.autoSync=!!$('#sAutoSync')?.checked;settings.binId=b;save();toast(k?'JSONBin key saved':'Key cleared')};
 if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
 if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
 if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
-function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{settings.pin='';save();toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){records=[];save();renderSettings();renderDashboard();toast('Data cleared')}})}
+function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{settings.pin='';save();toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
-function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0)records.push(x)});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
-function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);save();toast('Record restored');renderSettings()}}
+function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0){records.push(x);queueRecordChange(x.date,'CREATE',x)}});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
+function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);queueRecordChange(r.date,'UPDATE',r);save();toast('Record restored');renderSettings()}}
 function protectedAction(fn){if(!settings.pin)return fn();askPin(fn)}function setPin(){let a=prompt('Set a 4-digit PIN');if(!/^\d{4}$/.test(a||''))return toast('PIN must be exactly 4 digits');let b=prompt('Confirm PIN');if(a!==b)return toast('PIN did not match');settings.pin=a;save();toast('PIN enabled');renderSettings()}function askPin(ok){$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){$('#pinModal').classList.remove('show');ok()}else toast('Incorrect PIN')}}function lock(){if(!settings.pin)return;locked=true;$('#pinTitle').textContent='App Locked';$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){locked=false;$('#pinModal').classList.remove('show');resetLock()}else toast('Incorrect PIN')}}function resetLock(){clearTimeout(activity);if(settings.pin&&num(settings.autoLock)>0)activity=setTimeout(lock,num(settings.autoLock)*60000)}document.addEventListener('click',resetLock);document.addEventListener('input',resetLock);
 
 
-const JSONBIN_API='https://api.jsonbin.io/v3/b';
-function getJsonbinKey(){return CLOUD_KEY||localStorage.getItem(K+'jsonbinKey')||''}
-function setJsonbinKey(v){if(!CLOUD_KEY)localStorage.setItem(K+'jsonbinKey',(v||'').trim())}
-function getBinId(){return CLOUD_BIN||localStorage.getItem(K+'binId')||settings.binId||''}
+/* ============================================================
+   JSONBIN FREE EFFICIENT CLOUD SYNC ENGINE
+   Offline-First + IndexedDB + Batch Cloud Sync.
+   - Local edits NEVER touch the network; they are queued locally.
+   - One Sync = at most 1 GET + 1 PUT (PUT only when pendingChanges > 0).
+   - No polling. Conservative auto-sync only: once at startup, once when
+     back online (if pending), one debounced batch after edits, + manual.
+   ============================================================ */
+
+/* ---------- deterministic serialization + hash (change detection) ---------- */
+function stableStringify(v){
+  if(v===null||typeof v!=='object')return JSON.stringify(v);
+  if(Array.isArray(v))return '['+v.map(stableStringify).join(',')+']';
+  const keys=Object.keys(v).sort();
+  return '{'+keys.map(k=>JSON.stringify(k)+':'+stableStringify(v[k])).join(',')+'}';
+}
+function cyrb53(str,seed){
+  let h1=0xdeadbeef^(seed||0),h2=0x41c6ce57^(seed||0);
+  for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(16);
+}
+function genDeviceId(){
+  try{
+    const a=new Uint8Array(16);crypto.getRandomValues(a);
+    a[6]=(a[6]&15)|64;a[8]=(a[8]&63)|128;
+    const h=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return 'device-'+h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+  }catch(e){return 'device-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,14);}
+}
+
+/* ---------- shared (synced) vs device-local settings ---------- */
+const SHARED_SETTING_KEYS=['branch','zone','team','totalBranch','manager','managerDesignation','target','weeklyStart','weeklyEnd','template'];
+function pickSharedObj(s){const o={};SHARED_SETTING_KEYS.forEach(k=>{o[k]=(s||{})[k];});return o;}
+function sharedSettings(s){return pickSharedObj(s||settings);}
+function canonicalSyncContent(o){
+  const recs=(o.records||[]).map(r=>({date:r.date,places:r.places||'',cash:r.cash||'',clearing:r.clearing||'',rtgs:r.rtgs||'',npsb:r.npsb||'',agent:r.agent||'',officers:r.officers||[],visits:r.visits||[],accounts:r.accounts||[],updated:r.updated||'',created:r.created||''})).sort((a,b)=>(a.date<b.date?-1:1));
+  const tra=(o.trash||[]).filter(r=>r&&r.date).map(r=>({date:r.date,deleted:r.deleted||'',updated:r.updated||''})).sort((a,b)=>(a.date<b.date?-1:1));
+  const tom=(o.tombstones||[]).filter(t=>t&&(t.recordId||t.date)).map(t=>({recordId:t.recordId||t.date,date:t.date||t.recordId,deletedAt:t.deletedAt||''})).sort((a,b)=>(a.recordId<b.recordId?-1:1));
+  const set=o.settings_sync?pickSharedObj(o.settings_sync):sharedSettings(o.settings);
+  return {records:recs,trash:tra,tombstones:tom,settings:set};
+}
+function computeLocalHash(){try{return cyrb53(stableStringify(canonicalSyncContent({records:records,trash:trash,tombstones:tombstones})));}catch(e){return '';}}
+function cloudContentHash(cloud){
+  if(!cloud)return '';
+  try{return cyrb53(stableStringify(canonicalSyncContent({records:cloud.records||[],trash:cloud.trash||[],tombstones:cloud.tombstones||[],settings_sync:cloud.settings_sync||sharedSettings(cloud.settings||{})})));}catch(e){return '';}
+}
+
+/* ---------- IndexedDB (primary local database) ---------- */
+const IDB_NAME='fsib_marketing_db',IDB_VER=1;
+let _idb=null;
+let _meta={},_queue=[],_syncLog=[],tombstones=[];
+let _syncStatus='synced',_syncInProgress=false,_lastSyncError='';
+let _debounceT=null,_qPersistT=null,_persistT=null;
+let _qChain=Promise.resolve(),_persistChain=Promise.resolve(),_rateWarned=false;
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!('indexedDB' in window))return rej(new Error('no-idb'));
+    let rq;try{rq=indexedDB.open(IDB_NAME,IDB_VER);}catch(e){return rej(e);}
+    rq.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('appData'))db.createObjectStore('appData',{keyPath:'key'});
+      if(!db.objectStoreNames.contains('syncMeta'))db.createObjectStore('syncMeta',{keyPath:'key'});
+      if(!db.objectStoreNames.contains('syncQueue')){const q=db.createObjectStore('syncQueue',{keyPath:'id',autoIncrement:true});q.createIndex('recordKey','recordKey',{unique:false});}
+      if(!db.objectStoreNames.contains('syncLog'))db.createObjectStore('syncLog',{keyPath:'id',autoIncrement:true});
+    };
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error||new Error('idb-open'));
+    rq.onblocked=()=>rej(new Error('idb-blocked'));
+  });
+}
+function idbReq(store,mode,fn){
+  return new Promise((res,rej)=>{
+    if(!_idb)return rej(new Error('no-db'));
+    let tx;try{tx=_idb.transaction(store,mode);}catch(e){return rej(e);}
+    let rq;try{rq=fn(tx.objectStore(store));}catch(e){return rej(e);}
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error||new Error('idb-req'));
+  });
+}
+async function kvGet(key){try{const r=await idbReq('appData','readonly',s=>s.get(key));return r?r.value:undefined;}catch(e){return undefined;}}
+async function kvPut(key,value){try{await idbReq('appData','readwrite',s=>s.put({key:key,value:value}));}catch(e){}}
+
+/* ---------- syncMeta (in-memory + IndexedDB + localStorage mirror) ---------- */
+async function metaLoadAll(){
+  let stored={};
+  try{const all=await idbReq('syncMeta','readonly',s=>s.getAll());(all||[]).forEach(r=>{stored[r.key]=r.value;});}catch(e){}
+  try{const ls=JSON.parse(localStorage.getItem(K+'syncMeta')||'null');if(ls&&typeof ls==='object')stored={...ls,...stored};}catch(e){}
+  _meta={...stored,..._meta};
+  return _meta;
+}
+async function metaPut(key,value){
+  _meta[key]=value;
+  try{await idbReq('syncMeta','readwrite',s=>s.put({key:key,value:value}));}catch(e){}
+  try{localStorage.setItem(K+'syncMeta',JSON.stringify(_meta));}catch(e){}
+}
+
+/* ---------- syncQueue (only locally-changed records) ---------- */
+function mergeQueueRows(a,b){
+  const map=new Map();
+  (a||[]).concat(b||[]).forEach(q=>{
+    if(!q||!q.recordKey||q.syncStatus!=='PENDING')return;
+    const cur=map.get(q.recordKey);
+    if(!cur||(q.changedAt||'')>=(cur.changedAt||''))map.set(q.recordKey,q);
+  });
+  return [...map.values()];
+}
+async function queueLoadAll(){
+  let rows=[];
+  try{rows=await idbReq('syncQueue','readonly',s=>s.getAll())||[];}catch(e){rows=[];}
+  if(!rows.length){try{rows=JSON.parse(localStorage.getItem(K+'queue')||'[]');}catch(e){rows=[];}}
+  _queue=mergeQueueRows(rows,_queue);
+  return _queue;
+}
+function _persistQueueInner(){
+  return (async()=>{
+    if(!_idb)return;
+    try{
+      const tx=_idb.transaction('syncQueue','readwrite');const st=tx.objectStore('syncQueue');
+      await new Promise((res,rej)=>{const c=st.clear();c.onsuccess=()=>res();c.onerror=()=>rej(c.error);});
+      const snap=[..._queue];
+      for(const q of snap){const cpy={...q};delete cpy.id;await new Promise((res,rej)=>{const a=st.add(cpy);a.onsuccess=()=>res();a.onerror=()=>rej(a.error);});}
+    }catch(e){}
+  })();
+}
+function persistQueueNow(){
+  try{localStorage.setItem(K+'queue',JSON.stringify(_queue));}catch(e){}
+  _qChain=_qChain.then(_persistQueueInner).catch(()=>{});return _qChain;
+}
+function persistQueueSoon(){
+  try{localStorage.setItem(K+'queue',JSON.stringify(_queue));}catch(e){}
+  clearTimeout(_qPersistT);_qPersistT=setTimeout(()=>{persistQueueNow().catch(()=>{});},400);
+}
+function upsertQueue(entry){
+  const rk=entry.store+':'+entry.recordId;
+  const i=_queue.findIndex(q=>q.recordKey===rk);
+  if(entry.operation==='DELETE'&&i>=0&&_queue[i].operation==='CREATE'){_queue.splice(i,1);}
+  else if(i>=0){
+    const prev=_queue[i].operation;let op=entry.operation;
+    if(prev==='CREATE'&&op==='UPDATE')op='CREATE';
+    if(prev==='DELETE'&&(op==='CREATE'||op==='UPDATE'))op='UPDATE';
+    _queue[i]={..._queue[i],operation:op,changedAt:entry.changedAt,payload:entry.payload,syncStatus:'PENDING'};
+  }else{
+    _queue.push({recordKey:rk,store:entry.store,recordId:entry.recordId,operation:entry.operation,changedAt:entry.changedAt,payload:entry.payload,syncStatus:'PENDING'});
+  }
+  persistQueueSoon();
+}
+function pendingCount(){return (_queue||[]).filter(q=>q.syncStatus==='PENDING').length;}
+async function getPendingChanges(){return [...(_queue||[])].filter(q=>q.syncStatus==='PENDING').sort((a,b)=>(a.changedAt<b.changedAt?-1:1));}
+async function markChangesAsSynced(snapshot){
+  const map=new Map((snapshot||[]).map(s=>[s.recordKey,s.changedAt]));
+  _queue=(_queue||[]).filter(q=>{
+    if(!map.has(q.recordKey))return true;
+    return (q.changedAt||'')>(map.get(q.recordKey)||'');
+  });
+  await persistQueueNow();
+  _meta.pendingChanges=pendingCount();
+  await metaPut('pendingChanges',_meta.pendingChanges);
+}
+function queueRecordChange(date,op,rec){
+  try{
+    const ti=tombstones.findIndex(t=>(t.recordId||t.date)===date);
+    if(ti>=0){tombstones.splice(ti,1);kvPut('tombstones',tombstones);try{localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}}
+    upsertQueue({store:'records',recordId:date,operation:op,changedAt:(rec&&rec.updated)||new Date().toISOString(),payload:JSON.parse(JSON.stringify(rec))});
+  }catch(e){}
+  markDirtyAndSchedule();
+}
+function queueRecordDelete(date){
+  try{
+    const now=new Date().toISOString();
+    const tomb={recordId:date,date:date,deleted:true,deletedAt:now,deviceId:_meta.deviceId||''};
+    const ti=tombstones.findIndex(t=>(t.recordId||t.date)===date);
+    if(ti>=0)tombstones[ti]=tomb;else tombstones.push(tomb);
+    kvPut('tombstones',tombstones);try{localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}
+    upsertQueue({store:'records',recordId:date,operation:'DELETE',changedAt:now,payload:tomb});
+  }catch(e){}
+  markDirtyAndSchedule();
+}
+function queueSettingsChange(){
+  try{upsertQueue({store:'settings',recordId:'shared',operation:'UPDATE',changedAt:settings.settingsUpdatedAt||new Date().toISOString(),payload:sharedSettings()});}catch(e){}
+  markDirtyAndSchedule();
+}
+
+/* ---------- local persistence (IndexedDB primary, localStorage mirror) ---------- */
+function persistLocalAsync(immediate){
+  if(immediate){_persistChain=_persistChain.then(persistLocalInner).catch(()=>{});return _persistChain;}
+  clearTimeout(_persistT);_persistT=setTimeout(()=>{_persistChain=_persistChain.then(persistLocalInner).catch(()=>{});},250);
+}
+async function persistLocalInner(){
+  await kvPut('records',records);await kvPut('trash',trash);await kvPut('settings',settings);await kvPut('tombstones',tombstones);
+}
+
+/* ---------- dirty state + conservative auto-sync (debounced, never polling) ---------- */
+function markDirtyAndSchedule(){
+  const n=pendingCount();
+  _meta.pendingChanges=n;
+  if(!navigator.onLine)_syncStatus='offline';
+  else if(!_syncInProgress)_syncStatus=n>0?'pending':(_syncStatus==='error'?'error':'synced');
+  metaPut('pendingChanges',n);metaPut('syncStatus',_syncStatus);
+  updateSyncUI();
+  scheduleDebouncedSync();
+}
+function scheduleDebouncedSync(){
+  clearTimeout(_debounceT);_debounceT=null;
+  if(!settings.autoSync)return;
+  try{if(getViewBinFromUrl())return;}catch(e){}
+  if(!navigator.onLine||!getJsonbinKey())return;
+  _debounceT=setTimeout(()=>{
+    if(!navigator.onLine||_syncInProgress)return;
+    if(pendingCount()<=0)return;
+    syncNow('auto').catch(()=>{});
+  },SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
+}
+function setSyncStatus(s,err){
+  _syncStatus=s;_meta.syncStatus=s;
+  _lastSyncError=(s==='error')?((err&&err.message)||err||'sync failed'):'';
+  metaPut('syncStatus',s);
+  updateSyncUI();
+}
+
+/* ---------- request budget + rate-limit awareness ---------- */
+function noteRequest(){
+  _meta.requestsUsed=(_meta.requestsUsed||0)+1;
+  _meta.requestsSinceLastReset=(_meta.requestsSinceLastReset||0)+1;
+  metaPut('requestsUsed',_meta.requestsUsed);metaPut('requestsSinceLastReset',_meta.requestsSinceLastReset);
+}
+function noteRateHeaders(h){
+  try{
+    const rem=h.get('x-ratelimit-remaining'),lim=h.get('x-ratelimit-limit'),rst=h.get('x-ratelimit-reset');
+    if(rem===null&&lim===null)return;
+    _meta.lastRateLimit={remaining:rem!==null?Number(rem):null,limit:lim!==null?Number(lim):null,reset:rst||null,at:new Date().toISOString()};
+    metaPut('lastRateLimit',_meta.lastRateLimit);
+    if(_meta.lastRateLimit.remaining!==null&&_meta.lastRateLimit.remaining<=100&&!_rateWarned){
+      _rateWarned=true;
+      toast('Cloud request allowance nearly exhausted ('+_meta.lastRateLimit.remaining+' left). Sync sparingly.');
+    }
+    if(_meta.lastRateLimit.remaining===0)toast('Cloud request limit reached. Changes remain saved locally.');
+  }catch(e){}
+}
+
+/* ---------- JSONBin transport (least-privilege header first) ---------- */
+async function fetchJsonbin(path,opts){
+  opts=opts||{};
+  const key=getJsonbinKey();
+  const mkHeaders=useMaster=>{const h={'Content-Type':'application/json'};if(key)h[useMaster?'X-Master-Key':'X-Access-Key']=key;if(opts.binPrivate===false)h['X-Bin-Private']='false';if(opts.binName)h['X-Bin-Name']=opts.binName;return h;};
+  const doFetch=async useMaster=>{
+    const r=await fetch(SYNC_CONFIG.API_BASE+path,{method:opts.method||'GET',headers:mkHeaders(useMaster),body:opts.body});
+    noteRequest();noteRateHeaders(r.headers);
+    return r;
+  };
+  let r=await doFetch(false);
+  if((r.status===401||r.status===403)&&SYNC_CONFIG.USE_MASTER_HEADER_FALLBACK&&key){
+    const r2=await doFetch(true);
+    addSyncLog('auth','Retried with alternate credential header ('+r.status+' -> '+r2.status+').');
+    r=r2;
+  }
+  return r;
+}
+async function cloudGet(bin){
+  const r=await fetchJsonbin('/b/'+encodeURIComponent(bin)+'/latest',{method:'GET'});
+  if(r.status===404)return {notFound:true};
+  if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('GET '+r.status+' '+String(t||'').slice(0,120));}
+  const j=await r.json();
+  return {data:(j&&(j.record||j))||null,raw:j};
+}
+async function cloudPut(bin,payload){
+  const r=await fetchJsonbin('/b/'+encodeURIComponent(bin),{method:'PUT',body:JSON.stringify(payload)});
+  if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('PUT '+r.status+' '+String(t||'').slice(0,160));}
+  return r.json().catch(()=>({}));
+}
+async function cloudCreate(payload){
+  const r=await fetchJsonbin('/b',{method:'POST',body:JSON.stringify(payload),binName:SYNC_CONFIG.BIN_NAME,binPrivate:false});
+  if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('POST '+r.status+' '+String(t||'').slice(0,160));}
+  return r.json();
+}
+
+/* ---------- merge (multi-device, conflict-aware, newest-wins, never drop) ---------- */
+function unionRecords(a,b,tsKey){
+  const map=new Map();const tk=tsKey||'updated';
+  (a||[]).forEach(r=>{if(r&&r.date)map.set(r.date,r);});
+  (b||[]).forEach(r=>{
+    if(!r||!r.date)return;
+    if(!map.has(r.date)){map.set(r.date,r);return;}
+    const cur=map.get(r.date);
+    if((r[tk]||'')>(cur[tk]||''))map.set(r.date,r);
+  });
+  return [...map.values()].sort((x,y)=>(x.date<y.date?-1:1));
+}
+function unionTombstones(a,b){
+  const map=new Map();
+  (a||[]).concat(b||[]).forEach(t=>{
+    const k=t&&(t.recordId||t.date);if(!k)return;
+    const cur=map.get(k);
+    if(!cur||(t.deletedAt||'')>(cur.deletedAt||''))map.set(k,t);
+  });
+  return [...map.values()];
+}
+function pruneTombstones(list){
+  const maxMs=(SYNC_CONFIG.TOMBSTONE_RETENTION_DAYS||90)*864e5;const now=Date.now();
+  return (list||[]).filter(t=>{const d=Date.parse(t.deletedAt||0)||0;return (now-d)<maxMs;});
+}
+function mergeLocalAndCloud(cloud,pending){
+  const cloudRecords=Array.isArray(cloud&&cloud.records)?cloud.records:[];
+  const cloudTrash=Array.isArray(cloud&&cloud.trash)?cloud.trash:[];
+  const cloudTombs=Array.isArray(cloud&&cloud.tombstones)?cloud.tombstones:[];
+  const byDate=new Map();
+  cloudRecords.forEach(r=>{if(r&&r.date)byDate.set(r.date,r);});
+  const tombByDate=new Map();
+  cloudTombs.forEach(t=>{const k=t&&(t.recordId||t.date);if(k)tombByDate.set(k,t);});
+  tombstones.forEach(t=>{const k=t&&(t.recordId||t.date);if(!k)return;const c=tombByDate.get(k);if(!c||(t.deletedAt||'')>(c.deletedAt||''))tombByDate.set(k,t);});
+  const conflicts=[];
+  const ops=[...(pending||[])].filter(q=>q.store==='records').sort((a,b)=>(a.changedAt<b.changedAt?-1:1));
+  ops.forEach(q=>{
+    const rid=q.recordId;
+    if(q.operation==='DELETE'){
+      const tomb=q.payload||{recordId:rid,date:rid,deleted:true,deletedAt:q.changedAt};
+      const cur=byDate.get(rid);
+      const delAt=tomb.deletedAt||q.changedAt||'';
+      if(!cur||delAt>=(cur.updated||'')){byDate.delete(rid);tombByDate.set(rid,{recordId:rid,date:rid,deleted:true,deletedAt:delAt});}
+      else conflicts.push({recordId:rid,reason:'delete-vs-newer-cloud',kept:'cloud',attemptedDelete:{recordId:rid,deletedAt:delAt},at:new Date().toISOString()});
+    }else{
+      const rec=q.payload;if(!rec||!rec.date)return;
+      const cur=byDate.get(rid);
+      const tomb=tombByDate.get(rid);
+      if(tomb&&(tomb.deletedAt||'')>(rec.updated||'')){conflicts.push({recordId:rid,reason:'cloud-delete-newer',kept:'deleted',local:rec,at:new Date().toISOString()});return;}
+      if(!cur){byDate.set(rid,rec);tombByDate.delete(rid);}
+      else if((rec.updated||'')>=(cur.updated||'')){byDate.set(rid,rec);tombByDate.delete(rid);}
+      else conflicts.push({recordId:rid,reason:'both-modified',kept:'cloud',localUpdated:rec.updated||'',cloudUpdated:cur.updated||'',local:rec,at:new Date().toISOString()});
+    }
+  });
+  records.forEach(r=>{
+    if(!r||!r.date||byDate.has(r.date))return;
+    const t=tombByDate.get(r.date);
+    if(!t||(r.updated||'')>(t.deletedAt||'')){byDate.set(r.date,r);tombByDate.delete(r.date);}
+  });
+  const trashMap=new Map();
+  cloudTrash.forEach(t=>{if(t&&t.date)trashMap.set(t.date,t);});
+  trash.forEach(t=>{if(!t||!t.date)return;const c=trashMap.get(t.date);if(!c||(t.deleted||'')>=(c.deleted||''))trashMap.set(t.date,t);});
+  const cloudSet=(cloud&&(cloud.settings_sync||sharedSettings(cloud.settings||{})))||{};
+  const cloudSetAt=(cloud&&(cloud.settingsUpdatedAt||cloud.updated_at))||'';
+  const localSetAt=settings.settingsUpdatedAt||'';
+  let mergedSettings,settingsAt;
+  if(localSetAt>=cloudSetAt){mergedSettings=sharedSettings();settingsAt=localSetAt||new Date().toISOString();}
+  else{mergedSettings=pickSharedObj(cloudSet);settingsAt=cloudSetAt;}
+  return {
+    records:[...byDate.values()].sort((a,b)=>(a.date<b.date?-1:1)),
+    trash:[...trashMap.values()].sort((a,b)=>(a.date<b.date?-1:1)),
+    tombstones:pruneTombstones([...tombByDate.values()]),
+    settings_sync:mergedSettings,settingsUpdatedAt:settingsAt,
+    conflicts:conflicts
+  };
+}
+function buildCloudPayload(merged,prevCloud){
+  const now=new Date().toISOString();
+  const revision=((prevCloud&&prevCloud.revision)||_meta.lastCloudRevision||0)+1;
+  return {app:'FSIB Marketing',schemaVersion:SYNC_CONFIG.SCHEMA_VERSION,revision:revision,updated_at:now,lastWriter:_meta.deviceId||'',
+    records:merged.records,trash:merged.trash,tombstones:merged.tombstones,
+    settings_sync:merged.settings_sync,settingsUpdatedAt:merged.settingsUpdatedAt,partitions:null};
+}
+function applyCloudToLocal(cloud){
+  let added=0,updatedN=0;
+  const incoming=Array.isArray(cloud.records)?cloud.records:[];
+  const tombs=Array.isArray(cloud.tombstones)?cloud.tombstones:[];
+  const tombSet=new Set(tombs.map(t=>t.recordId||t.date).filter(Boolean));
+  const inMap=new Map();incoming.forEach(r=>{if(r&&r.date)inMap.set(r.date,r);});
+  const before=new Map(records.map(r=>[r.date,r]));
+  const next=[];
+  inMap.forEach(r=>{next.push(r);});
+  records.forEach(r=>{if(r&&r.date&&!inMap.has(r.date)&&!tombSet.has(r.date))next.push(r);});
+  next.forEach(r=>{if(!before.has(r.date))added++;else if((r.updated||'')!==(before.get(r.date).updated||''))updatedN++;});
+  next.sort((a,b)=>(a.date<b.date?-1:1));
+  records=next;
+  trash=unionRecords(trash,Array.isArray(cloud.trash)?cloud.trash:[],'deleted');
+  tombstones=pruneTombstones(unionTombstones(tombstones,tombs));
+  const cloudSetAt=cloud.settingsUpdatedAt||cloud.updated_at||'';
+  if((cloudSetAt||'')>(settings.settingsUpdatedAt||'')){
+    const cs=cloud.settings_sync||sharedSettings(cloud.settings||{});
+    SHARED_SETTING_KEYS.forEach(k=>{if(cs[k]!==undefined)settings[k]=cs[k];});
+    settings.settingsUpdatedAt=cloudSetAt;
+  }
+  save();
+  return {added:added,updated:updatedN};
+}
+function adoptMergedLocally(merged){
+  records=[...(merged.records||[])];
+  trash=[...(merged.trash||[])];
+  tombstones=pruneTombstones([...(merged.tombstones||[])]);
+  const at=merged.settingsUpdatedAt||'';
+  if((at||'')>=(settings.settingsUpdatedAt||'')){
+    SHARED_SETTING_KEYS.forEach(k=>{if(merged.settings_sync&&merged.settings_sync[k]!==undefined)settings[k]=merged.settings_sync[k];});
+    settings.settingsUpdatedAt=at;
+  }
+  save();
+}
+function reapplyLeftovers(){
+  if(!_queue.length)return;
+  const ops=[..._queue].sort((a,b)=>(a.changedAt<b.changedAt?-1:1));
+  ops.forEach(q=>{
+    if(q.store==='settings'){const p=q.payload||{};SHARED_SETTING_KEYS.forEach(k=>{if(p[k]!==undefined)settings[k]=p[k];});settings.settingsUpdatedAt=q.changedAt;return;}
+    if(q.store!=='records')return;
+    if(q.operation==='DELETE'){records=records.filter(r=>r.date!==q.recordId);return;}
+    const rec=q.payload;if(!rec||!rec.date)return;
+    const i=records.findIndex(r=>r.date===rec.date);
+    if(i>=0)records[i]=rec;else records.push(rec);
+  });
+  records.sort((a,b)=>(a.date<b.date?-1:1));
+  save();
+}
+function sizeGuard(payload){
+  let bytes=0;try{bytes=JSON.stringify(payload).length;}catch(e){}
+  _meta.lastPayloadBytes=bytes;
+  if(bytes>(SYNC_CONFIG.MAX_PAYLOAD_BYTES||400000)){
+    addSyncLog('Cloud data large','Payload ~'+Math.round(bytes/1024)+' KB approaches the JSONBin record-size limit. Use Backup, then delete very old months from History to shrink the single primary bin.');
+    toast('Cloud data is large (~'+Math.round(bytes/1024)+' KB). Consider archiving old months.');
+  }
+  return bytes;
+}
+function onBinCreated(newId,payload){
+  setBinId(newId);
+  try{
+    const link=location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+encodeURIComponent(newId);
+    settings.publicLink=link;settings.binId=newId;
+    localStorage.setItem(K+'settings',JSON.stringify(settings));
+  }catch(e){}
+  if(!SYNC_CONFIG.BIN_ID){
+    alert('IMPORTANT \u2014 Cloud Bin ID created:\n\n'+newId+'\n\nPut this in index.html as SYNC_CONFIG.BIN_ID so all mobiles share the same data.');
+    toast('Bin ID created \u2014 see alert');
+  }else toast('Synced to cloud');
+  try{if(navigator.clipboard&&settings.publicLink)navigator.clipboard.writeText(settings.publicLink).catch(()=>{});}catch(e){}
+}
+
+/* ---------- the request-efficient sync algorithm ---------- */
+async function syncNow(reason){
+  reason=reason||'manual';
+  try{if(getViewBinFromUrl())return {skipped:'public-view'};}catch(e){}
+  if(_syncInProgress)return {skipped:'busy'};
+  if(!navigator.onLine){setSyncStatus('offline');toast('Offline \u2014 changes saved locally');return {offline:true};}
+  if(!getJsonbinKey()){if(reason==='manual'||reason==='refresh')toast('Cloud key missing \u2014 contact admin');return {noKey:true};}
+  _syncInProgress=true;setSyncStatus('syncing');
+  const startedAt=new Date().toISOString();
+  try{
+    const pending=await getPendingChanges();
+    const needsUpload=pending.length>0;
+    const localHash=computeLocalHash();
+    const lastHash=_meta.lastCloudHash||'';
+    const explicit=(reason==='manual'||reason==='refresh');
+    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry');
+    if(!needsUpload&&!wantsCloudCheck){setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};}
+    if(!needsUpload&&localHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'){setSyncStatus('synced');return {noop:true};}
+    let bin=getBinId();
+    if(!bin){
+      if(!needsUpload){setSyncStatus('synced');return {noop:true};}
+      const merged0=mergeLocalAndCloud(null,pending);
+      const payload0=buildCloudPayload(merged0,null);
+      sizeGuard(payload0);
+      const created=await cloudCreate(payload0);
+      const newId=(created&&(created.metadata&&created.metadata.id))||'';
+      if(!newId)throw new Error('create returned no id');
+      onBinCreated(newId,payload0);
+      await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
+      adoptMergedLocally(merged0);
+      reapplyLeftovers();
+      await metaPut('lastCloudHash',cloudContentHash(payload0));await metaPut('lastCloudRevision',payload0.revision);await metaPut('lastCloudUpdatedAt',payload0.updated_at);
+      settings.lastSync=payload0.updated_at;await metaPut('lastSyncAt',payload0.updated_at);
+      await addSyncLog('Sync successful','Bin created. Records uploaded: '+pending.length,{uploaded:pending.length});
+      setSyncStatus(pendingCount()>0?'pending':'synced');
+      refreshAfterSync();
+      return {created:true,uploaded:pending.length};
+    }
+    let cloud=null,gotCloud=false,notFound=false;
+    if(wantsCloudCheck){
+      const g=await cloudGet(bin);
+      if(g.notFound)notFound=true;else{cloud=g.data;gotCloud=true;}
+    }
+    if(notFound){
+      const mergedN=mergeLocalAndCloud(null,pendingCount()?pending:[]);
+      const payloadN=buildCloudPayload(mergedN,null);
+      sizeGuard(payloadN);
+      const created=await cloudCreate(payloadN);
+      const newId=(created&&(created.metadata&&created.metadata.id))||'';
+      if(!newId)throw new Error('recreate returned no id');
+      onBinCreated(newId,payloadN);
+      if(pending.length)await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
+      reapplyLeftovers();adoptMergedLocally(mergedN);
+      await metaPut('lastCloudHash',cloudContentHash(payloadN));await metaPut('lastCloudRevision',payloadN.revision);await metaPut('lastCloudUpdatedAt',payloadN.updated_at);
+      settings.lastSync=payloadN.updated_at;await metaPut('lastSyncAt',payloadN.updated_at);
+      await addSyncLog('Sync successful','Cloud bin recreated. Records uploaded: '+pending.length,{uploaded:pending.length});
+      setSyncStatus(pendingCount()>0?'pending':'synced');refreshAfterSync();
+      return {recreated:true,uploaded:pending.length};
+    }
+    const cloudHash=gotCloud?cloudContentHash(cloud):lastHash;
+    const cloudChanged=gotCloud&&cloudHash!==(lastHash||'__none__');
+    if(!needsUpload){
+      if(!gotCloud||!cloudChanged){setSyncStatus('synced');return {noop:true};}
+      const applied=applyCloudToLocal(cloud||{});
+      await metaPut('lastCloudHash',cloudHash);await metaPut('lastCloudRevision',(cloud&&cloud.revision)||_meta.lastCloudRevision||0);await metaPut('lastCloudUpdatedAt',(cloud&&cloud.updated_at)||startedAt);
+      settings.lastSync=new Date().toISOString();await metaPut('lastSyncAt',settings.lastSync);
+      try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}await kvPut('settings',settings);
+      await addSyncLog('Sync successful','Downloaded cloud changes. New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
+      setSyncStatus('synced');refreshAfterSync();
+      if(explicit||reason==='startup')toast('Synced from cloud ('+records.length+' records)');
+      return {downloaded:applied};
+    }
+    if(gotCloud&&!cloudChanged&&localHash===cloudHash){
+      await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
+      setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};
+    }
+    const merged=mergeLocalAndCloud(cloud,pending);
+    const payload=buildCloudPayload(merged,cloud);
+    sizeGuard(payload);
+    await cloudPut(bin,payload);
+    await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
+    adoptMergedLocally(merged);
+    reapplyLeftovers();
+    if(merged.conflicts&&merged.conflicts.length){
+      const prev=Array.isArray(_meta.conflicts)?_meta.conflicts:[];
+      await metaPut('conflicts',merged.conflicts.concat(prev).slice(0,20));
+      await addSyncLog('Conflicts resolved',merged.conflicts.length+' conflicting record(s) \u2014 newest kept: '+merged.conflicts.map(c=>c.recordId).join(', '));
+    }
+    await metaPut('lastCloudHash',cloudContentHash(payload));await metaPut('lastCloudRevision',payload.revision);await metaPut('lastCloudUpdatedAt',payload.updated_at);
+    settings.lastSync=payload.updated_at;await metaPut('lastSyncAt',payload.updated_at);
+    try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}await kvPut('settings',settings);
+    await addSyncLog('Sync successful','Records uploaded: '+pending.length+(gotCloud&&cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
+    setSyncStatus(pendingCount()>0?'pending':'synced');
+    refreshAfterSync();
+    if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded)');
+    return {uploaded:pending.length,downloaded:cloudChanged};
+  }catch(err){
+    console.error('sync failed',err);
+    setSyncStatus('error',(err&&err.message)||'error');
+    await addSyncLog('Sync failed',String((err&&err.message)||err).slice(0,180)+' \u2014 local data is safe, '+pendingCount()+' change(s) waiting.');
+    if(reason==='manual'||reason==='refresh'||reason==='retry')toast('Sync failed. Your local data is safe. '+pendingCount()+' change(s) waiting to sync.');
+    return {error:err};
+  }finally{
+    _syncInProgress=false;updateSyncUI();
+  }
+}
+
+/* ---------- sync log (local only, capped) ---------- */
+async function addSyncLog(event,detail,extra){
+  const e={at:new Date().toISOString(),event:event,detail:detail||'',uploaded:(extra&&extra.uploaded)||0,downloaded:(extra&&extra.downloaded)||0};
+  _syncLog.unshift(e);_syncLog=_syncLog.slice(0,SYNC_CONFIG.MAX_SYNC_LOG||30);
+  try{localStorage.setItem(K+'syncLog',JSON.stringify(_syncLog));}catch(e){}
+  if(_idb){try{
+    await new Promise((res,rej)=>{const a=_idb.transaction('syncLog','readwrite').objectStore('syncLog').add(e);a.onsuccess=()=>res();a.onerror=()=>rej(a.error);});
+    const all=await idbReq('syncLog','readonly',s=>s.getAll());
+    if(all&&all.length>(SYNC_CONFIG.MAX_SYNC_LOG||30)){
+      const over=all.slice(0,all.length-(SYNC_CONFIG.MAX_SYNC_LOG||30));
+      const tx2=_idb.transaction('syncLog','readwrite');over.forEach(r=>tx2.objectStore('syncLog').delete(r.id));
+    }
+  }catch(e){}}
+  updateSyncUI();
+}
+async function loadSyncLog(){
+  try{const all=await idbReq('syncLog','readonly',s=>s.getAll());if(all&&all.length){_syncLog=all.sort((a,b)=>(a.at<b.at?1:-1)).slice(0,SYNC_CONFIG.MAX_SYNC_LOG||30);return _syncLog;}}catch(e){}
+  try{_syncLog=JSON.parse(localStorage.getItem(K+'syncLog')||'[]');}catch(e){_syncLog=[];}
+  return _syncLog;
+}
+
+/* ---------- migration: LocalStorage -> IndexedDB (once, data preserved) ---------- */
+async function initLocalDB(){
+  try{_idb=await idbOpen();}catch(e){_idb=null;}
+  await metaLoadAll();
+  if(!_meta.deviceId){
+    let dev='';try{dev=localStorage.getItem(K+'deviceId')||'';}catch(e){}
+    if(!dev)dev=genDeviceId();
+    await metaPut('deviceId',dev);
+    try{localStorage.setItem(K+'deviceId',dev);}catch(e){}
+  }else{try{localStorage.setItem(K+'deviceId',_meta.deviceId);}catch(e){}}
+  await queueLoadAll();
+  await loadSyncLog();
+  let idbT=await kvGet('tombstones');
+  let lsT=[];try{lsT=JSON.parse(localStorage.getItem(K+'tombstones')||'[]');}catch(e){}
+  const idbRecords=await kvGet('records');
+  if(idbRecords===undefined||idbRecords===null){
+    tombstones=unionTombstones(idbT||[],lsT||[]);
+    await persistLocalInner();
+    if(!_meta.migrated_v2&&records&&records.length){
+      const now=new Date().toISOString();
+      records.forEach(r=>{if(r&&r.date)upsertQueue({store:'records',recordId:r.date,operation:'CREATE',changedAt:r.updated||now,payload:JSON.parse(JSON.stringify(r))});});
+      await persistQueueNow();
+    }
+    await metaPut('migrated_v2',true);
+  }else{
+    const idbTrash=(await kvGet('trash'))||[];
+    const idbSettings=(await kvGet('settings'))||null;
+    const idbSeq=(idbSettings&&idbSettings._seq)||0,lsSeq=settings._seq||0;
+    if(lsSeq>=idbSeq){
+      tombstones=unionTombstones(lsT||[],idbT||[]);
+      await persistLocalInner();
+    }else{
+      records=idbRecords;trash=idbTrash;settings={...settings,...idbSettings};
+      tombstones=unionTombstones(idbT||[],lsT||[]);
+      try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}
+    }
+  }
+  if(!settings.settingsUpdatedAt)settings.settingsUpdatedAt=new Date().toISOString();
+  _meta.requestsUsed=_meta.requestsUsed||0;_meta.requestsSinceLastReset=_meta.requestsSinceLastReset||0;
+  await reconcileQueue();
+  const n=pendingCount();_meta.pendingChanges=n;
+  if(_meta.lastSyncAt&&!settings.lastSync)settings.lastSync=_meta.lastSyncAt;
+  if(settings.lastSync&&!_meta.lastSyncAt)_meta.lastSyncAt=settings.lastSync;
+  _syncStatus=!navigator.onLine?'offline':(n>0?'pending':'synced');
+  _meta.syncStatus=_syncStatus;
+  await persistQueueNow();
+  updateSyncUI();
+}
+async function reconcileQueue(){
+  try{
+    const h=computeLocalHash();
+    if(h===(_meta.lastCloudHash||''))return;
+    const keys=new Set((_queue||[]).map(q=>q.recordKey));
+    let added=0;const now=new Date().toISOString();
+    records.forEach(r=>{if(r&&r.date&&!keys.has('records:'+r.date)){upsertQueue({store:'records',recordId:r.date,operation:'UPDATE',changedAt:r.updated||now,payload:JSON.parse(JSON.stringify(r))});added++;}});
+    tombstones.forEach(t=>{const k=t.recordId||t.date;if(k&&!keys.has('records:'+k)){upsertQueue({store:'records',recordId:k,operation:'DELETE',changedAt:t.deletedAt||now,payload:t});added++;}});
+    if(added){await persistQueueNow();await addSyncLog('Queue repaired',added+' local change(s) re-queued after restart.');}
+  }catch(e){}
+}
+
+/* ---------- sync UI ---------- */
+function fmtSyncTime(iso){
+  if(!iso)return 'Never';
+  try{return new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});}catch(e){return String(iso);}
+}
+function syncStatusMeta(){
+  const n=pendingCount();
+  if(!navigator.onLine)return {key:'offline',label:n>0?('\u25cb Offline \u00b7 '+n+' saved'):('\u25cb Offline'),cls:'offline'};
+  if(_syncInProgress)return {key:'syncing',label:'\u21bb Syncing\u2026',cls:'syncing'};
+  if(_syncStatus==='error')return {key:'error',label:'! Sync failed'+(n>0?(' \u00b7 '+n+' waiting'):''),cls:'error'};
+  if(n>0)return {key:'pending',label:'\u2601 '+n+' pending',cls:'pending'};
+  return {key:'synced',label:'\u2601 Synced',cls:''};
+}
+function updateSyncUI(){
+  try{
+    const m=syncStatusMeta();
+    const b=document.getElementById('syncBtn');
+    if(b){b.textContent=m.label;b.className='syncbtn '+m.cls;
+      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Tap for details';}
+    const modal=document.getElementById('syncModal');
+    if(modal&&modal.classList.contains('show'))renderSyncDetails();
+    const cs=document.getElementById('cloudSyncStatus');
+    if(cs)cs.innerHTML=syncPanelHtml();
+    const cl=document.getElementById('syncLogFull');
+    if(cl)cl.textContent=syncLogText();
+  }catch(e){}
+}
+function syncPanelHtml(){
+  const m=syncStatusMeta();
+  const rl=_meta.lastRateLimit;
+  let rate='';
+  if(rl&&(rl.remaining!==null&&rl.remaining!==undefined)){
+    rate='<div>JSONBin reports: <b>'+rl.remaining+'</b> of '+(rl.limit||'?')+' requests remaining</div>';
+    if(rl.remaining!==null&&rl.remaining<=100)rate+='<div>\u26a0 Free allowance nearly exhausted \u2014 sync sparingly.</div>';
+  }else{
+    rate='<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>';
+  }
+  const conf=Array.isArray(_meta.conflicts)?_meta.conflicts:[];
+  return '<div class="syncmeta">'
+    +'<div>Status: <b>'+esc(m.label)+'</b></div>'
+    +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
+    +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
+    +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
+    +rate
+    +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')
+    +'</div>';
+}
+function syncLogText(){
+  if(!_syncLog.length)return 'No sync activity yet.';
+  return _syncLog.slice(0,12).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n');
+}
+function renderSyncDetails(){
+  const m=syncStatusMeta();
+  document.getElementById('syncDetails').innerHTML='<div class="syncmeta">'
+    +'<div>Status: <b>'+esc(m.label)+'</b></div>'
+    +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
+    +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
+    +'<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>'
+    +'</div>';
+  document.getElementById('syncLogMini').textContent=_syncLog.slice(0,8).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n')||'No sync activity yet.';
+  const sb=document.getElementById('syncNowBtn');
+  if(sb)sb.textContent=(_syncStatus==='error')?'Retry Sync':'Sync Now';
+}
+function refreshAfterSync(){
+  try{$('#headerBranch').textContent=settings.branch.toUpperCase();}catch(e){}
+  try{renderDashboard();}catch(e){}
+  try{
+    const active=(document.querySelector('.page.active')||{}).id||'dashboard';
+    if(active==='history')renderHistory();
+    else if(active==='reports')renderReports();
+    else if(active==='settings')renderSettings();
+  }catch(e){}
+  updateSyncUI();
+}
+function wireSyncUI(){
+  const b=document.getElementById('syncBtn');
+  if(b)b.onclick=()=>{renderSyncDetails();document.getElementById('syncModal').classList.add('show');};
+  const c=document.getElementById('closeSync');if(c)c.onclick=()=>document.getElementById('syncModal').classList.remove('show');
+  const s=document.getElementById('syncNowBtn');if(s)s.onclick=()=>{document.getElementById('syncModal').classList.remove('show');syncNow('manual').catch(()=>{});};
+  const r=document.getElementById('syncRefreshBtn');if(r)r.onclick=()=>{document.getElementById('syncModal').classList.remove('show');syncNow('refresh').catch(()=>{});};
+  const e=document.getElementById('syncBackupBtn');if(e)e.onclick=()=>{document.getElementById('syncModal').classList.remove('show');backup();};
+}
+
+const JSONBIN_API=SYNC_CONFIG.API_BASE+'/b';
+function getJsonbinKey(){return localStorage.getItem(K+'jsonbinKey')||CLOUD_KEY||''}
+function setJsonbinKey(v){localStorage.setItem(K+'jsonbinKey',(v||'').trim())}
+function getBinId(){return localStorage.getItem(K+'binId')||CLOUD_BIN||settings.binId||''}
 function setBinId(v){v=(v||'').trim();localStorage.setItem(K+'binId',v);if(v){settings.binId=v;localStorage.setItem(K+'settings',JSON.stringify(settings))}}
 function getSyncCode(){return getBinId()}
 function setSyncCode(v){setBinId(v)}
 function jsonbinHeaders(){
   const key=getJsonbinKey();
-  return {'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Private':'false'};
+  return {'Content-Type':'application/json','X-Access-Key':key,'X-Bin-Private':'false'};
 }
-async function pullCloud(){
-  const key=getJsonbinKey(), bin=getBinId();
-  if(!key){toast('Settings → paste JSONBin API Key first');return null}
-  if(!bin){toast('No Bin ID — Push once on this or other device first');return null}
-  if(!navigator.onLine){toast('Offline — cannot sync');return null}
-  try{
-    const r=await fetch(JSONBIN_API+'/'+encodeURIComponent(bin)+'/latest',{headers:jsonbinHeaders()});
-    if(!r.ok){const t=await r.text();toast('Pull failed ('+r.status+')');console.error(t);return null}
-    const j=await r.json();
-    const d=j.record||j;
-    if(!d||(!d.records&&!d.settings)){toast('Cloud empty — Push first');return d}
-    const localUpdated=Math.max(0,...records.map(x=>Date.parse(x.updated||0)||0),Date.parse(settings.lastSync||0)||0);
-    const cloudUpdated=Date.parse(d.updated_at||0)||0;
-    if(cloudUpdated>=localUpdated || !records.length){
-      records=Array.isArray(d.records)?d.records:records;
-      trash=Array.isArray(d.trash)?d.trash:trash;
-      if(d.settings&&typeof d.settings==='object'){
-        const keepPin=settings.pin, keepTheme=settings.theme, keepKey=getJsonbinKey();
-        settings={...settings,...d.settings,pin:keepPin||d.settings.pin||'',theme:keepTheme||d.settings.theme||'system'};
-        if(keepKey) setJsonbinKey(keepKey);
-      }
-      if(d.binId) setBinId(d.binId);
-      localStorage.setItem(K+'records',JSON.stringify(records));
-      localStorage.setItem(K+'trash',JSON.stringify(trash));
-      localStorage.setItem(K+'settings',JSON.stringify(settings));
-      toast('Synced from cloud ('+records.length+' records)');
-      renderDashboard();
-    }else toast('Local data is newer — use Push to Cloud');
-    settings.lastSync=new Date().toISOString();
-    localStorage.setItem(K+'settings',JSON.stringify(settings));
-    return d;
-  }catch(e){toast('Sync failed — check API Key');console.error(e);return null}
-}
-async function pushCloud(){
-  const key=getJsonbinKey();
-  if(!key){toast('Settings → paste JSONBin API Key first');return null}
-  if(!navigator.onLine){toast('Offline — cannot sync');return null}
-  const payload={records,trash,settings:{...settings,pin:''},updated_at:new Date().toISOString(),app:'FSIB Marketing'};
-  try{
-    let bin=getBinId();
-    let r;
-    if(bin){
-      r=await fetch(JSONBIN_API+'/'+encodeURIComponent(bin),{method:'PUT',headers:jsonbinHeaders(),body:JSON.stringify(payload)});
-    }else{
-      r=await fetch(JSONBIN_API,{method:'POST',headers:{...jsonbinHeaders(),'X-Bin-Name':'FSIB Marketing Report'},body:JSON.stringify(payload)});
-    }
-    if(!r.ok){const t=await r.text();toast('Push failed ('+r.status+')');console.error(t);return null}
-    const j=await r.json();
-    const newId=(j.metadata&&j.metadata.id)||(j.record&&j.record.metadata&&j.record.metadata.id)||bin;
-    if(newId){setBinId(newId);const link=location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+encodeURIComponent(newId);settings.publicLink=link;settings.binId=newId;localStorage.setItem(K+'settings',JSON.stringify(settings));if(!CLOUD_BIN){alert('IMPORTANT — Bin ID created:\n\n'+newId+'\n\nPut this in index.html as CLOUD_BIN so all mobiles share the same data.\nPublic link:\n'+link);toast('Bin ID created — see alert');}else{toast('Synced to cloud');}if(navigator.clipboard)navigator.clipboard.writeText(link).catch(()=>{});}
-    else toast('Pushed to cloud');
-    settings.lastSync=payload.updated_at;settings.binId=getBinId();
-    localStorage.setItem(K+'settings',JSON.stringify(settings));
-    return j;
-  }catch(e){toast('Push failed');console.error(e);return null}
-}
-async function autoSync(){
-  if(!getJsonbinKey()||!navigator.onLine)return;
-  try{await pushCloud()}catch(e){}
-}
+async function pullCloud(){return syncNow('refresh');}
+async function pushCloud(){return syncNow('manual');}
+async function autoSync(){if(pendingCount()<=0)return {noop:true};return syncNow('auto');}
 
 async function loadPublicView(binId){
   try{
@@ -228,7 +902,18 @@ function getViewBinFromUrl(){
 
 
 
-function network(){let on=navigator.onLine;$('#netStatus').textContent=on?'ONLINE':'OFFLINE MODE';$('#netStatus').classList.toggle('offline',!on)}addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
+function network(){
+  let on=navigator.onLine;
+  $('#netStatus').textContent=on?'ONLINE':'OFFLINE MODE';
+  $('#netStatus').classList.toggle('offline',!on);
+  if(!on){if(_syncStatus!=='offline'){_syncStatus='offline';updateSyncUI();}}
+  else{if(_syncStatus==='offline'){_syncStatus=pendingCount()>0?'pending':'synced';updateSyncUI();maybeSyncOnReconnect();}}
+}
+function maybeSyncOnReconnect(){
+  try{if(getViewBinFromUrl())return;}catch(e){}
+  if(pendingCount()>0&&getJsonbinKey()){clearTimeout(window._onlineSyncT);window._onlineSyncT=setTimeout(()=>{if(navigator.onLine&&pendingCount()>0&&!_syncInProgress)syncNow('online').catch(()=>{});},1200);}
+}
+addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredPrompt=event;
@@ -267,5 +952,12 @@ if("serviceWorker" in navigator){
   });
 }
 theme();network();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();resetLock();
-(function(){const vb=getViewBinFromUrl();if(vb){loadPublicView(vb);return}if(getJsonbinKey()&&navigator.onLine){setTimeout(async()=>{if(getBinId())await pullCloud().catch(()=>{});},600)}})();
+wireSyncUI();
+initLocalDB().then(()=>{
+  refreshAfterSync();
+  updateSyncUI();
+  const vb=getViewBinFromUrl();
+  if(vb){loadPublicView(vb);return;}
+  if(getJsonbinKey()&&getBinId()&&navigator.onLine){setTimeout(()=>{syncNow('startup').catch(()=>{});},900);}
+}).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>
