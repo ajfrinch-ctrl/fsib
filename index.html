@@ -39,7 +39,9 @@ const SYNC_CONFIG={
   ACCESS_KEY:'$2a$10$eUycK.PzKwznownRwW66AenSOyG/S6Mf0r40Z./NhC4WwWMk2F/1i',
   BIN_NAME:'FSIB Marketing Report',
   SCHEMA_VERSION:2,
+  AUTO_SYNC_MAX_PER_DAY:1,
   AUTO_SYNC_DEBOUNCE_MS:45000,
+  AUTO_REFRESH_DAYS:3,
   MAX_SYNC_LOG:30,
   MAX_PAYLOAD_BYTES:400000,
   TOMBSTONE_RETENTION_DAYS:90,
@@ -142,7 +144,8 @@ function downloadPDF(d){
   const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
   let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
 function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Bin ID (same on every phone)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Empty = first Sync creates it" ${CLOUD_BIN?'readonly':''}></div><div class="formgroup" style="display:none"><label>API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync (one batch ~45s after edits, when online)</label><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Sync once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync. <b>Auto-sync runs at most once a day</b> \u2014 it only spends that one sync when there is something to upload (or a refresh is due), so cloud requests are not wasted. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Bin ID (same on every phone)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Empty = first Sync creates it" ${CLOUD_BIN?'readonly':''}></div><div class="formgroup" style="display:none"><label>API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day max (day\u0993 \u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a 1\u099f\u09bf cloud sync)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Sync once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits. Tap <b>\u2601 Sync Now</b> for an immediate sync any time.';
 if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{const k=($('#sJsonbinKey').value||'').trim();const b=($('#sBinId').value||'').trim();setJsonbinKey(k);setBinId(b);settings.autoSync=!!$('#sAutoSync')?.checked;settings.binId=b;save();toast(k?'JSONBin key saved':'Key cleared')};
 if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
 if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
@@ -159,8 +162,12 @@ function protectedAction(fn){if(!settings.pin)return fn();askPin(fn)}function se
    Offline-First + IndexedDB + Batch Cloud Sync.
    - Local edits NEVER touch the network; they are queued locally.
    - One Sync = at most 1 GET + 1 PUT (PUT only when pendingChanges > 0).
-   - No polling. Conservative auto-sync only: once at startup, once when
-     back online (if pending), one debounced batch after edits, + manual.
+   - No polling. Hard cap: ONE automatic sync per DAY per device
+     (AUTO_SYNC_MAX_PER_DAY). The day's single sync is spent only when there
+     is real work: pending edits to upload, or a cloud refresh that is due
+     after AUTO_REFRESH_DAYS without any cloud contact.
+   - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and unlimited;
+     a manual sync also counts for that day so no second sync follows.
    ============================================================ */
 
 /* ---------- deterministic serialization + hash (change detection) ---------- */
@@ -347,6 +354,69 @@ async function persistLocalInner(){
   await kvPut('records',records);await kvPut('trash',trash);await kvPut('settings',settings);await kvPut('tombstones',tombstones);
 }
 
+/* ---------- daily auto-sync gate: at most ONE cloud sync per day ----------
+   - _meta.syncDayUsed = the local day (YYYY-MM-DD) whose single sync is already spent.
+   - The day is spent the moment a request actually reaches the cloud (auto OR manual),
+     so a manual sync never triggers a second automatic sync the same day.
+   - Offline / no-key / busy / nothing-to-do decisions make NO request and do NOT spend it. */
+function dayKeyOf(d){
+  const x=d?new Date(d):new Date();
+  if(!x||isNaN(x.getTime()))return '';
+  const p=n=>String(n).padStart(2,'0');
+  return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
+}
+function syncDayUsedToday(){return (_meta.syncDayUsed||'')===dayKeyOf();}
+function markSyncDayUsed(){
+  if((_meta.syncDayUsed||'')===dayKeyOf())return;
+  _meta.syncDayUsed=dayKeyOf();metaPut('syncDayUsed',_meta.syncDayUsed);
+}
+function releaseSyncDay(){_meta.syncDayUsed='';metaPut('syncDayUsed','');}
+function markAutoSyncFired(){
+  const now=new Date().toISOString();
+  _meta.lastAutoSyncAt=now;metaPut('lastAutoSyncAt',now);
+  markSyncDayUsed();
+}
+function noteCloudContact(){
+  const now=new Date().toISOString();
+  _meta.lastCloudContactAt=now;metaPut('lastCloudContactAt',now);
+  markSyncDayUsed();
+}
+function daysSinceCloudContact(){
+  const at=_meta.lastCloudContactAt||_meta.lastSyncAt||settings.lastSync||'';
+  if(!at)return 9999;
+  const t=new Date(at).getTime();
+  if(isNaN(t))return 9999;
+  return (Date.now()-t)/86400000;
+}
+function isDailyAutoReason(r){return r==='daily-upload'||r==='daily-refresh';}
+function dailyAutoTarget(){
+  if(pendingCount()>0)return 'daily-upload';
+  if(daysSinceCloudContact()>=(SYNC_CONFIG.AUTO_REFRESH_DAYS||3))return 'daily-refresh';
+  return '';
+}
+function dailyAutoSyncDue(){
+  if(!settings.autoSync)return false;
+  try{if(getViewBinFromUrl())return false;}catch(e){}
+  if(!navigator.onLine||!getJsonbinKey())return false;
+  if(syncDayUsedToday())return false;
+  return !!dailyAutoTarget();
+}
+function maybeDailyAutoSync(trigger){
+  if(_syncInProgress)return false;
+  if(!dailyAutoSyncDue())return false;
+  const reason=dailyAutoTarget();
+  if(!reason)return false;
+  try{console.info('FSIB daily auto sync ('+(trigger||'auto')+')');}catch(e){}
+  syncNow(reason).catch(()=>{});
+  return true;
+}
+function autoSyncStatusText(){
+  if(!settings.autoSync)return 'Off';
+  if(syncDayUsedToday())return 'used today \u00b7 next auto sync tomorrow';
+  const due=!!dailyAutoTarget();
+  return (due?'due now':'idle')+' \u00b7 '+pendingCount()+' pending \u00b7 limit 1/day';
+}
+
 /* ---------- dirty state + conservative auto-sync (debounced, never polling) ---------- */
 function markDirtyAndSchedule(){
   const n=pendingCount();
@@ -362,11 +432,8 @@ function scheduleDebouncedSync(){
   if(!settings.autoSync)return;
   try{if(getViewBinFromUrl())return;}catch(e){}
   if(!navigator.onLine||!getJsonbinKey())return;
-  _debounceT=setTimeout(()=>{
-    if(!navigator.onLine||_syncInProgress)return;
-    if(pendingCount()<=0)return;
-    syncNow('auto').catch(()=>{});
-  },SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
+  if(syncDayUsedToday())return;
+  _debounceT=setTimeout(()=>{maybeDailyAutoSync('edit');},SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
 }
 function setSyncStatus(s,err){
   _syncStatus=s;_meta.syncStatus=s;
@@ -589,10 +656,14 @@ function onBinCreated(newId,payload){
 /* ---------- the request-efficient sync algorithm ---------- */
 async function syncNow(reason){
   reason=reason||'manual';
+  const dailyAuto=isDailyAutoReason(reason);
   try{if(getViewBinFromUrl())return {skipped:'public-view'};}catch(e){}
   if(_syncInProgress)return {skipped:'busy'};
-  if(!navigator.onLine){setSyncStatus('offline');toast('Offline \u2014 changes saved locally');return {offline:true};}
+  if(!navigator.onLine){setSyncStatus('offline');if(!dailyAuto)toast('Offline \u2014 changes saved locally');return {offline:true};}
   if(!getJsonbinKey()){if(reason==='manual'||reason==='refresh')toast('Cloud key missing \u2014 contact admin');return {noKey:true};}
+  if(dailyAuto&&syncDayUsedToday())return {skipped:'daily-limit'};
+  /* spend the day's single sync BEFORE the first possible network call */
+  if(dailyAuto)markAutoSyncFired();
   _syncInProgress=true;setSyncStatus('syncing');
   const startedAt=new Date().toISOString();
   try{
@@ -601,12 +672,12 @@ async function syncNow(reason){
     const localHash=computeLocalHash();
     const lastHash=_meta.lastCloudHash||'';
     const explicit=(reason==='manual'||reason==='refresh');
-    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry');
+    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry'||dailyAuto);
     if(!needsUpload&&!wantsCloudCheck){setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};}
-    if(!needsUpload&&localHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'){setSyncStatus('synced');return {noop:true};}
+    if(!needsUpload&&localHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!dailyAuto){setSyncStatus('synced');return {noop:true};}
     let bin=getBinId();
     if(!bin){
-      if(!needsUpload){setSyncStatus('synced');return {noop:true};}
+      if(!needsUpload){if(dailyAuto)releaseSyncDay();setSyncStatus('synced');return {noop:true};}
       const merged0=mergeLocalAndCloud(null,pending);
       const payload0=buildCloudPayload(merged0,null);
       sizeGuard(payload0);
@@ -622,6 +693,7 @@ async function syncNow(reason){
       await addSyncLog('Sync successful','Bin created. Records uploaded: '+pending.length,{uploaded:pending.length});
       setSyncStatus(pendingCount()>0?'pending':'synced');
       refreshAfterSync();
+      if(dailyAuto)toast('Daily auto sync done \u2014 next automatic sync tomorrow');
       return {created:true,uploaded:pending.length};
     }
     let cloud=null,gotCloud=false,notFound=false;
@@ -643,6 +715,7 @@ async function syncNow(reason){
       settings.lastSync=payloadN.updated_at;await metaPut('lastSyncAt',payloadN.updated_at);
       await addSyncLog('Sync successful','Cloud bin recreated. Records uploaded: '+pending.length,{uploaded:pending.length});
       setSyncStatus(pendingCount()>0?'pending':'synced');refreshAfterSync();
+      if(dailyAuto)toast('Daily auto sync done \u2014 next automatic sync tomorrow');
       return {recreated:true,uploaded:pending.length};
     }
     const cloudHash=gotCloud?cloudContentHash(cloud):lastHash;
@@ -656,6 +729,7 @@ async function syncNow(reason){
       await addSyncLog('Sync successful','Downloaded cloud changes. New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
       setSyncStatus('synced');refreshAfterSync();
       if(explicit||reason==='startup')toast('Synced from cloud ('+records.length+' records)');
+      else if(dailyAuto)toast((applied.added+applied.updated)>0?('Daily auto sync done \u2014 '+(applied.added+applied.updated)+' cloud change(s) downloaded'):'Daily auto sync done \u2014 next automatic sync tomorrow');
       return {downloaded:applied};
     }
     if(gotCloud&&!cloudChanged&&localHash===cloudHash){
@@ -681,12 +755,14 @@ async function syncNow(reason){
     setSyncStatus(pendingCount()>0?'pending':'synced');
     refreshAfterSync();
     if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded)');
+    else if(dailyAuto)toast('Daily auto sync done \u2014 '+pending.length+' uploaded, next automatic sync tomorrow');
     return {uploaded:pending.length,downloaded:cloudChanged};
   }catch(err){
     console.error('sync failed',err);
     setSyncStatus('error',(err&&err.message)||'error');
     await addSyncLog('Sync failed',String((err&&err.message)||err).slice(0,180)+' \u2014 local data is safe, '+pendingCount()+' change(s) waiting.');
     if(reason==='manual'||reason==='refresh'||reason==='retry')toast('Sync failed. Your local data is safe. '+pendingCount()+' change(s) waiting to sync.');
+    else if(dailyAuto)toast('Auto sync failed \u2014 today\u2019s automatic sync is used up. Data is safe locally; tap \u2601 Sync Now to retry.');
     return {error:err};
   }finally{
     _syncInProgress=false;updateSyncUI();
@@ -792,7 +868,7 @@ function updateSyncUI(){
     const m=syncStatusMeta();
     const b=document.getElementById('syncBtn');
     if(b){b.textContent=m.label;b.className='syncbtn '+m.cls;
-      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Tap for details';}
+      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Auto sync: '+autoSyncStatusText()+' \u00b7 Tap for details';}
     const modal=document.getElementById('syncModal');
     if(modal&&modal.classList.contains('show'))renderSyncDetails();
     const cs=document.getElementById('cloudSyncStatus');
@@ -816,6 +892,8 @@ function syncPanelHtml(){
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b> <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span></div>'
+    +((pendingCount()>0&&syncDayUsedToday())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
     +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
     +rate
     +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')
@@ -831,6 +909,8 @@ function renderSyncDetails(){
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b> <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span></div>'
+    +((pendingCount()>0&&syncDayUsedToday())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
     +'<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>'
     +'</div>';
   document.getElementById('syncLogMini').textContent=_syncLog.slice(0,8).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n')||'No sync activity yet.';
@@ -910,10 +990,15 @@ function network(){
   else{if(_syncStatus==='offline'){_syncStatus=pendingCount()>0?'pending':'synced';updateSyncUI();maybeSyncOnReconnect();}}
 }
 function maybeSyncOnReconnect(){
+  if(!settings.autoSync)return;
   try{if(getViewBinFromUrl())return;}catch(e){}
-  if(pendingCount()>0&&getJsonbinKey()){clearTimeout(window._onlineSyncT);window._onlineSyncT=setTimeout(()=>{if(navigator.onLine&&pendingCount()>0&&!_syncInProgress)syncNow('online').catch(()=>{});},1200);}
+  if(!getJsonbinKey())return;
+  if(syncDayUsedToday())return;
+  clearTimeout(window._onlineSyncT);
+  window._onlineSyncT=setTimeout(()=>{maybeDailyAutoSync('online');},1200);
 }
 addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeDailyAutoSync('visible');});
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredPrompt=event;
@@ -958,6 +1043,6 @@ initLocalDB().then(()=>{
   updateSyncUI();
   const vb=getViewBinFromUrl();
   if(vb){loadPublicView(vb);return;}
-  if(getJsonbinKey()&&getBinId()&&navigator.onLine){setTimeout(()=>{syncNow('startup').catch(()=>{});},900);}
+  if(getJsonbinKey()&&getBinId()&&navigator.onLine&&dailyAutoSyncDue()){setTimeout(()=>{maybeDailyAutoSync('startup');},900);}
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>
