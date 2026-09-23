@@ -85,9 +85,10 @@ function fakeIndexedDB(window) {
   };
 }
 
-function bootApp({ records = [], cloud = null, onFirstPost = null } = {}) {
+function bootApp({ records = [], cloud = null, onFirstPost = null, handler: sharedHandler = null } = {}) {
   const blob = memoryBlob(cloud);
-  const handler = createSyncHandler(blob.adapter);
+  // pass a shared handler to put two "devices" on the same blob
+  const handler = sharedHandler || createSyncHandler(blob.adapter);
   const errors = [];
   const requests = [];
   let raced = false;
@@ -277,4 +278,73 @@ test("the settings page shows the endpoint instead of the removed key fields", a
   assert.equal(typeof window.document.querySelector("#sAutoSync").checked, "boolean");
   assert.equal(window.document.querySelector("#sPublicLink").value, "https://example.test/?view=1");
   assert.deepEqual(errors, []);
+});
+
+test("two devices on the same blob converge on the same data", async () => {
+  const blob = memoryBlob(null);
+  const handler = createSyncHandler(blob.adapter);
+
+  /* Device A: has 1 September, syncs first. */
+  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler });
+  assert.ok(await waitUntil(() => typeof a.window.pendingCount === "function" && a.window.pendingCount() >= 1));
+  const resA = await a.window.syncNow("manual");
+  assert.equal(resA.error, undefined);
+  assert.equal(blob.peek().version, 1);
+  assert.deepEqual(blob.peek().records.map((r) => r.date), ["2026-09-01"]);
+
+  /* Device B: fresh phone, its own 20 September, never seen A's data. */
+  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler });
+  assert.ok(await waitUntil(() => typeof b.window.pendingCount === "function" && b.window.pendingCount() >= 1));
+  const resB = await b.window.syncNow("manual");
+  assert.equal(resB.error, undefined);
+
+  // B's upload merged with A's day instead of overwriting it
+  assert.equal(blob.peek().version, 2);
+  assert.deepEqual(blob.peek().records.map((r) => r.date), ["2026-09-01", "2026-09-20"]);
+  assert.deepEqual(localRecords(b.window).map((r) => r.date), ["2026-09-01", "2026-09-20"], "B now holds both days");
+
+  /* Device A refreshes and picks up B's day. */
+  const resA2 = await a.window.syncNow("refresh");
+  assert.equal(resA2.error, undefined);
+  assert.deepEqual(localRecords(a.window).map((r) => r.date), ["2026-09-01", "2026-09-20"], "A now holds both days");
+  assert.equal(a.window.getCloudVersion(), b.window.getCloudVersion());
+
+  /* And both dashboards show the same monthly total. */
+  a.window.renderDashboard();
+  b.window.renderDashboard();
+  const monthlyOf = (w) => [...w.document.querySelectorAll("#dashboard .metric")][3].textContent.replace(/\s+/g, " ").trim();
+  assert.equal(monthlyOf(a.window), monthlyOf(b.window));
+  assert.match(monthlyOf(a.window), /13,888/);
+  assert.deepEqual([...a.errors, ...b.errors], []);
+});
+
+test("auto-refresh rules: pull on first open, then only when there is something to send", async () => {
+  const blob = memoryBlob({
+    settings: {},
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
+    trash: [],
+    version: 1,
+    updatedAt: "2026-09-01T09:00:00.000Z"
+  });
+  const { window } = bootApp({ handler: createSyncHandler(blob.adapter) });
+  assert.ok(await waitUntil(() => typeof window.dailyAutoSyncDue === "function"));
+  await new Promise((r) => setTimeout(r, 300));
+
+  // A phone that has never reached the cloud treats it as "refresh overdue" (9999 days),
+  // so it pulls on first open without the user doing anything.
+  assert.equal(window.daysSinceCloudContact() > 3, true, "no cloud contact yet");
+  assert.equal(window.dailyAutoSyncDue(), true, "first open should auto-pull");
+
+  const res = await window.syncNow("refresh");
+  assert.equal(res.error, undefined);
+  assert.deepEqual(localRecords(window).map((r) => r.date), ["2026-09-01"], "pulled the other device's day");
+
+  // Contact is fresh and nothing is pending, so it stays quiet (AUTO_REFRESH_DAYS = 3).
+  assert.equal(window.dailyAutoSyncDue(), false, "nothing to do, cloud contact is fresh");
+
+  // A local edit makes an upload due, which also merges the cloud copy on the way up.
+  window.queueSettingsChange();
+  assert.ok(await waitUntil(() => window.pendingCount() >= 1));
+  assert.equal(window.dailyAutoTarget(), "daily-upload");
+  assert.equal(window.dailyAutoSyncDue(), true);
 });
