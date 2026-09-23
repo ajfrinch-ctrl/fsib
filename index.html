@@ -231,32 +231,43 @@ input[type=date],input[type=month]{min-height:46px}
 <div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small" id="pinText">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="reportModal"><div class="modalbox modal-scroll"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
 <script>
 
-/* Cloud config — shared by all devices. Bin ID: set after first Sync, then re-upload once. All mobiles share the same data.
-   SECURITY: never expose a JSONBin Master Key in a public page. Prefer a least-privilege
-   Access Key (read/update only). For sensitive production data use a server-side proxy instead. */
+/* Cloud config — shared by all devices through this site's own /api/sync route, which is
+   backed by Netlify Blobs (store "fsib-app", key "state", strong consistency).
+   SECURITY: no credential ships in the page. The blob key stays on the server, so
+   view-source reveals nothing — unlike the JSONBin access key this replaced. */
 const SYNC_CONFIG={
-  API_BASE:'https://api.jsonbin.io/v3',
-  BIN_ID:'6aa9a195ac6210605ad1dc70',
-  ACCESS_KEY:'$2a$10$eUycK.PzKwznownRwW66AenSOyG/S6Mf0r40Z./NhC4WwWMk2F/1i',
-  BIN_NAME:'FSIB Marketing Report',
-  SCHEMA_VERSION:2,
+  API_PATH:'/api/sync',
+  SCHEMA_VERSION:3,
   AUTO_SYNC_MAX_PER_DAY:1,
   AUTO_SYNC_DEBOUNCE_MS:45000,
   AUTO_REFRESH_DAYS:3,
   MAX_SYNC_LOG:30,
-  MAX_PAYLOAD_BYTES:400000,
-  TOMBSTONE_RETENTION_DAYS:90,
-  USE_MASTER_HEADER_FALLBACK:true
+  MAX_STATE_BYTES:4000000,
+  /* the PIN unlocks one phone; it must never travel to the shared blob */
+  DEVICE_ONLY_SETTING_KEYS:['pin'],
+  DEVICE_PREFERENCE_KEYS:['theme','autoLock','lastBackup','lastSync','autoSync','settingsUpdatedAt']
 };
-const CLOUD_KEY=SYNC_CONFIG.ACCESS_KEY;
-const CLOUD_BIN=SYNC_CONFIG.BIN_ID;
+const CLOUD_API=SYNC_CONFIG.API_PATH;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',pin:'',autoLock:0,lastBackup:''};
+let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
 const legacyTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\n{{officers}}';
 const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
 if(settings.template===legacyTemplate) settings.template=treasuryTemplate;
-if(CLOUD_KEY&&settings.autoSync===undefined){settings.autoSync=true;}
+if(settings.autoSync===undefined){settings.autoSync=true;}
+
+/* ---------- device-only PIN (localStorage bmr_v1_pin) ----------
+   The PIN is a property of this phone, so it lives outside the synced settings
+   object. Anything left in settings.pin by an older build is migrated once. */
+const PIN_KEY=K+'pin';
+function getPin(){try{return localStorage.getItem(PIN_KEY)||''}catch(e){return ''}}
+function setPinValue(v){try{if(v)localStorage.setItem(PIN_KEY,String(v));else localStorage.removeItem(PIN_KEY)}catch(e){}}
+if(settings.pin){setPinValue(settings.pin);delete settings.pin;try{localStorage.setItem(K+'settings',JSON.stringify(settings))}catch(e){}}
+
+/* ---------- cloud version (optimistic concurrency cursor) ---------- */
+const CLOUD_VERSION_KEY=K+'cloud_version';
+function getCloudVersion(){const v=parseInt(localStorage.getItem(CLOUD_VERSION_KEY)||'0',10);return (Number.isFinite(v)&&v>0)?v:0}
+function setCloudVersion(v){const n=Number(v)||0;try{localStorage.setItem(CLOUD_VERSION_KEY,String(n))}catch(e){}_meta.lastCloudVersion=n;return n}
 settings.manager=settings.manager||'Harun Or Rashid'; settings.managerDesignation=settings.managerDesignation||'Manager';
 let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), deferred, locked=false, activity;
 const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
@@ -345,17 +356,17 @@ function downloadPDF(d){
   const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
   let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
 function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${settings.pin?'Change PIN':'Enable PIN Lock'}</button>${settings.pin?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync. <b>Auto-sync runs at most once a day</b> \u2014 it only spends that one sync when there is something to upload (or a refresh is due), so cloud requests are not wasted. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Bin ID (same on every phone)</label><input id="sBinId" value="${esc(getBinId())}" placeholder="Empty = first Sync creates it" ${CLOUD_BIN?'readonly':''}></div><div class="formgroup" style="display:none"><label>API Key</label><input id="sJsonbinKey" type="password" value="${esc(getJsonbinKey())}"></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day max (day\u0993 \u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a 1\u099f\u09bf cloud sync)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Key &amp; Bin ID</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(getBinId()?(location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+getBinId()):'')}" placeholder="Sync once to generate link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">Public link opens the report without API key. Do not share if data is confidential.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync. <b>Auto-sync runs at most once a day</b> \u2014 it only spends that one sync when there is something to upload (or a refresh is due), so cloud requests are not wasted. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day max (day\u0993 \u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a 1\u099f\u09bf cloud sync)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
 const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits. Tap <b>\u2601 Sync Now</b> for an immediate sync any time.';
-if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{const k=($('#sJsonbinKey').value||'').trim();const b=($('#sBinId').value||'').trim();setJsonbinKey(k);setBinId(b);settings.autoSync=!!$('#sAutoSync')?.checked;settings.binId=b;save();toast(k?'JSONBin key saved':'Key cleared')};
+if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{settings.autoSync=!!$('#sAutoSync')?.checked;save();toast(settings.autoSync?'Auto-sync on':'Auto-sync off')}
 if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
 if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
 if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
-function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{settings.pin='';save();toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
+function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
 function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0){records.push(x);queueRecordChange(x.date,'CREATE',x)}});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
 function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);queueRecordChange(r.date,'UPDATE',r);save();toast('Record restored');renderSettings()}}
-function protectedAction(fn){if(!settings.pin)return fn();askPin(fn)}function setPin(){let a=prompt('Set a 4-digit PIN');if(!/^\d{4}$/.test(a||''))return toast('PIN must be exactly 4 digits');let b=prompt('Confirm PIN');if(a!==b)return toast('PIN did not match');settings.pin=a;save();toast('PIN enabled');renderSettings()}function askPin(ok){$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){$('#pinModal').classList.remove('show');ok()}else toast('Incorrect PIN')}}function lock(){if(!settings.pin)return;locked=true;$('#pinTitle').textContent='App Locked';$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===settings.pin){locked=false;$('#pinModal').classList.remove('show');resetLock()}else toast('Incorrect PIN')}}function resetLock(){clearTimeout(activity);if(settings.pin&&num(settings.autoLock)>0)activity=setTimeout(lock,num(settings.autoLock)*60000)}document.addEventListener('click',resetLock);document.addEventListener('input',resetLock);
+function protectedAction(fn){if(!getPin())return fn();askPin(fn)}function setPin(){let a=prompt('Set a 4-digit PIN');if(!/^\d{4}$/.test(a||''))return toast('PIN must be exactly 4 digits');let b=prompt('Confirm PIN');if(a!==b)return toast('PIN did not match');setPinValue(a);toast('PIN enabled');renderSettings()}function askPin(ok){$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===getPin()){$('#pinModal').classList.remove('show');ok()}else toast('Incorrect PIN')}}function lock(){if(!getPin())return;locked=true;$('#pinTitle').textContent='App Locked';$('#pinModal').classList.add('show');$('#pinInput').value='';$('#pinConfirm').onclick=()=>{if($('#pinInput').value===getPin()){locked=false;$('#pinModal').classList.remove('show');resetLock()}else toast('Incorrect PIN')}}function resetLock(){clearTimeout(activity);if(getPin()&&num(settings.autoLock)>0)activity=setTimeout(lock,num(settings.autoLock)*60000)}document.addEventListener('click',resetLock);document.addEventListener('input',resetLock);
 
 
 /* ============================================================
@@ -398,23 +409,25 @@ function genDeviceId(){
 const SHARED_SETTING_KEYS=['branch','zone','team','totalBranch','manager','managerDesignation','target','weeklyStart','weeklyEnd','template'];
 function pickSharedObj(s){const o={};SHARED_SETTING_KEYS.forEach(k=>{o[k]=(s||{})[k];});return o;}
 function sharedSettings(s){return pickSharedObj(s||settings);}
+/* Canonical form of the cloud document, used only for change detection.
+   Timestamps that do not describe content (settingsUpdatedAt) are left out, so
+   two devices holding the same data produce the same hash. */
 function canonicalSyncContent(o){
   const recs=(o.records||[]).map(r=>({date:r.date,places:r.places||'',cash:r.cash||'',clearing:r.clearing||'',rtgs:r.rtgs||'',npsb:r.npsb||'',agent:r.agent||'',officers:r.officers||[],visits:r.visits||[],accounts:r.accounts||[],updated:r.updated||'',created:r.created||''})).sort((a,b)=>(a.date<b.date?-1:1));
   const tra=(o.trash||[]).filter(r=>r&&r.date).map(r=>({date:r.date,deleted:r.deleted||'',updated:r.updated||''})).sort((a,b)=>(a.date<b.date?-1:1));
-  const tom=(o.tombstones||[]).filter(t=>t&&(t.recordId||t.date)).map(t=>({recordId:t.recordId||t.date,date:t.date||t.recordId,deletedAt:t.deletedAt||''})).sort((a,b)=>(a.recordId<b.recordId?-1:1));
-  const set=o.settings_sync?pickSharedObj(o.settings_sync):sharedSettings(o.settings);
-  return {records:recs,trash:tra,tombstones:tom,settings:set};
+  const set=pickSharedObj(o.settings||{});
+  return {records:recs,trash:tra,settings:set};
 }
-function computeLocalHash(){try{return cyrb53(stableStringify(canonicalSyncContent({records:records,trash:trash,tombstones:tombstones})));}catch(e){return '';}}
+function computeLocalHash(){try{return cyrb53(stableStringify(canonicalSyncContent({records:records,trash:localTrashList(),settings:settings})));}catch(e){return '';}}
 function cloudContentHash(cloud){
   if(!cloud)return '';
-  try{return cyrb53(stableStringify(canonicalSyncContent({records:cloud.records||[],trash:cloud.trash||[],tombstones:cloud.tombstones||[],settings_sync:cloud.settings_sync||sharedSettings(cloud.settings||{})})));}catch(e){return '';}
+  try{return cyrb53(stableStringify(canonicalSyncContent({records:cloud.records||[],trash:cloud.trash||[],settings:cloud.settings||{}})));}catch(e){return '';}
 }
 
 /* ---------- IndexedDB (primary local database) ---------- */
 const IDB_NAME='fsib_marketing_db',IDB_VER=1;
 let _idb=null;
-let _meta={},_queue=[],_syncLog=[],tombstones=[];
+let _meta={},_queue=[],_syncLog=[],tombstones=[],_initPromise=null;
 let _syncStatus='synced',_syncInProgress=false,_lastSyncError='';
 let _debounceT=null,_qPersistT=null,_persistT=null;
 let _qChain=Promise.resolve(),_persistChain=Promise.resolve(),_rateWarned=false;
@@ -597,8 +610,8 @@ function dailyAutoTarget(){
 }
 function dailyAutoSyncDue(){
   if(!settings.autoSync)return false;
-  try{if(getViewBinFromUrl())return false;}catch(e){}
-  if(!navigator.onLine||!getJsonbinKey())return false;
+  try{if(isPublicView())return false;}catch(e){}
+  if(!navigator.onLine)return false;
   if(syncDayUsedToday())return false;
   return !!dailyAutoTarget();
 }
@@ -631,8 +644,8 @@ function markDirtyAndSchedule(){
 function scheduleDebouncedSync(){
   clearTimeout(_debounceT);_debounceT=null;
   if(!settings.autoSync)return;
-  try{if(getViewBinFromUrl())return;}catch(e){}
-  if(!navigator.onLine||!getJsonbinKey())return;
+  try{if(isPublicView())return;}catch(e){}
+  if(!navigator.onLine)return;
   if(syncDayUsedToday())return;
   _debounceT=setTimeout(()=>{maybeDailyAutoSync('edit');},SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
 }
@@ -663,53 +676,150 @@ function noteRateHeaders(h){
   }catch(e){}
 }
 
-/* ---------- JSONBin transport (least-privilege header first) ---------- */
-async function fetchJsonbin(path,opts){
-  opts=opts||{};
-  const key=getJsonbinKey();
-  const mkHeaders=useMaster=>{const h={'Content-Type':'application/json'};if(key)h[useMaster?'X-Master-Key':'X-Access-Key']=key;if(opts.binPrivate===false)h['X-Bin-Private']='false';if(opts.binName)h['X-Bin-Name']=opts.binName;return h;};
-  const doFetch=async useMaster=>{
-    const r=await fetch(SYNC_CONFIG.API_BASE+path,{method:opts.method||'GET',headers:mkHeaders(useMaster),body:opts.body});
-    noteRequest();noteRateHeaders(r.headers);
-    return r;
-  };
-  let r=await doFetch(false);
-  if((r.status===401||r.status===403)&&SYNC_CONFIG.USE_MASTER_HEADER_FALLBACK&&key){
-    const r2=await doFetch(true);
-    addSyncLog('auth','Retried with alternate credential header ('+r.status+' -> '+r2.status+').');
-    r=r2;
-  }
-  return r;
+/* ---------- /api/sync transport (Netlify Blobs backend) ----------
+   Mirrors src/lib/cloud-api.ts. index.html is a no-build PWA shell, so it
+   carries this inline copy of the same wire contract; keep the two in step.
+   GET  -> {settings, records, trash, version, updatedAt}
+   POST -> {settings, records, trash, version, force} -> new state, 409 on stale version */
+function emptyCloudState(){return {settings:{},records:[],trash:[],version:0,updatedAt:null}}
+function stripDeviceOnly(s){
+  const skip=SYNC_CONFIG.DEVICE_ONLY_SETTING_KEYS||[];
+  const o={};
+  Object.keys(s||{}).forEach(k=>{if(skip.indexOf(k)>=0)return;o[k]=s[k]});
+  return o;
 }
-async function cloudGet(bin){
-  const r=await fetchJsonbin('/b/'+encodeURIComponent(bin)+'/latest',{method:'GET'});
-  if(r.status===404)return {notFound:true};
+async function cloudGet(){
+  const r=await fetch(CLOUD_API,{method:'GET',headers:{accept:'application/json'},cache:'no-store'});
+  noteRequest();noteRateHeaders(r.headers);
+  if(r.status===404)return {found:false,state:emptyCloudState()};
   if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('GET '+r.status+' '+String(t||'').slice(0,120));}
-  const j=await r.json();
-  return {data:(j&&(j.record||j))||null,raw:j};
+  const j=(await r.json())||{};
+  return {found:true,state:{
+    settings:(j&&j.settings)||{},
+    records:Array.isArray(j&&j.records)?j.records:[],
+    trash:Array.isArray(j&&j.trash)?j.trash:[],
+    version:Number(j&&j.version)||0,
+    updatedAt:(j&&j.updatedAt)||null
+  }};
 }
-async function cloudPut(bin,payload){
-  const r=await fetchJsonbin('/b/'+encodeURIComponent(bin),{method:'PUT',body:JSON.stringify(payload)});
-  if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('PUT '+r.status+' '+String(t||'').slice(0,160));}
-  return r.json().catch(()=>({}));
+async function cloudSave(payload,version,force){
+  const body=JSON.stringify({
+    settings:stripDeviceOnly((payload&&payload.settings)||{}),
+    records:(payload&&payload.records)||[],
+    trash:(payload&&payload.trash)||[],
+    version:Number(version)||0,
+    force:force===true
+  });
+  const r=await fetch(CLOUD_API,{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:body});
+  noteRequest();noteRateHeaders(r.headers);
+  const j=await r.json().catch(()=>({}));
+  if(r.ok)return {ok:true,status:r.status,state:j};
+  return {ok:false,status:r.status,error:(j&&j.error)||('HTTP '+r.status),message:(j&&j.message)||'',
+    currentVersion:(j&&typeof j.currentVersion==='number')?j.currentVersion:undefined};
 }
-async function cloudCreate(payload){
-  const r=await fetchJsonbin('/b',{method:'POST',body:JSON.stringify(payload),binName:SYNC_CONFIG.BIN_NAME,binPrivate:false});
-  if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('POST '+r.status+' '+String(t||'').slice(0,160));}
-  return r.json();
+async function cloudClear(){
+  const r=await fetch(CLOUD_API,{method:'DELETE'});
+  noteRequest();
+  return r.ok;
 }
 
-/* ---------- merge (multi-device, conflict-aware, newest-wins, never drop) ---------- */
-function unionRecords(a,b,tsKey){
-  const map=new Map();const tk=tsKey||'updated';
-  (a||[]).forEach(r=>{if(r&&r.date)map.set(r.date,r);});
-  (b||[]).forEach(r=>{
-    if(!r||!r.date)return;
-    if(!map.has(r.date)){map.set(r.date,r);return;}
-    const cur=map.get(r.date);
-    if((r[tk]||'')>(cur[tk]||''))map.set(r.date,r);
+/* ---------- whole-state merge (multi-device, newest write wins, deletes beat stale edits) ----------
+   The cloud document is one object: {settings, records, trash, version, updatedAt}.
+   A deleted day lives in `trash` carrying its delete stamp, so a trash row whose
+   stamp is >= the record's stamp means "deleted" for every device. */
+function rowStamp(r){return String((r&&(r.updated||r.created||r.deleted))||'')}
+function rowsByDate(list){const m=new Map();(list||[]).forEach(r=>{if(r&&r.date)m.set(r.date,r)});return m}
+function unionRows(a,b){
+  const m=rowsByDate(a);
+  rowsByDate(b).forEach((r,d)=>{const cur=m.get(d);if(!cur||rowStamp(r)>=rowStamp(cur))m.set(d,r)});
+  return m;
+}
+/* legacy tombstones from the JSONBin build become trash rows, so old deletes still propagate */
+function localTrashRows(){
+  const m=rowsByDate(trash);
+  (tombstones||[]).forEach(t=>{
+    const d=t&&(t.date||t.recordId);if(!d)return;
+    const stamp=t.deletedAt||'';
+    const cur=m.get(d);
+    if(!cur||rowStamp(cur)<stamp)m.set(d,{date:d,deleted:stamp,updated:stamp});
   });
-  return [...map.values()].sort((x,y)=>(x.date<y.date?-1:1));
+  return m;
+}
+function localTrashList(){return [...localTrashRows().values()]}
+function splitLiveAndDeleted(recordMap,trashMap){
+  const live=[],dead=[];
+  new Set([...recordMap.keys(),...trashMap.keys()]).forEach(d=>{
+    const rec=recordMap.get(d),tomb=trashMap.get(d);
+    if(rec&&(!tomb||rowStamp(rec)>rowStamp(tomb)))live.push(rec);
+    else if(tomb)dead.push(tomb);
+  });
+  const byDate=(a,b)=>(a.date<b.date?-1:a.date>b.date?1:0);
+  live.sort(byDate);dead.sort(byDate);
+  return {live:live,dead:dead};
+}
+function mergeWithCloud(cloud){
+  const cloudRec=rowsByDate(cloud&&cloud.records);
+  const localRec=rowsByDate(records);
+  const cloudTrash=rowsByDate(cloud&&cloud.trash);
+  const localTrash=localTrashRows();
+  const conflicts=[];
+  const recMap=new Map();
+  new Set([...cloudRec.keys(),...localRec.keys()]).forEach(d=>{
+    const c=cloudRec.get(d),l=localRec.get(d);
+    if(!c||!l){recMap.set(d,c||l);return;}
+    const keepLocal=rowStamp(l)>=rowStamp(c);
+    recMap.set(d,keepLocal?l:c);
+    if(rowStamp(l)!==rowStamp(c))conflicts.push({recordId:d,reason:'both-modified',kept:keepLocal?'local':'cloud',localUpdated:rowStamp(l),cloudUpdated:rowStamp(c),at:new Date().toISOString()});
+  });
+  const split=splitLiveAndDeleted(recMap,unionRows(cloudTrash,localTrash));
+  const cloudSet=(cloud&&cloud.settings)||{};
+  const cloudSetAt=String(cloudSet.settingsUpdatedAt||(cloud&&cloud.updatedAt)||'');
+  const localSetAt=String(settings.settingsUpdatedAt||'');
+  const cloudWins=cloudSetAt>localSetAt;
+  const mergedSettings=pickSharedObj(settings);
+  if(cloudWins)SHARED_SETTING_KEYS.forEach(k=>{if(cloudSet[k]!==undefined)mergedSettings[k]=cloudSet[k]});
+  return {
+    records:split.live,
+    trash:split.dead,
+    settings:mergedSettings,
+    settingsUpdatedAt:(cloudWins?cloudSetAt:localSetAt)||new Date().toISOString(),
+    conflicts:conflicts
+  };
+}
+function buildCloudPayload(merged){
+  const s=pickSharedObj((merged&&merged.settings)||settings);
+  s.settingsUpdatedAt=(merged&&merged.settingsUpdatedAt)||new Date().toISOString();
+  return {settings:s,records:(merged&&merged.records)||[],trash:(merged&&merged.trash)||[]};
+}
+function applyCloudToLocal(cloud){
+  const before=new Map(records.map(r=>[r.date,rowStamp(r)]));
+  const merged=mergeWithCloud(cloud);
+  records=merged.records;
+  trash=merged.trash;
+  tombstones=[];
+  let added=0,updatedN=0;
+  records.forEach(r=>{
+    if(!before.has(r.date))added++;
+    else if(before.get(r.date)!==rowStamp(r))updatedN++;
+  });
+  const at=merged.settingsUpdatedAt||'';
+  if((at||'')>(settings.settingsUpdatedAt||'')){
+    SHARED_SETTING_KEYS.forEach(k=>{if(merged.settings[k]!==undefined)settings[k]=merged.settings[k]});
+    settings.settingsUpdatedAt=at;
+  }
+  save();
+  return {added:added,updated:updatedN,conflicts:merged.conflicts};
+}
+function adoptMergedLocally(merged){
+  records=[...(merged.records||[])];
+  trash=[...(merged.trash||[])];
+  tombstones=[];
+  const at=merged.settingsUpdatedAt||'';
+  if((at||'')>=(settings.settingsUpdatedAt||'')){
+    SHARED_SETTING_KEYS.forEach(k=>{if(merged.settings&&merged.settings[k]!==undefined)settings[k]=merged.settings[k]});
+    settings.settingsUpdatedAt=at;
+  }
+  save();
 }
 function unionTombstones(a,b){
   const map=new Map();
@@ -721,243 +831,107 @@ function unionTombstones(a,b){
   return [...map.values()];
 }
 function pruneTombstones(list){
-  const maxMs=(SYNC_CONFIG.TOMBSTONE_RETENTION_DAYS||90)*864e5;const now=Date.now();
+  const maxMs=90*864e5;const now=Date.now();
   return (list||[]).filter(t=>{const d=Date.parse(t.deletedAt||0)||0;return (now-d)<maxMs;});
-}
-function mergeLocalAndCloud(cloud,pending){
-  const cloudRecords=Array.isArray(cloud&&cloud.records)?cloud.records:[];
-  const cloudTrash=Array.isArray(cloud&&cloud.trash)?cloud.trash:[];
-  const cloudTombs=Array.isArray(cloud&&cloud.tombstones)?cloud.tombstones:[];
-  const byDate=new Map();
-  cloudRecords.forEach(r=>{if(r&&r.date)byDate.set(r.date,r);});
-  const tombByDate=new Map();
-  cloudTombs.forEach(t=>{const k=t&&(t.recordId||t.date);if(k)tombByDate.set(k,t);});
-  tombstones.forEach(t=>{const k=t&&(t.recordId||t.date);if(!k)return;const c=tombByDate.get(k);if(!c||(t.deletedAt||'')>(c.deletedAt||''))tombByDate.set(k,t);});
-  const conflicts=[];
-  const ops=[...(pending||[])].filter(q=>q.store==='records').sort((a,b)=>(a.changedAt<b.changedAt?-1:1));
-  ops.forEach(q=>{
-    const rid=q.recordId;
-    if(q.operation==='DELETE'){
-      const tomb=q.payload||{recordId:rid,date:rid,deleted:true,deletedAt:q.changedAt};
-      const cur=byDate.get(rid);
-      const delAt=tomb.deletedAt||q.changedAt||'';
-      if(!cur||delAt>=(cur.updated||'')){byDate.delete(rid);tombByDate.set(rid,{recordId:rid,date:rid,deleted:true,deletedAt:delAt});}
-      else conflicts.push({recordId:rid,reason:'delete-vs-newer-cloud',kept:'cloud',attemptedDelete:{recordId:rid,deletedAt:delAt},at:new Date().toISOString()});
-    }else{
-      const rec=q.payload;if(!rec||!rec.date)return;
-      const cur=byDate.get(rid);
-      const tomb=tombByDate.get(rid);
-      if(tomb&&(tomb.deletedAt||'')>(rec.updated||'')){conflicts.push({recordId:rid,reason:'cloud-delete-newer',kept:'deleted',local:rec,at:new Date().toISOString()});return;}
-      if(!cur){byDate.set(rid,rec);tombByDate.delete(rid);}
-      else if((rec.updated||'')>=(cur.updated||'')){byDate.set(rid,rec);tombByDate.delete(rid);}
-      else conflicts.push({recordId:rid,reason:'both-modified',kept:'cloud',localUpdated:rec.updated||'',cloudUpdated:cur.updated||'',local:rec,at:new Date().toISOString()});
-    }
-  });
-  records.forEach(r=>{
-    if(!r||!r.date||byDate.has(r.date))return;
-    const t=tombByDate.get(r.date);
-    if(!t||(r.updated||'')>(t.deletedAt||'')){byDate.set(r.date,r);tombByDate.delete(r.date);}
-  });
-  const trashMap=new Map();
-  cloudTrash.forEach(t=>{if(t&&t.date)trashMap.set(t.date,t);});
-  trash.forEach(t=>{if(!t||!t.date)return;const c=trashMap.get(t.date);if(!c||(t.deleted||'')>=(c.deleted||''))trashMap.set(t.date,t);});
-  const cloudSet=(cloud&&(cloud.settings_sync||sharedSettings(cloud.settings||{})))||{};
-  const cloudSetAt=(cloud&&(cloud.settingsUpdatedAt||cloud.updated_at))||'';
-  const localSetAt=settings.settingsUpdatedAt||'';
-  let mergedSettings,settingsAt;
-  if(localSetAt>=cloudSetAt){mergedSettings=sharedSettings();settingsAt=localSetAt||new Date().toISOString();}
-  else{mergedSettings=pickSharedObj(cloudSet);settingsAt=cloudSetAt;}
-  return {
-    records:[...byDate.values()].sort((a,b)=>(a.date<b.date?-1:1)),
-    trash:[...trashMap.values()].sort((a,b)=>(a.date<b.date?-1:1)),
-    tombstones:pruneTombstones([...tombByDate.values()]),
-    settings_sync:mergedSettings,settingsUpdatedAt:settingsAt,
-    conflicts:conflicts
-  };
-}
-function buildCloudPayload(merged,prevCloud){
-  const now=new Date().toISOString();
-  const revision=((prevCloud&&prevCloud.revision)||_meta.lastCloudRevision||0)+1;
-  return {app:'FSIB Marketing',schemaVersion:SYNC_CONFIG.SCHEMA_VERSION,revision:revision,updated_at:now,lastWriter:_meta.deviceId||'',
-    records:merged.records,trash:merged.trash,tombstones:merged.tombstones,
-    settings_sync:merged.settings_sync,settingsUpdatedAt:merged.settingsUpdatedAt,partitions:null};
-}
-function applyCloudToLocal(cloud){
-  let added=0,updatedN=0;
-  const incoming=Array.isArray(cloud.records)?cloud.records:[];
-  const tombs=Array.isArray(cloud.tombstones)?cloud.tombstones:[];
-  const tombSet=new Set(tombs.map(t=>t.recordId||t.date).filter(Boolean));
-  const inMap=new Map();incoming.forEach(r=>{if(r&&r.date)inMap.set(r.date,r);});
-  const before=new Map(records.map(r=>[r.date,r]));
-  const next=[];
-  inMap.forEach(r=>{next.push(r);});
-  records.forEach(r=>{if(r&&r.date&&!inMap.has(r.date)&&!tombSet.has(r.date))next.push(r);});
-  next.forEach(r=>{if(!before.has(r.date))added++;else if((r.updated||'')!==(before.get(r.date).updated||''))updatedN++;});
-  next.sort((a,b)=>(a.date<b.date?-1:1));
-  records=next;
-  trash=unionRecords(trash,Array.isArray(cloud.trash)?cloud.trash:[],'deleted');
-  tombstones=pruneTombstones(unionTombstones(tombstones,tombs));
-  const cloudSetAt=cloud.settingsUpdatedAt||cloud.updated_at||'';
-  if((cloudSetAt||'')>(settings.settingsUpdatedAt||'')){
-    const cs=cloud.settings_sync||sharedSettings(cloud.settings||{});
-    SHARED_SETTING_KEYS.forEach(k=>{if(cs[k]!==undefined)settings[k]=cs[k];});
-    settings.settingsUpdatedAt=cloudSetAt;
-  }
-  save();
-  return {added:added,updated:updatedN};
-}
-function adoptMergedLocally(merged){
-  records=[...(merged.records||[])];
-  trash=[...(merged.trash||[])];
-  tombstones=pruneTombstones([...(merged.tombstones||[])]);
-  const at=merged.settingsUpdatedAt||'';
-  if((at||'')>=(settings.settingsUpdatedAt||'')){
-    SHARED_SETTING_KEYS.forEach(k=>{if(merged.settings_sync&&merged.settings_sync[k]!==undefined)settings[k]=merged.settings_sync[k];});
-    settings.settingsUpdatedAt=at;
-  }
-  save();
-}
-function reapplyLeftovers(){
-  if(!_queue.length)return;
-  const ops=[..._queue].sort((a,b)=>(a.changedAt<b.changedAt?-1:1));
-  ops.forEach(q=>{
-    if(q.store==='settings'){const p=q.payload||{};SHARED_SETTING_KEYS.forEach(k=>{if(p[k]!==undefined)settings[k]=p[k];});settings.settingsUpdatedAt=q.changedAt;return;}
-    if(q.store!=='records')return;
-    if(q.operation==='DELETE'){records=records.filter(r=>r.date!==q.recordId);return;}
-    const rec=q.payload;if(!rec||!rec.date)return;
-    const i=records.findIndex(r=>r.date===rec.date);
-    if(i>=0)records[i]=rec;else records.push(rec);
-  });
-  records.sort((a,b)=>(a.date<b.date?-1:1));
-  save();
 }
 function sizeGuard(payload){
   let bytes=0;try{bytes=JSON.stringify(payload).length;}catch(e){}
   _meta.lastPayloadBytes=bytes;
-  if(bytes>(SYNC_CONFIG.MAX_PAYLOAD_BYTES||400000)){
-    addSyncLog('Cloud data large','Payload ~'+Math.round(bytes/1024)+' KB approaches the JSONBin record-size limit. Use Backup, then delete very old months from History to shrink the single primary bin.');
+  if(bytes>(SYNC_CONFIG.MAX_STATE_BYTES||4000000)){
+    addSyncLog('Cloud data large','State ~'+Math.round(bytes/1024)+' KB is over the '+Math.round((SYNC_CONFIG.MAX_STATE_BYTES||4000000)/1024)+' KB limit /api/sync accepts. Use Backup, then delete very old months from History.');
     toast('Cloud data is large (~'+Math.round(bytes/1024)+' KB). Consider archiving old months.');
   }
   return bytes;
 }
-function onBinCreated(newId,payload){
-  setBinId(newId);
-  try{
-    const link=location.origin+location.pathname.replace(/index\.html$/,'')+'?view='+encodeURIComponent(newId);
-    settings.publicLink=link;settings.binId=newId;
-    localStorage.setItem(K+'settings',JSON.stringify(settings));
-  }catch(e){}
-  if(!SYNC_CONFIG.BIN_ID){
-    alert('IMPORTANT \u2014 Cloud Bin ID created:\n\n'+newId+'\n\nPut this in index.html as SYNC_CONFIG.BIN_ID so all mobiles share the same data.');
-    toast('Bin ID created \u2014 see alert');
-  }else toast('Synced to cloud');
-  try{if(navigator.clipboard&&settings.publicLink)navigator.clipboard.writeText(settings.publicLink).catch(()=>{});}catch(e){}
-}
 
-/* ---------- the request-efficient sync algorithm ---------- */
-async function syncNow(reason){
+/* ---------- the sync algorithm: one document, optimistic concurrency ---------- */
+async function afterCloudWrite(state,hash,extra){
+  if(hash)await metaPut('lastCloudHash',hash);
+  await metaPut('lastCloudVersion',Number((state&&state.version)||0));
+  await metaPut('lastCloudUpdatedAt',(state&&state.updatedAt)||new Date().toISOString());
+  settings.lastSync=new Date().toISOString();
+  await metaPut('lastSyncAt',settings.lastSync);
+  try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
+  await kvPut('settings',settings);
+}
+async function syncNow(reason,opts){
   reason=reason||'manual';
+  opts=opts||{};
+  /* Never sync against a half-loaded local store. */
+  if(_initPromise){try{await _initPromise}catch(e){}}
   const dailyAuto=isDailyAutoReason(reason);
-  try{if(getViewBinFromUrl())return {skipped:'public-view'};}catch(e){}
+  try{if(isPublicView())return {skipped:'public-view'};}catch(e){}
   if(_syncInProgress)return {skipped:'busy'};
   if(!navigator.onLine){setSyncStatus('offline');if(!dailyAuto)toast('Offline \u2014 changes saved locally');return {offline:true};}
-  if(!getJsonbinKey()){if(reason==='manual'||reason==='refresh')toast('Cloud key missing \u2014 contact admin');return {noKey:true};}
   if(dailyAuto&&syncDayUsedToday())return {skipped:'daily-limit'};
-  /* spend the day's single sync BEFORE the first possible network call */
+  /* spend the day's single automatic sync BEFORE the first possible network call */
   if(dailyAuto)markAutoSyncFired();
   _syncInProgress=true;setSyncStatus('syncing');
-  const startedAt=new Date().toISOString();
+  const explicit=(reason==='manual'||reason==='refresh');
+  const force=opts.force===true;
   try{
     const pending=await getPendingChanges();
     const needsUpload=pending.length>0;
     const localHash=computeLocalHash();
     const lastHash=_meta.lastCloudHash||'';
-    const explicit=(reason==='manual'||reason==='refresh');
     const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry'||dailyAuto);
     if(!needsUpload&&!wantsCloudCheck){setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};}
     if(!needsUpload&&localHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!dailyAuto){setSyncStatus('synced');return {noop:true};}
-    let bin=getBinId();
-    if(!bin){
-      if(!needsUpload){if(dailyAuto)releaseSyncDay();setSyncStatus('synced');return {noop:true};}
-      const merged0=mergeLocalAndCloud(null,pending);
-      const payload0=buildCloudPayload(merged0,null);
-      sizeGuard(payload0);
-      const created=await cloudCreate(payload0);
-      const newId=(created&&(created.metadata&&created.metadata.id))||'';
-      if(!newId)throw new Error('create returned no id');
-      onBinCreated(newId,payload0);
-      await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
-      adoptMergedLocally(merged0);
-      reapplyLeftovers();
-      await metaPut('lastCloudHash',cloudContentHash(payload0));await metaPut('lastCloudRevision',payload0.revision);await metaPut('lastCloudUpdatedAt',payload0.updated_at);
-      settings.lastSync=payload0.updated_at;await metaPut('lastSyncAt',payload0.updated_at);
-      await addSyncLog('Sync successful','Bin created. Records uploaded: '+pending.length,{uploaded:pending.length});
-      setSyncStatus(pendingCount()>0?'pending':'synced');
-      refreshAfterSync();
-      if(dailyAuto)toast('Daily auto sync done \u2014 next automatic sync tomorrow');
-      return {created:true,uploaded:pending.length};
-    }
-    let cloud=null,gotCloud=false,notFound=false;
-    if(wantsCloudCheck){
-      const g=await cloudGet(bin);
-      if(g.notFound)notFound=true;else{cloud=g.data;gotCloud=true;}
-    }
-    if(notFound){
-      const mergedN=mergeLocalAndCloud(null,pendingCount()?pending:[]);
-      const payloadN=buildCloudPayload(mergedN,null);
-      sizeGuard(payloadN);
-      const created=await cloudCreate(payloadN);
-      const newId=(created&&(created.metadata&&created.metadata.id))||'';
-      if(!newId)throw new Error('recreate returned no id');
-      onBinCreated(newId,payloadN);
-      if(pending.length)await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
-      reapplyLeftovers();adoptMergedLocally(mergedN);
-      await metaPut('lastCloudHash',cloudContentHash(payloadN));await metaPut('lastCloudRevision',payloadN.revision);await metaPut('lastCloudUpdatedAt',payloadN.updated_at);
-      settings.lastSync=payloadN.updated_at;await metaPut('lastSyncAt',payloadN.updated_at);
-      await addSyncLog('Sync successful','Cloud bin recreated. Records uploaded: '+pending.length,{uploaded:pending.length});
-      setSyncStatus(pendingCount()>0?'pending':'synced');refreshAfterSync();
-      if(dailyAuto)toast('Daily auto sync done \u2014 next automatic sync tomorrow');
-      return {recreated:true,uploaded:pending.length};
-    }
-    const cloudHash=gotCloud?cloudContentHash(cloud):lastHash;
-    const cloudChanged=gotCloud&&cloudHash!==(lastHash||'__none__');
+
+    const g=await cloudGet();
+    const cloud=g.state;
+    const cloudHash=cloudContentHash(cloud);
+    const cloudChanged=(cloudHash!==(lastHash||'__none__'));
+    setCloudVersion(cloud.version);
+
+    /* Nothing to upload — just take the cloud copy if it moved. */
     if(!needsUpload){
-      if(!gotCloud||!cloudChanged){setSyncStatus('synced');return {noop:true};}
-      const applied=applyCloudToLocal(cloud||{});
-      await metaPut('lastCloudHash',cloudHash);await metaPut('lastCloudRevision',(cloud&&cloud.revision)||_meta.lastCloudRevision||0);await metaPut('lastCloudUpdatedAt',(cloud&&cloud.updated_at)||startedAt);
-      settings.lastSync=new Date().toISOString();await metaPut('lastSyncAt',settings.lastSync);
-      try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}await kvPut('settings',settings);
-      await addSyncLog('Sync successful','Downloaded cloud changes. New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
+      if(g.found&&!cloudChanged){setSyncStatus('synced');return {noop:true,version:cloud.version};}
+      const applied=applyCloudToLocal(cloud);
+      await afterCloudWrite(cloud,cloudHash);
+      await addSyncLog('Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
       setSyncStatus('synced');refreshAfterSync();
       if(explicit||reason==='startup')toast('Synced from cloud ('+records.length+' records)');
       else if(dailyAuto)toast((applied.added+applied.updated)>0?('Daily auto sync done \u2014 '+(applied.added+applied.updated)+' cloud change(s) downloaded'):'Daily auto sync done \u2014 next automatic sync tomorrow');
-      return {downloaded:applied};
+      return {downloaded:applied,version:cloud.version};
     }
-    if(gotCloud&&!cloudChanged&&localHash===cloudHash){
-      await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
-      setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};
-    }
-    const merged=mergeLocalAndCloud(cloud,pending);
-    const payload=buildCloudPayload(merged,cloud);
+
+    /* Upload: merge local + cloud, then POST carrying the version we just read. */
+    let merged=mergeWithCloud(cloud);
+    let payload=buildCloudPayload(merged);
     sizeGuard(payload);
-    await cloudPut(bin,payload);
-    await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
+    let baseVersion=cloud.version;
+    let res=await cloudSave(payload,baseVersion,force);
+    if(!res.ok&&res.status===409&&!force){
+      /* Another device saved between our GET and POST: re-read, re-merge, retry once. */
+      await addSyncLog('Conflict','Server moved to version '+res.currentVersion+' while we sent '+baseVersion+'. Re-merging and retrying.');
+      const g2=await cloudGet();
+      merged=mergeWithCloud(g2.state);
+      payload=buildCloudPayload(merged);
+      baseVersion=g2.state.version;
+      res=await cloudSave(payload,baseVersion,false);
+    }
+    if(!res.ok)throw new Error((res.error||'save-failed')+(res.message?(' \u2014 '+res.message):''));
+    const saved=res.state||{};
+    const newVersion=Number(saved.version)||baseVersion;
+    setCloudVersion(newVersion);
     adoptMergedLocally(merged);
-    reapplyLeftovers();
+    /* Publish the new hash before clearing the queue: reconcileQueue() compares the
+       local hash with lastCloudHash, so doing this first stops a startup reconcile
+       from re-queueing the very records this sync just uploaded. */
+    await afterCloudWrite(saved,cloudContentHash({records:merged.records,trash:merged.trash,settings:payload.settings}));
+    if(pending.length)await markChangesAsSynced(pending.map(p=>({recordKey:p.recordKey,changedAt:p.changedAt})));
     if(merged.conflicts&&merged.conflicts.length){
       const prev=Array.isArray(_meta.conflicts)?_meta.conflicts:[];
       await metaPut('conflicts',merged.conflicts.concat(prev).slice(0,20));
-      await addSyncLog('Conflicts resolved',merged.conflicts.length+' conflicting record(s) \u2014 newest kept: '+merged.conflicts.map(c=>c.recordId).join(', '));
+      await addSyncLog('Conflicts resolved',merged.conflicts.length+' day(s) changed on two devices \u2014 newest kept: '+merged.conflicts.map(c=>c.recordId).join(', '));
     }
-    await metaPut('lastCloudHash',cloudContentHash(payload));await metaPut('lastCloudRevision',payload.revision);await metaPut('lastCloudUpdatedAt',payload.updated_at);
-    settings.lastSync=payload.updated_at;await metaPut('lastSyncAt',payload.updated_at);
-    try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}await kvPut('settings',settings);
-    await addSyncLog('Sync successful','Records uploaded: '+pending.length+(gotCloud&&cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
+    await addSyncLog('Sync successful','Uploaded to cloud (version '+newVersion+'). Records uploaded: '+pending.length+(cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
     setSyncStatus(pendingCount()>0?'pending':'synced');
     refreshAfterSync();
-    if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded)');
+    if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded, version '+newVersion+')');
     else if(dailyAuto)toast('Daily auto sync done \u2014 '+pending.length+' uploaded, next automatic sync tomorrow');
-    return {uploaded:pending.length,downloaded:cloudChanged};
+    return {uploaded:pending.length,version:newVersion,downloaded:cloudChanged};
   }catch(err){
     console.error('sync failed',err);
     setSyncStatus('error',(err&&err.message)||'error');
@@ -1083,7 +1057,7 @@ function syncPanelHtml(){
   const rl=_meta.lastRateLimit;
   let rate='';
   if(rl&&(rl.remaining!==null&&rl.remaining!==undefined)){
-    rate='<div>JSONBin reports: <b>'+rl.remaining+'</b> of '+(rl.limit||'?')+' requests remaining</div>';
+    rate='<div>Server reports: <b>'+rl.remaining+'</b> of '+(rl.limit||'?')+' requests remaining</div>';
     if(rl.remaining!==null&&rl.remaining<=100)rate+='<div>\u26a0 Free allowance nearly exhausted \u2014 sync sparingly.</div>';
   }else{
     rate='<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>';
@@ -1138,47 +1112,36 @@ function wireSyncUI(){
   const e=document.getElementById('syncBackupBtn');if(e)e.onclick=()=>{document.getElementById('syncModal').classList.remove('show');backup();};
 }
 
-const JSONBIN_API=SYNC_CONFIG.API_BASE+'/b';
-function getJsonbinKey(){return localStorage.getItem(K+'jsonbinKey')||CLOUD_KEY||''}
-function setJsonbinKey(v){localStorage.setItem(K+'jsonbinKey',(v||'').trim())}
-function getBinId(){return localStorage.getItem(K+'binId')||CLOUD_BIN||settings.binId||''}
-function setBinId(v){v=(v||'').trim();localStorage.setItem(K+'binId',v);if(v){settings.binId=v;localStorage.setItem(K+'settings',JSON.stringify(settings))}}
-function getSyncCode(){return getBinId()}
-function setSyncCode(v){setBinId(v)}
-function jsonbinHeaders(){
-  const key=getJsonbinKey();
-  return {'Content-Type':'application/json','X-Access-Key':key,'X-Bin-Private':'false'};
-}
+/* ---------- public read-only view ----------
+   GET /api/sync is public by design (no credential ships in the page), so a share
+   link needs no bin id: <site>/?view=1 renders the cloud state read-only. */
+function publicViewUrl(){return location.origin+location.pathname.replace(/index\.html$/,'')+'?view=1'}
+function isPublicView(){try{return new URLSearchParams(location.search).get('view')!==null}catch(e){return false}}
 async function pullCloud(){return syncNow('refresh');}
 async function pushCloud(){return syncNow('manual');}
 async function autoSync(){if(pendingCount()<=0)return {noop:true};return syncNow('auto');}
 
-async function loadPublicView(binId){
+async function loadPublicView(){
   try{
-    const r=await fetch(JSONBIN_API+'/'+encodeURIComponent(binId)+'/latest');
-    if(!r.ok){toast('Could not load public report');return}
-    const j=await r.json();
-    const d=j.record||j;
+    const g=await cloudGet();
+    const d=g.state||emptyCloudState();
     records=Array.isArray(d.records)?d.records:[];
     trash=[];
+    tombstones=[];
     if(d.settings&&typeof d.settings==='object'){
-      settings={...settings,...d.settings,pin:'',autoLock:0};
+      settings={...settings,...d.settings,autoLock:0};
+      setPinValue('');
     }
     document.body.classList.add('public-view');
     const ban=document.createElement('div');
     ban.id='publicBanner';
     ban.style.cssText='position:sticky;top:0;z-index:50;background:#06377d;color:#fff;padding:10px 14px;font-size:13px;font-weight:700;text-align:center';
-    ban.textContent='Public view — read only · FSIB Branch Marketing Report';
+    ban.textContent='Public view \u2014 read only \u00b7 FSIB Branch Marketing Report';
     document.body.insertBefore(ban,document.body.firstChild);
-    // hide install, pin-sensitive, settings edit is ok but disable save cloud
     const ib=document.getElementById('installBtn');if(ib)ib.classList.add('hidden');
     renderDashboard();
-    // override nav to allow dashboard history reports only
     toast('Public report loaded ('+records.length+' days)');
   }catch(e){console.error(e);toast('Public load failed')}
-}
-function getViewBinFromUrl(){
-  try{return new URLSearchParams(location.search).get('view')||''}catch(e){return ''}
 }
 
 
@@ -1192,8 +1155,7 @@ function network(){
 }
 function maybeSyncOnReconnect(){
   if(!settings.autoSync)return;
-  try{if(getViewBinFromUrl())return;}catch(e){}
-  if(!getJsonbinKey())return;
+  try{if(isPublicView())return;}catch(e){}
   if(syncDayUsedToday())return;
   clearTimeout(window._onlineSyncT);
   window._onlineSyncT=setTimeout(()=>{maybeDailyAutoSync('online');},1200);
@@ -1256,11 +1218,11 @@ function wireModalUX(){
 theme();network();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();resetLock();
 wireSyncUI();
 wireModalUX();
-initLocalDB().then(()=>{
+_initPromise=initLocalDB();
+_initPromise.then(()=>{
   refreshAfterSync();
   updateSyncUI();
-  const vb=getViewBinFromUrl();
-  if(vb){loadPublicView(vb);return;}
-  if(getJsonbinKey()&&getBinId()&&navigator.onLine&&dailyAutoSyncDue()){setTimeout(()=>{maybeDailyAutoSync('startup');},900);}
+  if(isPublicView()){loadPublicView();return;}
+  if(navigator.onLine&&dailyAutoSyncDue()){setTimeout(()=>{maybeDailyAutoSync('startup');},900);}
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>
