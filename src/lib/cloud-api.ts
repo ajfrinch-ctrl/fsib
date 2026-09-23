@@ -70,12 +70,15 @@ export async function loadCloudState(api: string = DEFAULT_API_PATH): Promise<Cl
   if (res.status === 404) return { settings: {}, records: [], trash: [], version: 0, updatedAt: null };
   if (!res.ok) throw new CloudApiError(`GET ${res.status}`, res.status);
   const data = await res.json();
+  /* The deployed endpoint wraps the document in { ok, empty, state }; older and
+     self-hosted builds return the bare document. Accept both. */
+  const doc = data && typeof data === "object" && data.state && typeof data.state === "object" ? data.state : data;
   return {
-    settings: (data && data.settings) || {},
-    records: Array.isArray(data && data.records) ? data.records : [],
-    trash: Array.isArray(data && data.trash) ? data.trash : [],
-    version: Number(data && data.version) || 0,
-    updatedAt: (data && data.updatedAt) || null
+    settings: (doc && doc.settings) || {},
+    records: Array.isArray(doc && doc.records) ? doc.records : [],
+    trash: Array.isArray(doc && doc.trash) ? doc.trash : [],
+    version: Number(doc && doc.version) || 0,
+    updatedAt: (doc && doc.updatedAt) || null
   };
 }
 
@@ -98,15 +101,21 @@ export async function saveCloudState(
     body
   });
   const data = await res.json().catch(() => ({}));
+  const doc = data && typeof data === "object" && data.state && typeof data.state === "object" ? data.state : data;
   if (res.ok) {
-    return { ok: true, status: res.status, state: data as CloudState };
+    return { ok: true, status: res.status, state: doc as CloudState };
   }
   return {
     ok: false,
     status: res.status,
     error: (data && data.error) || `HTTP ${res.status}`,
     message: (data && data.message) || "Save rejected by /api/sync",
-    currentVersion: data && typeof data.currentVersion === "number" ? data.currentVersion : undefined
+    currentVersion:
+      data && typeof data.currentVersion === "number"
+        ? data.currentVersion
+        : doc && typeof doc.version === "number"
+          ? doc.version
+          : undefined
   };
 }
 

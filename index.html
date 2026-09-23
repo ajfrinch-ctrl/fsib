@@ -694,12 +694,16 @@ async function cloudGet(){
   if(r.status===404)return {found:false,state:emptyCloudState()};
   if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('GET '+r.status+' '+String(t||'').slice(0,120));}
   const j=(await r.json())||{};
+  /* The deployed /api/sync wraps the document in {ok,empty,state}; accept that and
+     the bare document, so this client works against either server. */
+  const d=(j&&typeof j==='object'&&j.state&&typeof j.state==='object')?j.state:j;
+  if(j&&j.empty===true&&!(j.state&&typeof j.state==='object'))return {found:false,state:emptyCloudState()};
   return {found:true,state:{
-    settings:(j&&j.settings)||{},
-    records:Array.isArray(j&&j.records)?j.records:[],
-    trash:Array.isArray(j&&j.trash)?j.trash:[],
-    version:Number(j&&j.version)||0,
-    updatedAt:(j&&j.updatedAt)||null
+    settings:(d&&d.settings)||{},
+    records:Array.isArray(d&&d.records)?d.records:[],
+    trash:Array.isArray(d&&d.trash)?d.trash:[],
+    version:Number(d&&d.version)||0,
+    updatedAt:(d&&d.updatedAt)||null
   }};
 }
 async function cloudSave(payload,version,force){
@@ -713,9 +717,10 @@ async function cloudSave(payload,version,force){
   const r=await fetch(CLOUD_API,{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:body});
   noteRequest();noteRateHeaders(r.headers);
   const j=await r.json().catch(()=>({}));
-  if(r.ok)return {ok:true,status:r.status,state:j};
+  const d=(j&&typeof j==='object'&&j.state&&typeof j.state==='object')?j.state:j;
+  if(r.ok)return {ok:true,status:r.status,state:d};
   return {ok:false,status:r.status,error:(j&&j.error)||('HTTP '+r.status),message:(j&&j.message)||'',
-    currentVersion:(j&&typeof j.currentVersion==='number')?j.currentVersion:undefined};
+    currentVersion:(j&&typeof j.currentVersion==='number')?j.currentVersion:((d&&typeof d.version==='number')?d.version:undefined)};
 }
 async function cloudClear(){
   const r=await fetch(CLOUD_API,{method:'DELETE'});

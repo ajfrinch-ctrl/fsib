@@ -111,3 +111,32 @@ test("mergeStates leaves shared settings alone when the local edit is newer", ()
   };
   assert.equal(mergeStates(local, cloud).settings.branch, "Local Branch");
 });
+
+test("reads the deployed endpoint's { ok, empty, state } envelope", async () => {
+  // shape copied from a live GET https://fsib.netlify.app/api/sync
+  fakeFetch(() =>
+    json(200, {
+      ok: true,
+      empty: false,
+      state: {
+        settings: { branch: "Tantar Branch", zone: "Cumilla" },
+        records: [{ date: "2026-09-14", cash: "1257100", updated: "2026-09-14T09:08:00.514Z" }],
+        trash: [{ date: "2026-09-09", deleted: "2026-09-10T12:07:25.737Z" }],
+        version: 16,
+        updatedAt: "2026-09-14T09:08:02.462Z"
+      }
+    })
+  );
+  const state = await loadCloudState();
+  assert.equal(state.version, 16, "version must come from inside the envelope");
+  assert.deepEqual(state.records.map((r) => r.date), ["2026-09-14"]);
+  assert.deepEqual(state.trash.map((r) => r.date), ["2026-09-09"]);
+  assert.equal(state.settings.zone, "Cumilla");
+});
+
+test("an enveloped 409 still reports the server's version", async () => {
+  fakeFetch(() => json(409, { ok: false, error: "version-conflict", message: "stale", state: { version: 16 } }));
+  const out = await saveCloudState({ settings: {}, records: [], trash: [] }, { version: 0 });
+  assert.equal(out.ok, false);
+  assert.equal(out.currentVersion, 16);
+});

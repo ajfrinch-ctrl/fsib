@@ -42,7 +42,11 @@ test("GET on an empty blob returns the documented empty state", async () => {
   const handler = createSyncHandler(memoryAdapter().adapter);
   const res = await handler(request("GET"));
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { settings: {}, records: [], trash: [], version: 0, updatedAt: null });
+  assert.deepEqual(await res.json(), {
+    ok: true,
+    empty: true,
+    state: { settings: {}, records: [], trash: [], version: 0, updatedAt: null }
+  });
 });
 
 test("POST creates version 1, sorted and stripped of the PIN", async () => {
@@ -58,7 +62,9 @@ test("POST creates version 1, sorted and stripped of the PIN", async () => {
     })
   );
   assert.equal(res.status, 201);
-  const state = await res.json();
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  const state = body.state;
   assert.equal(state.version, 1);
   assert.deepEqual(state.records.map((r) => r.date), ["2026-09-01", "2026-09-14"]);
   assert.equal(state.settings.pin, undefined, "PIN must never reach the blob");
@@ -75,6 +81,7 @@ test("a stale version is rejected with 409 and the current version", async () =>
   );
   assert.equal(res.status, 409);
   const body = await res.json();
+  assert.equal(body.ok, false);
   assert.equal(body.error, "version-conflict");
   assert.equal(body.currentVersion, 1);
   assert.equal(body.providedVersion, 0);
@@ -88,7 +95,7 @@ test("force: true overwrites a stale version", async () => {
     request("POST", { settings: {}, records: [day("2026-09-09", "9", "2026-09-09T09:00:00.000Z")], trash: [], version: 0, force: true })
   );
   assert.equal(res.status, 201);
-  const state = await res.json();
+  const state = (await res.json()).state;
   assert.equal(state.version, 2);
   assert.deepEqual(state.records.map((r) => r.date), ["2026-09-09"]);
 });
@@ -101,12 +108,12 @@ test("PUT behaves like POST, and DELETE clears the blob", async () => {
     request("PUT", { settings: {}, records: [day("2026-09-01", "5", "2026-09-01T10:00:00.000Z")], trash: [], version: 1 })
   );
   assert.equal(put.status, 200);
-  assert.equal((await put.json()).version, 2);
+  assert.equal((await put.json()).state.version, 2);
 
   const del = await handler(request("DELETE"));
   assert.equal(del.status, 200);
   const after = await handler(request("GET"));
-  assert.equal((await after.json()).version, 0);
+  assert.equal((await after.json()).state.version, 0);
 });
 
 test("writes need a version (or force), and only known verbs are allowed", async () => {

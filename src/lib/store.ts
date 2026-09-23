@@ -208,6 +208,12 @@ export function applyWrite(current: CloudState, body: unknown, now?: string): Wr
   return { ok: true, state };
 }
 
+/** Unwrap either a bare state document or the { ok, empty, state } envelope. */
+export function unwrapState(payload: unknown): CloudState {
+  if (isPlainObject(payload) && isPlainObject(payload.state)) return normalizeState(payload.state);
+  return normalizeState(payload);
+}
+
 export function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -222,7 +228,13 @@ export function createSyncHandler(adapter: BlobAdapter) {
     try {
       if (method === "GET") {
         const state = normalizeState(await adapter.get());
-        return jsonResponse(200, state);
+        /* The deployed /api/sync wraps the document in { ok, empty, state }; keep
+           that envelope so this Function is a drop-in replacement for it. */
+        return jsonResponse(200, {
+          ok: true,
+          empty: state.version === 0 && state.records.length === 0 && state.trash.length === 0,
+          state
+        });
       }
 
       if (method === "POST" || method === "PUT") {
@@ -230,13 +242,13 @@ export function createSyncHandler(adapter: BlobAdapter) {
         try {
           body = await req.json();
         } catch {
-          return jsonResponse(400, { error: "invalid-json", message: "Request body must be JSON." });
+          return jsonResponse(400, { ok: false, error: "invalid-json", message: "Request body must be JSON." });
         }
         const current = normalizeState(await adapter.get());
         const outcome = applyWrite(current, body);
-        if (!outcome.ok) return jsonResponse(outcome.status, outcome.body);
+        if (!outcome.ok) return jsonResponse(outcome.status, { ok: false, ...outcome.body });
         await adapter.set(outcome.state);
-        return jsonResponse(method === "POST" ? 201 : 200, outcome.state);
+        return jsonResponse(method === "POST" ? 201 : 200, { ok: true, state: outcome.state });
       }
 
       if (method === "DELETE") {
@@ -249,13 +261,14 @@ export function createSyncHandler(adapter: BlobAdapter) {
       }
 
       return jsonResponse(405, {
+        ok: false,
         error: "method-not-allowed",
         message: `${method} is not supported on /api/sync.`,
         allowed: ["GET", "POST", "PUT", "DELETE"]
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return jsonResponse(500, { error: "internal", message: message.slice(0, 200) });
+      return jsonResponse(500, { ok: false, error: "internal", message: message.slice(0, 200) });
     }
   };
 }
