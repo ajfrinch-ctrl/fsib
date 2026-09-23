@@ -1,4 +1,4 @@
-const CACHE_NAME = "fsib-branch-marketing-v4";
+const CACHE_NAME = "fsib-branch-marketing-v5";
 
 const APP_SHELL = [
   "./",
@@ -33,8 +33,11 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
-  // Never cache the cloud sync API: cached GETs would serve stale bin data across devices.
-  if (event.request.url.indexOf("api.jsonbin.io") !== -1) return;
+  const url = event.request.url;
+
+  /* Never cache the sync API. A cached GET would hand a device yesterday's
+     cloud state — and a stale `version` makes every following write fail. */
+  if (url.indexOf("/api/") !== -1) return;
 
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {

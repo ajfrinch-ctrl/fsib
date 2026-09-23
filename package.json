@@ -1,0 +1,21 @@
+{
+  "name": "fsib-branch-marketing-report",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first daily branch marketing report PWA (First Security Islami Bank PLC, Tantar Branch) with Netlify Blobs cloud sync via /api/sync.",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node dev-server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "jsdom": "^27.0.0",
+    "typescript": "^7.0.2"
+  }
+}
