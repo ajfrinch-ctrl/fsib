@@ -249,22 +249,32 @@ test("the visiting and account reports export offline too", async () => {
   assert.equal(downloads.length, 1);
   assert.match(downloads[0].download, /^BranchVisitingReport_September_2026\.pdf$/);
   const visitPdf = pdfText(blobs[0]);
-  assert.match(visitPdf, /VISITING REPORT/);
-  assert.match(visitPdf, /TOTAL VISITS: 1/);
+  assert.match(visitPdf, /MONTHLY STATEMENT/);
+  assert.match(visitPdf, /MediaBox \[0 0 842 595\]/);
+  assert.match(visitPdf, /BaseFont \/Courier/);
+  assert.doesNotMatch(visitPdf, /VISITING REPORT/);
   assert.match(visitPdf, /School/);
-  assert.match(visitPdf, /Place: Tantar High/);
-  assert.match(visitPdf, /Mobile: 01711111111/);
+  assert.match(visitPdf, /Tantar High/);
+  assert.match(visitPdf, /01711111111/);
+  assert.match(visitPdf, /Savings 1001 20,000/);
+  const visitText = [...visitPdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
+  const expected = window.statementLines("2026-09-01").filter((s) => s.trim())
+    .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
+  assert.equal(visitText, expected, "the visiting PDF is the same statement table");
 
   window.renderAccountReport("monthly", "2026-09-01");
   window.document.querySelector(".pdf-dl").click();
+  assert.equal(window.document.querySelector("#pdfPreviewTitle").textContent, "Monthly Statement");
   window.document.querySelector("#pdfDownloadBtn").click();
   assert.equal(downloads.length, 2);
   assert.match(downloads[1].download, /^BranchAccountReport_September_2026\.pdf$/);
   const accountPdf = pdfText(blobs[1]);
-  assert.match(accountPdf, /NEW ACCOUNT REPORT/);
-  assert.match(accountPdf, /TOTAL ACCOUNTS: 1/);
-  assert.match(accountPdf, /A\/C No: 1001/);
-  assert.match(accountPdf, /Initial Deposit: Tk 20,000/);
+  assert.match(accountPdf, /MONTHLY STATEMENT/);
+  assert.doesNotMatch(accountPdf, /NEW ACCOUNT REPORT/);
+  assert.match(accountPdf, /Savings 1001 20,000/);
+  assert.match(accountPdf, /12,50,000/);
+  const accountText = [...accountPdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
+  assert.equal(accountText, visitText, "account and visiting PDFs are the same statement");
 });
 
 test("pick a date, generate, preview, then download from the preview", async () => {
@@ -292,8 +302,11 @@ test("pick a date, generate, preview, then download from the preview", async () 
 
   // the preview text is exactly what the PDF will contain
   const previewText = [...doc.querySelectorAll(".pdfpage pre")].map((p) => p.textContent).join("\n");
-  assert.match(previewText, /BRANCH MARKETING REPORT/);
+  assert.equal(doc.querySelector("#pdfPreviewTitle").textContent, "Daily Statement");
+  assert.match(previewText, /DAILY STATEMENT/);
   assert.match(previewText, /Total Deposit: Tk 12,50,000/);
+  assert.match(previewText, /21 Sep/);
+  assert.ok(!previewText.includes("24 Sep"), "the other day must not be in a single-day report");
   assert.ok(!previewText.includes("24 September 2026"), "the other day must not be in a single-day report");
 
   // download from inside the preview
@@ -307,6 +320,46 @@ test("pick a date, generate, preview, then download from the preview", async () 
   const inPreview = previewText.split("\n").filter((s) => s.trim())
     .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
   assert.equal(inPdf, inPreview, "the preview must show exactly what the PDF contains");
+});
+
+test("daily and weekly reports use the same statement table", async () => {
+  const { window } = bootOffline({
+    records: [day("2026-09-21", "1250000"), day("2026-09-24", "2405000")]
+  });
+  await new Promise((r) => setTimeout(r, 250));
+  const cols = window.statementColumns();
+  const dateRows = (lines) => lines.filter((l) => /^\d\d [A-Z][a-z]{2} /.test(l));
+  const daily = window.statementLines("2026-09-21", "daily");
+  assert.match(daily.join("\n"), /DAILY STATEMENT/);
+  assert.equal(dateRows(daily).length, 1);
+  assert.equal(daily.find((l) => l.startsWith("21 Sep")).trim().startsWith("21 Sep"), true);
+  assert.equal(statementCells(daily.find((l) => l.startsWith("21 Sep")), cols)[3].trim(), "");
+  assert.equal(daily.some((l) => l.startsWith("24 Sep")), false);
+
+  const weekly = window.statementLines("2026-09-21", "weekly");
+  assert.match(weekly.join("\n"), /WEEKLY STATEMENT/);
+  const weekDays = dateRows(weekly);
+  assert.equal(weekDays.map((l) => l.slice(0, 6).trim()).join(","), "20 Sep,21 Sep,22 Sep,23 Sep,24 Sep");
+  assert.equal(weekDays.find((l) => l.startsWith("20 Sep")).trim(), "20 Sep");
+  assert.equal(statementCells(weekDays.find((l) => l.startsWith("22 Sep")), cols).slice(1).every((c) => c.trim() === ""), true);
+  assert.equal(statementCells(weekDays.find((l) => l.startsWith("24 Sep")), cols)[2].trim(), "24,05,000");
+  assert.equal(weekly.some((l) => l.startsWith("01 Sep")), false);
+});
+
+test("WhatsApp share stays the daily message, not the statement table", async () => {
+  const { window } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  window.openShareModal(day("2026-09-21", "1250000"));
+  const summary = window.document.querySelector("#summaryPreview").textContent;
+  const details = window.document.querySelector("#detailPreview").textContent;
+  assert.match(summary, /Daily Report Date : 21 September 2026/);
+  assert.match(summary, /Total Deposit: Tk 12,50,000/);
+  assert.match(summary, /Total Places Visited: 4/);
+  assert.match(details, /\*DAILY BRANCH ACTIVITY DETAILS\*/);
+  assert.match(details, /Harun Or Rashid \| School: Tantar High \| Tantar \| 01711111111/);
+  assert.match(details, /Savings: 1001 — Tk 20,000/);
+  assert.doesNotMatch(summary, /STATEMENT/);
+  assert.doesNotMatch(details, /DAILY STATEMENT|MONTHLY STATEMENT|Clr\/BFTN/);
 });
 
 test("closing the preview saves nothing", async () => {

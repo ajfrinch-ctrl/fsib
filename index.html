@@ -601,14 +601,14 @@ function renderReports(type='monthly',ref=today()){
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
-  $$('.pdf-dl').forEach(b=>b.onclick=()=>{if(type==='monthly')previewPDF(statementLines(ref),pdfName('BranchMarketingReport',d.result.label),'Monthly Statement',statementLayout());else previewPDF(marketingLines(d),pdfName('BranchMarketingReport',d.result.label),'Branch Marketing Report')});
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>openReportPdf(type,ref,'BranchMarketingReport',d.result.label));
   const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function renderVisitReport(type='monthly',ref=today()){
   const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
   $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(periodTitle(type,ref))}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('visits',type,ref)}<div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map(v=>`<article class="card record vitem"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><h3>${esc(v.name||'\u2014')}</h3><div class="rec-meta"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Address</label><b>${esc(v.address||'\u2014')}</b></div><div><label>Mobile Number</label><b>${esc(v.mobile||'\u2014')}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb visit detail \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderVisitReport,type,ref);
-  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(visitLines(items,periodTitle(type,ref)),pdfName('BranchVisitingReport',periodTitle(type,ref)),'Visiting Report'));
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>openReportPdf(type,ref,'BranchVisitingReport',periodTitle(type,ref)));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
@@ -617,7 +617,7 @@ function renderAccountReport(type='monthly',ref=today()){
   const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
   $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderAccountReport,type,ref);
-  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(accountLines(items,periodTitle(type,ref),d.acDep),pdfName('BranchAccountReport',periodTitle(type,ref)),'New Account Report'));
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>openReportPdf(type,ref,'BranchAccountReport',periodTitle(type,ref)));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
@@ -641,21 +641,9 @@ function savePdf(lines,filename,layout){
   setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},20000);
   toast('PDF downloaded');
 }
-function marketingLines(d){
-  return [
-    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'BRANCH MARKETING REPORT', '', d.result.label,
-    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
-    'SUMMARY', 'Total Deposit: Tk '+money(d.dep)+' ('+lac(d.dep)+')', 'Total Places Visited: '+d.v,
-    'Total New Accounts: '+d.ac, 'Account Deposit: Tk '+money(d.acDep), 'Recorded Days: '+d.rs.length,
-    'Average Daily Deposit: Tk '+money(d.dep/d.days), '', 'DEPOSIT BREAKDOWN',
-    ...Object.entries(d.methods).map(x=>x[0]+': Tk '+money(x[1])), '', 'VISIT TYPES',
-    ...(Object.entries(d.types).map(x=>x[0]+': '+x[1])||[]), '', 'OFFICER ACTIVITY',
-    ...(Object.entries(d.officerCount).map(x=>x[0]+': '+x[1])||[]), '', 'DAILY RECORDS',
-    ...(d.rs.length?d.rs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>dateText(r.date)+' | Deposit: Tk '+money(total(r))+' | Visits: '+visits(r)+' | Accounts: '+accountsCount(r)):['No saved records'])
-  ];
-}
-/* Monthly statement: one row per calendar date, one column per daily entry.
-   A missing entry is a blank column — never 0, a dash, or "no entry". */
+/* Every report PDF is this statement: one row per date in the period,
+   one column per daily entry. A missing entry is a blank column — never 0,
+   a dash, or "no entry". WhatsApp share does not use this table. */
 const STATEMENT_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function statementLayout(){return {font:'Courier',size:8,leading:11,width:842,height:595,x:16,top:568,linesPerPage:48}}
 function statementColumns(){
@@ -680,6 +668,21 @@ function monthDates(ref){
   for(let d=1;d<=n;d++)out.push(month+'-'+String(d).padStart(2,'0'));
   return out;
 }
+function periodDates(type, ref){
+  const day=String(ref||today()).slice(0,10);
+  if(type==='daily') return [day];
+  if(type==='weekly'){
+    const x=new Date(day+'T12:00'), start=new Date(x);
+    start.setDate(x.getDate()-x.getDay());
+    const out=[];
+    for(let i=0;i<5;i++){const d=new Date(start);d.setDate(start.getDate()+i);out.push(d.toISOString().slice(0,10))}
+    return out;
+  }
+  return monthDates(day);
+}
+function statementKind(type){return type==='daily'||type==='weekly'?type:'monthly'}
+function statementHeading(type){return statementKind(type)==='daily'?'DAILY STATEMENT':statementKind(type)==='weekly'?'WEEKLY STATEMENT':'MONTHLY STATEMENT'}
+function statementPreviewTitle(type){return statementKind(type)==='daily'?'Daily Statement':statementKind(type)==='weekly'?'Weekly Statement':'Monthly Statement'}
 function statementDayLabel(iso){return iso.slice(8,10)+' '+(STATEMENT_MONTHS[(+iso.slice(5,7)||1)-1]||'')}
 function amountCell(v){if(v===undefined||v===null||String(v).trim()==='')return '';const n=num(v);return n?money(n):''}
 function placesCell(r){if(!r||r.places===undefined||r.places===null||String(r.places).trim()==='')return '';const n=num(r.places);return n?String(n):''}
@@ -740,22 +743,24 @@ function packStatement(header,rowGroups,perPage){
   if(pages.length===1)return pages[0];
   return pages.flatMap(p=>{const page=p.slice();while(page.length<perPage)page.push('');return page});
 }
-function statementLines(ref){
+function statementLines(ref, type){
+  type=statementKind(type);
   const cols=statementColumns();
-  const month=String(ref||today()).slice(0,7);
-  const title=new Date(month+'-01T12:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const dates=periodDates(type, ref);
+  const title=periodTitle(type, dates[0]||ref||today());
   const rule=cols.map(c=>'-'.repeat(c.width)).join(' ');
+  const wanted={};dates.forEach(d=>{wanted[d]=true});
   const by={};
-  records.forEach(r=>{if(r&&typeof r.date==='string'&&r.date.startsWith(month))by[r.date]=r});
-  const monthRecords=Object.keys(by).sort().map(d=>by[d]);
-  const dep=monthRecords.reduce((a,r)=>a+total(r),0);
-  const places=monthRecords.reduce((a,r)=>a+num(r.places),0);
-  const ac=monthRecords.reduce((a,r)=>a+accountsCount(r),0);
-  const acDep=monthRecords.reduce((a,r)=>a+accountsTotal(r),0);
+  records.forEach(r=>{if(r&&wanted[r.date])by[r.date]=r});
+  const periodRecords=Object.keys(by).sort().map(d=>by[d]);
+  const dep=periodRecords.reduce((a,r)=>a+total(r),0);
+  const places=periodRecords.reduce((a,r)=>a+num(r.places),0);
+  const ac=periodRecords.reduce((a,r)=>a+accountsCount(r),0);
+  const acDep=periodRecords.reduce((a,r)=>a+accountsTotal(r),0);
   const header=[
     'FIRST SECURITY ISLAMI BANK PLC',
     String(settings.branch||'Tantar Branch').toUpperCase(),
-    'MONTHLY STATEMENT',
+    statementHeading(type),
     title,
     'Zone: '+(settings.zone||'')+' | Team: '+(settings.team||'')+' | Total Branch: '+(settings.totalBranch||''),
     'Total Deposit: Tk '+money(dep)+' | Places: '+places+' | Accounts: '+ac+' | Account Deposit: Tk '+money(acDep),
@@ -765,7 +770,7 @@ function statementLines(ref){
   ];
   const sums={places:0,cash:0,clearing:0,rtgs:0,npsb:0,agent:0};
   const groups=[];
-  monthDates(month+'-01').forEach(date=>{
+  dates.forEach(date=>{
     const r=by[date];
     if(r){sums.places+=num(r.places);sums.cash+=num(r.cash);sums.clearing+=num(r.clearing);sums.rtgs+=num(r.rtgs);sums.npsb+=num(r.npsb);sums.agent+=num(r.agent)}
     groups.push(statementRowLines([
@@ -795,43 +800,15 @@ function statementLines(ref){
   groups.push([rule]);
   return packStatement(header,groups,statementLayout().linesPerPage);
 }
-function visitLines(items,label){
-  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
-  return [
-    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'VISITING REPORT', '', label,
-    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
-    'TOTAL VISITS: '+sorted.length, '', 'DATE-WISE VISIT DETAILS',
-    ...(sorted.length?sorted.flatMap(v=>[
-      dateText(v.date)+' | '+(v.type||'Visit'),
-      '   Place: '+(v.name||'-'),
-      '   Officer: '+(v.officer||'Not selected'),
-      '   Address: '+(v.address||'-'),
-      '   Mobile: '+(v.mobile||'-')
-    ]):['No visit details'])
-  ];
-}
-function accountLines(items,label,acDep){
-  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
-  return [
-    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'NEW ACCOUNT REPORT', '', label,
-    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
-    'TOTAL ACCOUNTS: '+sorted.length, 'Account Deposit: Tk '+money(acDep), '', 'DATE-WISE ACCOUNT DETAILS',
-    ...(sorted.length?sorted.flatMap(a=>[
-      dateText(a.date)+' | '+(a.category||'-'),
-      '   A/C No: '+(a.no||'-'),
-      '   Initial Deposit: Tk '+money(a.amount)
-    ]):['No account details'])
-  ];
+function openReportPdf(type, ref, prefix, label){
+  previewPDF(statementLines(ref, type), pdfName(prefix, label), statementPreviewTitle(type), statementLayout());
 }
 function pdfName(prefix,label){return prefix+'_'+label.replace(/[^a-z0-9]+/gi,'_')+'.pdf'}
-function downloadPDF(d){savePdf(marketingLines(d),pdfName('BranchMarketingReport',d.result.label))}
-function downloadVisitPDF(items,label){savePdf(visitLines(items,label),pdfName('BranchVisitingReport',label))}
-function downloadAccountPDF(items,label,acDep){savePdf(accountLines(items,label,acDep),pdfName('BranchAccountReport',label))}
 
 /* Generate \u2192 preview \u2192 download. The preview shows the generated report page
    by page, exactly as the PDF writer will lay it out, so what is on screen
-   is what lands in the file. Portrait reports are 42 lines; the monthly
-   statement is a landscape table. Everything here is offline. */
+   is what lands in the file. Every report is the same landscape statement.
+   Everything here is offline. */
 let _pdfPending=null;
 function previewPDF(lines,filename,title,layout){
   const L=Object.assign({linesPerPage:42},layout||{});

@@ -112,7 +112,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 66 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
+npm test           # 68 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -140,10 +140,11 @@ latency. `tests/pdf-export.test.mjs` boots the app with every network call
 failing and walks the whole report flow — pick a date, generate, check the
 preview, download — proving all three report PDFs (statement, visiting,
 accounts) are built and saved by the browser alone, and that nothing is
-written to disk unless Download is tapped. The monthly statement PDF is a
-landscape table: one row per date, and a column for every daily entry
-(places, each deposit type, officers, visits, accounts). A column with no
-entry is left blank. Daily and weekly statement PDFs stay summary reports.
+written to disk unless Download is tapped. Every report PDF — statement,
+visiting, and accounts, for a day, a week, or a month — is the same landscape
+statement: one row per date in that period, and a column for every daily
+entry. A column with no entry is left blank. WhatsApp share text is separate
+and is not this table.
 
 ## Deploy
 
