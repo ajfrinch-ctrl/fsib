@@ -78,6 +78,51 @@ and the report cannot disagree. A column with no entry is `0`, never blank.
 Below it the dashboard keeps the today hero (with the entry button), the 7-day
 trend, the monthly target and the highlights.
 
+## Reports
+
+Both report views keep only what the branch reads at a glance always visible —
+the period tabs, the period picker and the hero (period, the period's total, the
+target progress). Everything else is a **closed section with a one-line summary
+in its header**, so a tap opens it and the page never arrives as twenty open
+cards:
+
+```
+> Summary          5 recorded days · 10 accounts · 78.50 Lac
+> Deposit by method 5 methods · 78.50 Lac
+> Activity         2 officers · 1 visit type
+> Daily details    5 days · ৳ 78,50,000
+    > 24 Sep       7 places · 2 accounts      ৳ 15,90,000
+```
+
+A day row is closed the same way — date, what happened, what it collected — and
+opens onto the places / new accounts / A/C deposit trio plus the deposit,
+officer and account breakdowns. The accounts view groups by day the same way
+and carries a hero of its own. Native `<details>`, so a tap, Enter or Space all
+work, and opening one section leaves any other open section alone.
+
+## WhatsApp share
+
+The report the branch sends has two parts, both built in the page:
+
+- **Current Daily Report** — the editable treasury template. It carries
+  `Total Places Visited: {{visits}}`, `Total Accounts: {{accounts}}` and
+  `Total Deposit: Tk {{deposit}} ({{depositLac}})`, so the places visited and the
+  number of accounts opened that day go out with the day's money. Settings lists
+  every available field (`{{visits}}`, `{{accounts}}` and `{{depositLac}}`
+  included), and an older, hand-edited template keeps working.
+- **Detailed Daily Activity** — the plain-text breakdown: officers, visit
+  details, deposit details, new accounts. Every amount in it is written in
+  **lakh** beside the full figure (`Tk 15,00,000 (15.00 Lac)`), because that is
+  the unit the branch reads.
+
+An account number is not collected at all. The entry form asks for an account
+type and the money it brought in, and the detailed message says
+**`NUMBER OF ACCOUNTS:`** — how many accounts were opened that day — and lists
+each new account by type and amount. The number is dropped on every read and
+write by the same rule that drops the retired sync switches (`no` in
+`RETIRED_ACCOUNT_FIELDS`), so an older blob cannot bring it back, and a day
+saved by an older build simply loses it on the next sync.
+
 ## API
 
 `OPTIONS` on either endpoint is a 204 preflight, so a shell served from another
@@ -190,7 +235,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 80 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download
+npm test           # 87 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```

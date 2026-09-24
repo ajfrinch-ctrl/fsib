@@ -111,7 +111,7 @@ input[type=date],input[type=month]{min-height:46px}
 .deposit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.deposit-grid .formgroup{margin:0}.deposit-grid .total{grid-column:1/-1;margin-top:4px}
 .account-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.account-summary .total{margin:0}
 .entry-section .add{margin-top:2px}
-@media(min-width:700px){.entry-date{grid-template-columns:minmax(220px,360px)}.deposit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.deposit-grid .total{grid-column:1/-1}.account-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:700px){.entry-date{grid-template-columns:minmax(220px,360px) minmax(140px,220px)}.deposit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.deposit-grid .total{grid-column:1/-1}.account-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------------- repeating rows (officer / visit / account) ---------------- */
 .repeatrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;align-items:start}
@@ -120,11 +120,8 @@ input[type=date],input[type=month]{min-height:46px}
 .repeatrow,.accountrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
 .cell{min-width:0;display:flex;flex-direction:column}
 .rl{display:block;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
-.c-name,.c-address,.c-ano{grid-column:1/-1}
-.accountrow .c-ano{order:3}
-.accountrow .c-amount{order:2}
-.accountrow .remove{order:4}
-.officer .remove{grid-column:1/-1}
+.c-name,.c-address{grid-column:1/-1}
+.accountrow .remove,.officer .remove{grid-column:1/-1}
 .remove{border:0;border-radius:9px;background:#fbe5e8;color:#c43e53;font-size:20px;line-height:1;
   min-height:var(--tap);min-width:var(--tap)}
 .dark .remove{background:#2a1115}
@@ -273,26 +270,48 @@ input[type=date],input[type=month]{min-height:46px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;overflow-wrap:anywhere}
 .chip b{color:var(--blue)}
-.daystats{display:flex;gap:8px;margin:10px 0 2px}
+.daystats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 11px}
 .daystat{flex:1;min-width:0;background:var(--soft);border-radius:10px;padding:8px 9px}
 .daystat label{margin-bottom:3px}
 .daystat b{font-size:13.5px;overflow-wrap:anywhere}
-details.det{margin-top:10px;border-top:1px dashed var(--line);padding-top:4px}
-details.det summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:40px;font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.3px}
-details.det summary::-webkit-details-marker{display:none}
-details.det summary::after{content:"\25BE";margin-left:auto;transition:transform .15s}
-details.det[open] summary::after{transform:rotate(180deg)}
-.detrow{margin-top:8px}
-.detrow:last-child{padding-bottom:4px}
-.vitem h3,.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
+/* ---------------- collapsible report sections ----------------
+   Every section is closed until it is tapped, and its header carries a
+   one-line summary so the page still says what is inside it. */
+.repsec{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  margin-bottom:10px;overflow:hidden}
+.repsec-head{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px;min-height:52px}
+.repsec-head::-webkit-details-marker{display:none}
+.repsec-head:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.repsec-title{flex:0 0 auto;font-size:12px;font-weight:900;color:var(--blue);letter-spacing:.5px;text-transform:uppercase}
+.repsec-sub{flex:1 1 auto;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.repsec-chev{flex:0 0 auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(-45deg);transition:transform .18s ease}
+.repsec[open] .repsec-chev{transform:rotate(45deg)}
+.repsec[open] .repsec-head{border-bottom:1px solid var(--line)}
+.repsec-body{padding:13px}
+.repsec-body>:first-child{margin-top:0}
+/* a panel inside a section is a panel, not a card inside a card */
+.repsec-body>.card:not(.daycard){box-shadow:none;background:var(--soft)}
+.repsec-body>.card{box-shadow:none;border-radius:11px}
+/* one row per day: date, what happened, the day's deposit */
+.daycard{display:block;margin-bottom:8px;padding:11px 12px}
+.daycard:last-child{margin-bottom:0}
+.dayhead{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px}
+.dayhead::-webkit-details-marker{display:none}
+.daydate{flex:0 0 auto;font-weight:800;font-size:13px}
+.daymeta{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dayamt{flex:0 0 auto;font-weight:800;font-size:13px;color:var(--blue)}
+.daybody{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px}
+.detrow{margin-top:9px}
+.detrow:last-child{padding-bottom:2px}
+.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
 .rec-meta{display:grid;gap:8px}
 .rec-meta b{overflow-wrap:anywhere}
-@media(prefers-reduced-motion:reduce){details.det summary::after{transition:none}}
+@media(prefers-reduced-motion:reduce){.repsec-chev{transition:none}}
 @media(min-width:700px){
   .rep-hero{padding:22px 20px 18px}
   .rh-amount{font-size:40px}
   #reports .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .rec-meta{grid-template-columns:1fr 1fr 1fr}
 }
 
 .pdfpreview{margin:4px 0 12px}
@@ -347,9 +366,9 @@ details.det[open] summary::after{transform:rotate(180deg)}
   .repeatrow,.accountrow{background:none;border:0;padding:0;box-shadow:none;margin:7px 0}
   .repeatrow{grid-template-columns:1fr 1fr var(--tap)}
   .visitrow{grid-template-columns:1fr 1fr 1.2fr 1.2fr 1fr var(--tap)}
-  .accountrow{grid-template-columns:minmax(120px,1fr) 1.4fr 1fr var(--tap)}
-  .c-name,.c-address,.c-ano{grid-column:auto}
-  .accountrow .c-ano,.accountrow .c-amount,.accountrow .remove{order:0}
+  .accountrow{grid-template-columns:minmax(140px,1fr) 1.4fr var(--tap)}
+  .c-name,.c-address{grid-column:auto}
+  .accountrow .c-amount,.accountrow .remove{order:0}
   .officer .remove{grid-column:auto}
   #form>.primary[type=submit]{position:static;box-shadow:none;margin-bottom:0}
   .nav{top:0;bottom:auto;left:auto;width:240px;border:0;border-right:1px solid var(--line);
@@ -384,14 +403,37 @@ details.det[open] summary::after{transform:rotate(180deg)}
 .settings-hero{margin-bottom:14px;padding:16px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#062f70,#1264d6);box-shadow:0 10px 24px #0a479d2b}
 .settings-hero h2{margin:0 0 4px;font-size:20px}.settings-hero p{margin:0;color:#dceaff;font-size:12px}
 .settings-card{margin:14px 0;padding:15px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+/* Every section is closed until it is tapped: the header carries a one-line
+   summary so the page still says what is in it without opening anything. */
+.settings-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.settings-card>summary::-webkit-details-marker{display:none}
+.settings-card>summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:12px}
+.settings-head .sectiontitle{margin:0;flex:0 0 auto}
+.settings-hsub{flex:1 1 auto;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.settings-chev{flex:0 0 auto;width:9px;height:9px;margin-left:auto;border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .18s ease}
+.settings-card[open] .settings-chev{transform:rotate(45deg)}
+.settings-body{margin-top:13px}
 .settings-card .sectiontitle{display:flex;align-items:center;gap:8px;margin-bottom:13px}.settings-card .sectiontitle::before{content:attr(data-icon);display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--soft);color:var(--blue);font-size:15px}
-.settings-grid{display:grid;grid-template-columns:1fr;gap:0 10px}.settings-actions{display:grid;grid-template-columns:1fr;gap:8px}.settings-actions>*{width:100%}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.settings-grid .formgroup{margin-bottom:0}
+.settings-grid .wide{grid-column:1/-1}
+.settings-group{display:flex;align-items:center;gap:9px;margin:15px 0 9px;font-size:11px;font-weight:800;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.settings-group:first-child{margin-top:0}
+.settings-group::after{content:"";flex:1;height:1px;background:var(--line)}
+.settings-hint{display:flex;align-items:center;min-height:46px}
+.settings-actions{display:grid;grid-template-columns:1fr;gap:8px}.settings-actions>*{width:100%}
 .settings-count{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.settings-count:last-child{border-bottom:0}.settings-count b{color:var(--blue)}
-@media(min-width:700px){.settings-grid{grid-template-columns:1fr 1fr}.settings-grid .wide{grid-column:1/-1}.settings-actions{grid-template-columns:repeat(3,1fr)}}
+.settings-save{margin:16px 0 4px}.settings-save .primary{width:100%}.settings-save .small{display:block;margin-top:9px;text-align:center}
+@media(min-width:700px){.settings-actions{grid-template-columns:repeat(3,1fr)}}
 
 /* ---------------- security card ---------------- */
 .security-card{position:relative;overflow:hidden}.security-card::after{content:"";position:absolute;right:-28px;top:-34px;width:110px;height:110px;border-radius:50%;background:var(--soft);pointer-events:none}
-.security-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}.security-title{display:flex;align-items:center;gap:10px}.security-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:18px}.security-title h3{margin:0;font-size:15px}.security-title p{margin:2px 0 0;color:var(--muted);font-size:11px}.security-state{padding:6px 10px;border-radius:20px;background:#e4f7ef;color:var(--green);font-size:11px;font-weight:900;white-space:nowrap}.security-state.off{background:#fff2df;color:#a56500}.dark .security-state{background:#10291f}.dark .security-state.off{background:#2e2410}.security-copy{margin:14px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px;background:var(--bg)}
+.security-head{display:flex;align-items:center;gap:12px;position:relative;z-index:1;cursor:pointer;list-style:none}
+.security-head::-webkit-details-marker{display:none}
+.security-head .security-state{margin-left:auto}
+.security-head .settings-chev{margin-left:0}.security-title{display:flex;align-items:center;gap:10px}.security-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:18px}.security-title h3{margin:0;font-size:15px}.security-title p{margin:2px 0 0;color:var(--muted);font-size:11px}.security-state{padding:6px 10px;border-radius:20px;background:#e4f7ef;color:var(--green);font-size:11px;font-weight:900;white-space:nowrap}.security-state.off{background:#fff2df;color:#a56500}.dark .security-state{background:#10291f}.dark .security-state.off{background:#2e2410}.security-copy{margin:14px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px;background:var(--bg)}
 </style></head><body><main class="app">
 <header class="top"><div class="brand-wrap"><div class="brand-mark">FSIB</div><div class="top-copy"><div class="reportname">Daily Branch Report</div><div class="top-subtitle">Branch activity &amp; performance</div></div></div><div class="head-actions"><span id="netStatus" style="display:none">ONLINE</span><span id="liveBadge" style="display:none"><i></i><span id="liveBadgeText">LIVE</span></span><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
@@ -482,12 +524,12 @@ const LIVE_CONFIG={
 const LIVE_API=CLOUD_ORIGIN+LIVE_CONFIG.API_PATH;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const DEFAULT_SETTINGS={branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
+const DEFAULT_SETTINGS={branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Accounts: {{accounts}}\n\nTotal Deposit: Tk {{deposit}} ({{depositLac}})\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
 /* Merge over the defaults: a stored or cloud settings object written by an
    older build can be missing keys, and a missing weeklyStart used to take the
    History screen down with an invalid date. */
 let settings=Object.assign({},DEFAULT_SETTINGS,JSON.parse(localStorage.getItem(K+'settings')||'null')||{});
-const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
+const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Accounts: {{accounts}}\n\nTotal Deposit: Tk {{deposit}} ({{depositLac}})\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
 /* Sync is always real-time. Older builds stored autoSync / realtime switches
    in this object; they are not settings anymore and must not be honoured,
    shown, or uploaded. */
@@ -523,10 +565,10 @@ function save(){
   persistLocalAsync();
   markDirtyAndSchedule();
 }function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function dateShort(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}
-/* Use one definition everywhere: synced/legacy rows may contain whitespace or
-   numeric account numbers, and a truthiness check makes counts disagree. */
-function accountNumber(x){return String(x==null||x.no==null?'':x.no).trim()}
-function accountRows(r){return (r.accounts||[]).filter(x=>accountNumber(x)!==''||num(x&&x.amount)>0)}
+/* Use one definition everywhere: an account row is an account type plus the
+   money it brought in, and a truthiness check on a string makes counts
+   disagree. Account numbers are not collected anymore. */
+function accountRows(r){return (r.accounts||[]).filter(x=>num(x&&x.amount)>0)}
 function accountsTotal(r){return accountRows(r).reduce((a,x)=>a+num(x.amount),0)}
 /* The dashboard's deposit figure: the day's own deposit plus the money its new
    accounts brought in. The entry form, the WhatsApp text and the PDFs keep the
@@ -543,6 +585,7 @@ function renderDashboard(){
   const sum=a=>a.reduce((x,r)=>x+total(r),0);
   const sumAll=a=>a.reduce((x,r)=>x+depositAll(r),0);
   const best=[...records].sort((a,b)=>total(b)-total(a))[0];
+  const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
   const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
   const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
   const monthDep=sumAll(month);
@@ -628,6 +671,7 @@ function renderDashboard(){
     <div class="sectiontitle">Highlights</div>
     ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(depositAll(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
     ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
+    ${(bestV&&visits(bestV)>0)?('<div class="hirow"><span class="hilabel">Most places visited</span><b>'+visits(bestV)+' places</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
     ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}
   </div>`;
   const cta=document.getElementById('dashCta');
@@ -635,30 +679,30 @@ function renderDashboard(){
   const cfg=document.getElementById('dashGoalCfg');
   if(cfg)cfg.onclick=()=>nav('settings');
 }
-function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-ano"><span class="rl">Account Number</span><input class="ano" placeholder="Account number" value="${esc(a.no||'')}"></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
+function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
 function renderEntry(record){
   record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),officers:[],accounts:[]};
-  $('#entry').innerHTML=`<div class="entry-intro"><h2>Daily Data Entry</h2><span class="small">Enter today’s branch activity in three simple steps. Your draft saves automatically.</span><span class="small" id="draftStatus" style="margin-top:6px">Draft ready</span></div><form id="form">
-  <section class="entry-section"><div class="sectiontitle" data-step="1">Report date</div><div class="entry-date"><div class="formgroup"><label for="date">Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div></div></section>
+  $('#entry').innerHTML=`<div class="entry-intro"><h2>Daily Data Entry</h2><span class="small">Enter today’s branch activity in four simple steps. Your draft saves automatically.</span><span class="small" id="draftStatus" style="margin-top:6px">Draft ready</span></div><form id="form">
+  <section class="entry-section"><div class="sectiontitle" data-step="1">Report date</div><div class="entry-date"><div class="formgroup"><label for="date">Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label for="places">Total Places Visited</label><input id="places" class="amount" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(record.places||'')}"></div></div></section>
   <section class="entry-section"><div class="sectiontitle" data-step="2">Officers</div><div id="officers">${(record.officers||[]).map(officerRow).join('')}</div><button class="add" type="button" id="addOfficer">+ Add officer</button></section>
   <section class="entry-section"><div class="sectiontitle" data-step="3">Deposit collection</div><div class="deposit-grid">${[['cash','Cash'],['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label for="${id}">${l} (৳)</label><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div>`).join('')}<div class="total"><span>Total Deposit</span><b id="depTotal">৳ 0</b> <span class="small" id="depLac"></span></div></div></section>
   <section class="entry-section"><div class="sectiontitle" data-step="4">New accounts</div><div id="accounts">${(record.accounts||[]).map(accountRow).join('')}</div><button class="add" type="button" id="addAccount">+ Add account</button><div class="account-summary"><div class="total"><span>Number of Accounts</span><b id="acCount">0</b></div><div class="total"><span>Account Deposit</span><b id="acTotal">৳ 0</b></div></div></section>
   <div id="sharePanel"></div><button class="primary" style="width:100%;margin-top:18px" type="submit">Save Daily Data</button></form>`;bindEntry();calcEntry()}
-function currentForm(){let f=$('#form');return {date:$('#date').value, cash:$('#cash').value,clearing:$('#clearing').value,rtgs:$('#rtgs').value,npsb:$('#npsb').value,agent:$('#agent').value,officers:$$('.officer').map(x=>({name:x.querySelector('.oname').value,designation:x.querySelector('.odes').value})).filter(x=>x.name),accounts:$$('.account').map(x=>({category:x.querySelector('.acat').value,no:x.querySelector('.ano').value.trim(),amount:x.querySelector('.aamount').value})).filter(x=>x.no||x.amount),updated:new Date().toISOString()}}
+function currentForm(){let f=$('#form');return {date:$('#date').value,places:$('#places').value, cash:$('#cash').value,clearing:$('#clearing').value,rtgs:$('#rtgs').value,npsb:$('#npsb').value,agent:$('#agent').value,officers:$$('.officer').map(x=>({name:x.querySelector('.oname').value,designation:x.querySelector('.odes').value})).filter(x=>x.name),accounts:$$('.account').map(x=>({category:x.querySelector('.acat').value,amount:x.querySelector('.aamount').value})).filter(x=>x.amount),updated:new Date().toISOString()}}
 function message(r){
   let os=(r.officers||[]).map((o,i)=>`${i+1}. ${o.name}, ${o.designation}`).join('\n')||'No officer entered';
   // replaceAll is important: {{branch}} appears both in the report heading and beneath the manager signature.
-  const values={date:dateText(r.date),team:settings.team,zone:settings.zone,branches:settings.totalBranch,branch:settings.branch,deposit:money(total(r)),manager:settings.manager||'Harun Or Rashid',managerDesignation:settings.managerDesignation||'Manager',officers:os};
+  const values={date:dateText(r.date),team:settings.team,zone:settings.zone,branches:settings.totalBranch,branch:settings.branch,visits:visits(r),accounts:accountsCount(r),deposit:money(total(r)),depositLac:lac(total(r)),manager:settings.manager||'Harun Or Rashid',managerDesignation:settings.managerDesignation||'Manager',officers:os};
   let text=settings.template||treasuryTemplate;
   Object.entries(values).forEach(([key,value])=>text=text.split('{{'+key+'}}').join(String(value)));
   // Keeps older, manually customized templates in sync too.
   return text.split('Tantar Branch').join(settings.branch);
 }function detailedMessage(r){
-  const deposit=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet Deposit',r.agent]].filter(x=>num(x[1])>0).map(x=>`${x[0]}: Tk ${money(x[1])}`).join('\n')||'No deposit entry';
+  const deposit=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet Deposit',r.agent]].filter(x=>num(x[1])>0).map(x=>`${x[0]}: Tk ${money(x[1])} (${lac(num(x[1]))})`).join('\n')||'No deposit entry';
   const officerList=(r.officers||[]).map((o,i)=>`${i+1}. ${o.name}, ${o.designation}`).join('\n')||'No officer entry';
   const visitList=(r.visits||[]).map((v,i)=>`${i+1}. ${v.officer||'Officer not selected'} | ${v.type}: ${v.name||'—'} | ${v.address||'—'} | ${v.mobile||'—'}`).join('\n')||'No visit detail';
-  const accountList=accountRows(r).map(a=>`${a.category}: ${accountNumber(a)} — Tk ${money(a.amount)}`).join('\n')||'No account entry';
-  return `*DAILY BRANCH ACTIVITY DETAILS*\n\nDate: ${dateText(r.date)}\nBranch: ${settings.branch}\nZone: ${settings.zone}\n\n*TOTAL PLACES VISITED:* ${visits(r)}\n\n*OFFICERS*\n${officerList}\n\n*VISIT DETAILS*\n${visitList}\n\n*DEPOSIT DETAILS*\n${deposit}\n\n*TOTAL DEPOSIT:* Tk ${money(total(r))}\n\n*NEW ACCOUNTS*\n${accountList}\n\n*ACCOUNT DEPOSIT:* Tk ${money(accountsTotal(r))}`;
+  const accountList=accountRows(r).map(a=>`${a.category}: Tk ${money(a.amount)} (${lac(num(a.amount))})`).join('\n')||'No account entry';
+  return `*DAILY BRANCH ACTIVITY DETAILS*\n\nDate: ${dateText(r.date)}\nBranch: ${settings.branch}\nZone: ${settings.zone}\n\n*TOTAL PLACES VISITED:* ${visits(r)}\n\n*NUMBER OF ACCOUNTS:* ${accountsCount(r)}\n\n*OFFICERS*\n${officerList}\n\n*VISIT DETAILS*\n${visitList}\n\n*DEPOSIT DETAILS*\n${deposit}\n\n*TOTAL DEPOSIT:* Tk ${money(total(r))} (${lac(total(r))})\n\n*NEW ACCOUNTS*\n${accountList}\n\n*ACCOUNT DEPOSIT:* Tk ${money(accountsTotal(r))} (${lac(accountsTotal(r))})`;
 }
 function hasEntryData(r){return num(r.places)>0||total(r)>0||(r.officers||[]).length>0||(r.accounts||[]).length>0}
 const WHATSAPP_RECIPIENT='8801992044229';
@@ -674,7 +718,7 @@ function openShareModal(record){
   $('#sendDetail').onclick=()=>window.open(whatsappLink(details),'_blank');
 }
 function calcEntry(){if(!$('#form'))return;let r=currentForm();$('#depTotal').textContent='৳ '+money(total(r));$('#depLac').textContent='('+lac(total(r))+')';$('#acCount').textContent=accountsCount(r);$('#acTotal').textContent='৳ '+money(accountsTotal(r));let panel=$('#sharePanel');if(panel)panel.innerHTML=''}function bindEntry(){let f=$('#form');f.addEventListener('input',e=>{if(e.target.classList.contains('amount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9.]/g,'');e.target.setSelectionRange(p,p)}localStorage.setItem(K+'draft',JSON.stringify(currentForm()));$('#draftStatus').textContent='Draft saved · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});calcEntry()});f.addEventListener('change',e=>{if(e.target.classList.contains('oname'))e.target.closest('.officer').querySelector('.odes').value=officers[e.target.value]||'';calcEntry()});f.onclick=e=>{if(e.target.id==='addOfficer'){$('#officers').insertAdjacentHTML('beforeend',officerRow());calcEntry()}if(e.target.id==='addAccount'){$('#accounts').insertAdjacentHTML('beforeend',accountRow());calcEntry()}if(e.target.classList.contains('remove')){e.target.parentElement.remove();calcEntry()}if(e.target.id==='copy'){navigator.clipboard?.writeText(message(currentForm()));toast('Current report copied')}if(e.target.id==='whatsapp')window.open(whatsappLink(message(currentForm())),'_blank');if(e.target.id==='copyDetailed'){navigator.clipboard?.writeText(detailedMessage(currentForm()));toast('Detailed activity copied')}if(e.target.id==='whatsappDetailed')window.open('https://wa.me/?text='+encodeURIComponent(detailedMessage(currentForm())),'_blank')};f.onsubmit=e=>{e.preventDefault();saveRecord()}}
-function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>(a.no&&!a.amount)||(!a.no&&a.amount)))return toast('অসম্পূর্ণ account row সম্পন্ন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;queueRecordChange(r.date,(index>=0?'UPDATE':'CREATE'),r);save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r);window.open(whatsappLink(message(r)),'_blank')}
+function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;queueRecordChange(r.date,(index>=0?'UPDATE':'CREATE'),r);save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r);window.open(whatsappLink(message(r)),'_blank')}
 function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2></div><span class="pill">${records.length} saved</span></div><input id="search" type="search" inputmode="search" autocomplete="off" aria-label="Search saved records" placeholder="Search date, officer, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts · ${(r.officers||[]).map(o=>o.name).join(', ')||'No officer'}</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
 function deleteRecord(d){if(!confirm('Delete this daily record? It can be restored from Trash.'))return;let i=records.findIndex(r=>r.date===d),r=records.splice(i,1)[0];trash.push({...r,deleted:new Date().toISOString()});queueRecordDelete(d);save();toast('Deleted. Available in Trash.');renderHistory();renderDashboard()}
 function reportRange(type, ref){
@@ -716,11 +760,30 @@ function bindRepControls(go,type,ref){
   if(n)n.onclick=()=>go(type,periodShift(type,ref,1));
   if(inp)inp.onchange=e=>{const v=e.target.value;if(!v)return;go(type,type==='monthly'?v.slice(0,7)+'-01':v)};
 }
+/* One collapsible report section: closed until it is tapped, with a one-line
+   summary in the header so the page still says what is inside it. */
+function repSection(title,sub,body){
+  return `<details class="repsec"><summary class="repsec-head"><span class="repsec-title">${esc(title)}</span>`
+    +`<span class="small repsec-sub">${esc(sub)}</span><span class="repsec-chev"></span></summary>`
+    +`<div class="repsec-body">${body}</div></details>`;
+}
+/* One row per day: the date, what happened in it and what it collected. The
+   full breakdown is a tap away instead of twenty open cards. */
 function dayCard(r){
   const breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': \u09f3 '+money(x[1])).join(' \u00b7 ')||'No deposit breakdown';
-  const accountInfo=accountRows(r).map(a=>a.category+' ('+accountNumber(a)+'): \u09f3 '+money(a.amount)).join(' \u00b7 ')||'No new account';
+  const accountInfo=accountRows(r).map(a=>a.category+': \u09f3 '+money(a.amount)).join(' \u00b7 ')||'No new account';
   const officers=(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' \u00b7 ')||'No officer entered';
-  return `<article class="card daycard"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">\u09f3 ${money(total(r))}</span></div><div class="daystats"><div class="daystat"><label>New Accounts</label><b>${accountsCount(r)}</b></div><div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div><details class="det"><summary>Full details</summary><div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div><div class="detrow"><label>Officers</label><div class="small">${officers}</div></div><div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></details></article>`;
+  const ac=accountsCount(r);
+  return `<details class="card daycard"><summary class="dayhead"><span class="daydate">${dateShort(r.date)}</span>`
+    +`<span class="daymeta">${visits(r)} places \u00b7 ${ac} account${ac===1?'':'s'}</span>`
+    +`<span class="dayamt">\u09f3 ${money(total(r))}</span><span class="repsec-chev"></span></summary>`
+    +`<div class="daybody"><div class="daystats">`
+    +`<div class="daystat"><label>Places</label><b>${visits(r)}</b></div>`
+    +`<div class="daystat"><label>New Accounts</label><b>${ac}</b></div>`
+    +`<div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div>`
+    +`<div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div>`
+    +`<div class="detrow"><label>Officers</label><div class="small">${officers}</div></div>`
+    +`<div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></div></details>`;
 }
 function renderReports(type='monthly',ref=today()){
   const d=buildReport(type,ref);
@@ -735,7 +798,11 @@ function renderReports(type='monthly',ref=today()){
   }).join('');
   const typeChips=Object.entries(d.types).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No detailed visits</span>';
   const offChips=Object.entries(d.officerCount).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No officer data</span>';
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div><div class="sectionhead"><h2>Deposit Breakdown</h2><span class="small">share of total</span></div><div class="card">${depRows}</div><div class="sectionhead"><h2>Activity</h2></div><div class="card"><label>Officer Activity</label><div class="chips">${offChips}</div></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="pill">${d.rs.length} days</span></div>${[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>${repSection('Summary',d.rs.length+' recorded day'+(d.rs.length===1?'':'s')+' \u00b7 '+d.ac+' accounts \u00b7 '+lac(d.dep),`<div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>`)}
+${repSection('Deposit by method',Object.keys(d.methods).length+' methods \u00b7 '+lac(d.dep),`<div class="card">${depRows}</div>`)}
+${repSection('Activity',Object.keys(d.officerCount).length+' officer'+(Object.keys(d.officerCount).length===1?'':'s')+' \u00b7 '+Object.keys(d.types).length+' visit type'+(Object.keys(d.types).length===1?'':'s'),`<div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div><label style="margin-top:12px">Officer Activity</label><div class="chips">${offChips}</div></div>`)}
+${repSection('Daily details',d.rs.length+' day'+(d.rs.length===1?'':'s')+' \u00b7 \u09f3 '+money(d.dep),[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`)}
+<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderReports,type,ref);
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
@@ -744,11 +811,24 @@ function renderReports(type='monthly',ref=today()){
 }
 function renderAccountReport(type='monthly',ref=today()){
   const d=buildReport(type,ref), items=d.rs.flatMap(r=>accountRows(r).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  /* What used to sit beside the (now retired) account number: how much of that
+     day's new-account money this one account brought in. */
+  const dayTotal={};items.forEach(a=>dayTotal[a.date]=(dayTotal[a.date]||0)+num(a.amount));
+  const byDate={};items.forEach(a=>(byDate[a.date]??=[]).push(a));
+  const acItem=a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div><div><label>Share of the day\u2019s new-account deposit</label><b>${(dayTotal[a.date]>0?num(a.amount)/dayTotal[a.date]*100:0).toFixed(0)}%</b></div></div></article>`;
+  const daySections=Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).map(dt=>{
+    const list=byDate[dt],n=list.length;
+    return repSection(dateText(dt),n+' account'+(n===1?'':'s')+' \u00b7 \u09f3 '+money(dayTotal[dt]),list.map(acItem).join(''));
+  }).join('');
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}
+  <div class="rep-hero"><div class="rh-label">New account report</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.acDep)}</div><div class="rh-sub">${items.length} accounts across ${d.rs.length} recorded day${d.rs.length===1?'':'s'} \u00b7 ${lac(d.acDep)}</div></div>
+  ${daySections||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}
+  <div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderAccountReport,type,ref);
   $$('.pdf-dl').forEach(b=>b.onclick=()=>openReportPdf(type,ref,'BranchAccountReport',periodTitle(type,ref)));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
 /* Offline PDF export: the file bytes are assembled right here in the browser
@@ -827,7 +907,7 @@ function visitsCell(r){
   });
   return lines;
 }
-function accountsCell(r){if(!r)return [];return (r.accounts||[]).filter(a=>String(a.no||'').trim()||num(a.amount)).map(a=>{const bits=[a.category,a.no].map(x=>String(x||'').trim()).filter(Boolean);if(num(a.amount))bits.push(money(a.amount));return bits.join(' ')}).filter(Boolean)}
+function accountsCell(r){if(!r)return [];return (r.accounts||[]).filter(a=>num(a.amount)).map(a=>{const bits=[a.category].map(x=>String(x||'').trim()).filter(Boolean);if(num(a.amount))bits.push(money(a.amount));return bits.join(' ')}).filter(Boolean)}
 function fitCell(text,width){
   text=String(text==null?'':text).replace(/\s+/g,' ').trim();
   if(!text)return [''];
@@ -953,24 +1033,49 @@ function closePdfPreview(){$('#pdfModal').classList.remove('show');_pdfPending=n
 function confirmPdfDownload(){if(!_pdfPending)return;const p=_pdfPending;savePdf(p.lines,p.filename,p.layout);closePdfPreview()}
 function renderSettings(){
   let tr=trash.length;
-  $('#settings').innerHTML=`<div class="settings-hero"><h2>Settings</h2><p>Manage branch information, security and local data.</p></div>
-  <section class="settings-card"><div class="sectiontitle" data-icon="🏢">Branch profile</div><div class="settings-grid">
-    <div class="formgroup"><label for="sBranch">Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div>
-    <div class="formgroup"><label for="sZone">Zone</label><input id="sZone" value="${esc(settings.zone)}"></div>
-    <div class="formgroup"><label for="sTeam">Team</label><input id="sTeam" value="${esc(settings.team)}"></div>
-    <div class="formgroup"><label for="sBranches">Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div>
-    <div class="formgroup"><label for="sManager">Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div>
-    <div class="formgroup"><label for="sManagerDesignation">Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div>
-  </div><button type="button" class="primary" id="saveSettings">Save Settings</button></section>
-  <section class="settings-card"><div class="sectiontitle" data-icon="🎯">Monthly target</div><div class="formgroup"><label for="sTarget">Deposit Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}" placeholder="0"><span class="small">Leave as 0 if you do not want to track a target.</span></div></section>
-  <section class="settings-card"><div class="sectiontitle" data-icon="💬">WhatsApp template</div><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(settings.template||treasuryTemplate)}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</span></div></section>
-  <section class="settings-card security-card"><div class="security-head"><div class="security-title"><div class="security-icon">🔒</div><div><h3>App security</h3><p>Protect access on this device</p></div></div><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span></div><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></section>
-  <section class="settings-card"><div class="sectiontitle" data-icon="💾">Backup &amp; recovery</div><div class="settings-count"><span>Saved records</span><b>${records.length}</b></div><div class="settings-count"><span>Recently deleted</span><b>${tr}</b></div><div class="settings-count"><span>Last backup</span><b>${settings.lastBackup||'Never'}</b></div><div class="settings-actions" style="margin-top:12px"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted</button></div><button class="danger" id="clear" style="width:100%;margin-top:10px">Clear All Data</button></section>`;
+  /* One line per closed section, so the page still says what is inside it. */
+  const clip=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'\u2026':t};
+  const tplFirst=clip((settings.template||treasuryTemplate).split('\n')[0],40);
+  const target=num(settings.target);
+  const profileLine=[settings.branch,settings.team].filter(Boolean).join(' \u00b7 ')+(target>0?(' \u00b7 Target \u09f3 '+money(target)):'');
+  const backupLine=records.length+' record'+(records.length===1?'':'s')+' \u00b7 '+tr+' deleted \u00b7 Last backup: '+(settings.lastBackup||'never');
+  $('#settings').innerHTML=`<div class="settings-hero"><h2>Settings</h2><p>Manage branch information, security and local data. Tap a section to open it.</p></div>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="🏢">Branch profile</span><span class="small settings-hsub">${esc(profileLine)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body">
+      <div class="settings-group">Branch</div>
+      <div class="settings-grid">
+        <div class="formgroup wide"><label for="sBranch">Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div>
+        <div class="formgroup"><label for="sZone">Zone</label><input id="sZone" value="${esc(settings.zone)}"></div>
+        <div class="formgroup"><label for="sTeam">Team</label><input id="sTeam" value="${esc(settings.team)}"></div>
+        <div class="formgroup"><label for="sBranches">Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div>
+      </div>
+      <div class="settings-group">Manager</div>
+      <div class="settings-grid">
+        <div class="formgroup"><label for="sManager">Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div>
+        <div class="formgroup"><label for="sManagerDesignation">Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div>
+      </div>
+      <div class="settings-group">Monthly target</div>
+      <div class="settings-grid">
+        <div class="formgroup"><label for="sTarget">Deposit Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}" placeholder="0"></div>
+        <div class="formgroup settings-hint"><span class="small">Leave as 0 if you do not want to track a target.</span></div>
+      </div>
+    </div>
+  </details>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💬">WhatsApp template</span><span class="small settings-hsub">${esc(tplFirst)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(settings.template||treasuryTemplate)}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{accounts}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span></div></div>
+  </details>
+  <details class="settings-card security-card"><summary class="security-head"><span class="security-title"><span class="security-icon">🔒</span><span><h3>App security</h3><p>Protect access on this device</p></span></span><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></div>
+  </details>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💾">Backup &amp; recovery</span><span class="small settings-hsub">${esc(backupLine)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="settings-count"><span>Saved records</span><b>${records.length}</b></div><div class="settings-count"><span>Recently deleted</span><b>${tr}</b></div><div class="settings-count"><span>Last backup</span><b>${settings.lastBackup||'Never'}</b></div><div class="settings-actions" style="margin-top:12px"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted</button></div><button class="danger" id="clear" style="width:100%;margin-top:10px">Clear All Data</button></div>
+  </details>
+  <div class="settings-save"><button type="button" class="primary" id="saveSettings">Save Settings</button><span class="small">Saves the branch profile, the monthly target and the WhatsApp template.</span></div>`;
   $('#saveSettings').onclick=applySettings;
   function bind(id,fn){const el=$('#'+id);if(el)el.onclick=fn}
   bind('setPin',()=>setPin());bind('removePin',()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()}));bind('lockNow',lock);bind('backup',backup);const restoreInput=$('#restore');if(restoreInput)restoreInput.onchange=restore;bind('trashBtn',showTrash);bind('clear',()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('All data cleared')}}));
 }
-function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=settings.autoLock||0;settings.template=settings.template||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();renderDashboard();toast('Settings saved')}
+function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=settings.autoLock||0;settings.template=$('#sTemplate').value.trim()||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();renderDashboard();toast('Settings saved')}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
 function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0){records.push(x);queueRecordChange(x.date,'CREATE',x)}});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
 function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);queueRecordChange(r.date,'UPDATE',r);save();toast('Record restored');renderSettings()}}

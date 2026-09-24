@@ -346,6 +346,40 @@ test("a lost race (409) re-merges and retries without losing either device's day
   assert.deepEqual(errors, []);
 });
 
+test("every settings section is closed until it is tapped", async () => {
+  const { window, errors } = bootApp({
+    records: [day("2026-09-22", "1000000", "2026-09-22T09:00:00.000Z")]
+  });
+  assert.ok(await waitUntil(() => typeof window.nav === "function"));
+  window.nav("settings");
+  const doc = window.document;
+  const cards = [...doc.querySelectorAll("#settings > details.settings-card")];
+  assert.equal(cards.length, 4, "profile, template, security, backup");
+  assert.deepEqual(cards.map((c) => c.open), [false, false, false, false],
+    "nothing is open on arrival — the page stays short");
+
+  /* A closed section still says what is inside it. */
+  const heads = cards.map((c) => c.querySelector("summary").textContent.replace(/\s+/g, " ").trim());
+  assert.match(heads[0], /Branch profile/);
+  assert.match(heads[0], /Tantar Branch/);
+  assert.match(heads[1], /WhatsApp template/);
+  assert.match(heads[3], /1 record/);
+
+  /* Tap to open, tap again to close — one section at a time stays open. */
+  cards[1].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, true, false, false]);
+  assert.ok(doc.querySelector("#sTemplate"), "the template is there, just hidden until asked for");
+  cards[3].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, true, false, true],
+    "opening another section does not close the one already open");
+  cards[1].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, false, false, true]);
+
+  /* The Save button is never inside a section: it is always reachable. */
+  assert.equal(doc.querySelector("#saveSettings").closest("details"), null);
+  assert.deepEqual(errors, []);
+});
+
 test("the PIN stays on the device and never reaches the blob", async () => {
   const { window, blob, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
@@ -413,7 +447,50 @@ test("the settings page has no sync section or sync controls", async () => {
   assert.equal(window.document.querySelector("#pullCloud"), null);
   assert.equal(window.document.querySelector("#cloudSyncStatus"), null);
   assert.doesNotMatch(html, /Cloud Sync|Cloud endpoint|Real-time endpoint|Save Sync Settings|Auto-sync|Sync Now|Sync history|sJsonbinKey|sBinId/);
-  assert.equal(window.document.querySelector("#sPublicLink").value, "https://example.test/?view=1");
+  /* The share-link box was retired with the old sync panel, but the read-only
+     cloud link it used to copy still exists. */
+  assert.equal(window.document.querySelector("#sPublicLink"), null);
+  assert.equal(window.publicViewUrl(), "https://example.test/?view=1");
+  assert.deepEqual(errors, []);
+});
+
+test("the Save button sits under everything it saves, and it saves all of it", async () => {
+  const { window, errors } = bootApp({ records: [] });
+  assert.ok(await waitUntil(() => typeof window.nav === "function"));
+  window.nav("settings");
+  const doc = window.document;
+  const save = doc.querySelector("#saveSettings");
+  assert.ok(save, "there is a Save button");
+  /* It used to live inside the Branch profile card, above the monthly target
+     and the WhatsApp template — two things it also writes. */
+  /* el is followed by the button: the button sits below everything it writes. */
+  const after = (el) => Boolean(el.compareDocumentPosition(save) & window.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.equal(after(doc.querySelector("#sTarget")), true, "the button comes after the monthly target");
+  assert.equal(after(doc.querySelector("#sTemplate")), true, "the button comes after the WhatsApp template");
+  assert.equal(save.closest(".settings-card"), null, "it is not buried inside one section");
+
+  /* The profile fields are grouped, not one long unbroken list of inputs. */
+  const groups = [...doc.querySelectorAll("#settings .settings-group")].map((g) => g.textContent.trim());
+  assert.deepEqual(groups, ["Branch", "Manager", "Monthly target"]);
+  const profile = doc.querySelectorAll("#settings .settings-card")[0];
+  assert.deepEqual(
+    [...profile.querySelectorAll("input")].map((i) => i.id),
+    ["sBranch", "sZone", "sTeam", "sBranches", "sManager", "sManagerDesignation", "sTarget"],
+    "the profile card holds every profile field, the target included"
+  );
+  assert.equal(profile.querySelector("#sBranch").closest(".formgroup").classList.contains("wide"), true,
+    "the long branch name spans the row, the short fields pair up");
+
+  doc.querySelector("#sBranch").value = "Cumilla Branch";
+  doc.querySelector("#sTarget").value = "5000000";
+  doc.querySelector("#sTemplate").value = "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}";
+  save.click();
+  assert.equal(window.eval("settings.branch"), "Cumilla Branch");
+  assert.equal(window.eval("settings.target"), 5000000);
+  assert.equal(window.eval("settings.template"), "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}",
+    "the WhatsApp template box is not dead");
+  assert.match(window.eval("message({ date: '2026-09-21', places: '4', cash: '1250000', officers: [], accounts: [] })"),
+    /TODAY 21 September 2026 4 0 12,50,000 12.50 Lac/);
   assert.deepEqual(errors, []);
 });
 

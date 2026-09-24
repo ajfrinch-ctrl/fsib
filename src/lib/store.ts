@@ -73,6 +73,13 @@ const RECORD_FIELDS = [
 ];
 
 const ARRAY_FIELDS = ["officers", "visits", "accounts"];
+
+/**
+ * The account number is not collected anymore: the branch reports how many
+ * accounts were opened, not which numbers. Like the retired sync switches, it
+ * is dropped on every read and write, so an older blob cannot bring it back.
+ */
+const RETIRED_ACCOUNT_FIELDS = ["no"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_ROWS = 20000;
 
@@ -123,7 +130,10 @@ export function normalizeRecords(input: unknown): SyncRecord[] {
         if (!Array.isArray(value)) continue;
         row[field] = value.filter(isPlainObject).map((item) => {
           const clean: Record<string, unknown> = {};
-          for (const k of Object.keys(item)) if (isStorable(item[k])) clean[k] = item[k];
+          for (const k of Object.keys(item)) {
+            if (field === "accounts" && RETIRED_ACCOUNT_FIELDS.includes(k)) continue;
+            if (isStorable(item[k])) clean[k] = item[k];
+          }
           return clean;
         });
         continue;
