@@ -24,17 +24,53 @@ Two devices now converge in about a second, with nobody tapping **Sync**:
 - **Offline** — nothing changes: edits queue locally, the parked request is
   dropped, and the queue flushes the moment the device is back online.
 
+- **What a phone cannot know, the server tells it** — every `/api/live` answer
+  (the 304 included) carries `X-Live-Max-Wait-Ms`: the longest hold this
+  deployment will really honour. A hold that outlives the platform's function
+  timeout is *killed*, and a killed hold reaches the browser as a gateway error,
+  not as "the cloud is quiet" — so the app used to treat it as a broken channel
+  and back off for up to two minutes. Now the app parks for exactly the
+  advertised ceiling and grows the hold again when a host proves it can.
+- **Both signals are always armed** — a parked request waits on the in-process
+  hub (instant, for a write this instance served) *and* on the shared blob
+  poller. Netlify runs each invocation in its own instance, so the poller is the
+  half that actually finds another device's write; a hub-only hold could only
+  ever learn about it by timing out.
+- **Safety net** — whenever no request is parked (an older deploy without
+  `/api/live`, a gateway that cuts every hold, a tab that has just come back),
+  the app looks for changes on a timer instead, and it flushes the pending edit
+  the moment the tab is hidden so the other phone sees it before the officer
+  puts the phone away.
+
 Long-poll rather than SSE/WebSocket because a Netlify Function is stateless and
 capped at 60 s: a held GET works on every host this repo deploys to, with no
 reconnect choreography and no sticky session. The live channel is always on. Settings has no Cloud Sync section and no
 switch that can turn it off. A deploy without `/api/live` is
-detected once (404/405) and never retried — downloads then arrive on startup
-and manual refresh while edits still upload by themselves.
+detected once (404/405) and never retried — downloads then arrive on startup,
+the safety net and manual refresh while edits still upload by themselves.
 
 The header shows the truth about the channel: `LIVE` (parked and watching),
 `UPDATING` (pulling), `RETRY` (backing off), `NO LIVE` (server has no endpoint)
 or `LIVE OFF`. There is no sync-status button. A green border along the bottom
 of the top bar means this device is online and synced.
+
+## Dashboard
+
+The top of the dashboard is the four periods the branch reads at a glance, each
+with the accounts opened and the deposit collected in it:
+
+| This period | Accounts | Deposit |
+| --- | --- | --- |
+| Today | new accounts opened today | today's total deposit |
+| This week | accounts in the branch week | deposit in the branch week |
+| This month | accounts this calendar month | deposit this calendar month |
+| Last 30 days | accounts in the rolling 30 days | deposit in the rolling 30 days |
+
+"This week" follows `weeklyStart`/`weeklyEnd` (Sunday–Thursday by default), the
+same window History groups by and the weekly report is filed against, so the row
+and the report cannot disagree. A column with no entry is `0`, never blank.
+Below it the dashboard keeps the today hero (with the entry button), the 7-day
+trend, the monthly target and the highlights.
 
 ## API
 
@@ -67,8 +103,12 @@ date downloads nothing at all.
 
 ### `/api/live`
 
-`wait` is in **seconds** and is clamped server-side (`LIVE_MAX_WAIT_MS`, under
-the platform's 60 s function limit).
+`wait` is in **seconds** and is clamped server-side. Every answer carries
+`X-Live-Max-Wait-Ms`: the effective ceiling, so a client can park for exactly
+what the deployment will serve. `netlify/functions/live.ts` defaults to an 8 s
+hold — under the 10 s function timeout a Netlify site has unless it has been
+raised — and 2 s between blob polls; `FSIB_LIVE_MAX_WAIT_MS` and
+`FSIB_LIVE_POLL_MS` override both. The Nitro route uses the same defaults.
 
 | Request | Response |
 | --- | --- |
@@ -93,7 +133,7 @@ and an older blob cannot bring those switches back.
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The whole PWA: UI, local-first storage, sync client, real-time channel |
+| `index.html` | The whole PWA: UI, local-first storage, sync client, real-time channel, dashboard |
 | `src/lib/store.ts` | The `/api/sync` contract + blob-agnostic state logic (the only implementation) |
 | `src/lib/live.ts` | The `/api/live` long-poll contract + the in-process wake-up hub |
 | `src/lib/cloud-api.ts` | Typed browser client for both contracts |
@@ -112,7 +152,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 68 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
+npm test           # 75 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, safety net, two devices over real HTTP, offline report generate/preview/download
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -149,7 +189,13 @@ and is not this table.
 ## Deploy
 
 `netlify.toml` builds with `npm run build` and publishes `public/`; both
-functions are picked up from `netlify/functions/`. Netlify Blobs needs no
+functions are picked up from `netlify/functions/`.
+
+`service-worker.js` is network-first for the app shell: a phone must never keep
+running an old build (a cache-first shell is exactly how a device "works" while
+silently missing every edit another device makes). The cache is the offline
+fallback, `/api/` is never cached, and a new worker taking over an installed app
+reloads it once so the phone starts on the build it just downloaded. Netlify Blobs needs no
 provisioning — the store `fsib-app` / key `state` is created on first write.
 
 Each parked `/api/live` request is one function invocation, so a device left

@@ -167,6 +167,25 @@ input[type=date],input[type=month]{min-height:46px}
 .tbar.now em{color:var(--green)}
 .dash-goal .dh-goalnum{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
 .dash-goal .progress i{background:linear-gradient(90deg,#3f8bff,#1264d6)}
+/* Period summary: one row per period, an accounts cell and a deposit cell —
+   today / this week / this month / last 30 days. */
+.dash-periods{margin-top:10px;padding:14px 14px 10px}
+.ptable{margin-top:10px}
+.prow{display:grid;grid-template-columns:minmax(96px,1.15fr) minmax(58px,.7fr) minmax(0,1.35fr);
+  gap:8px;align-items:baseline;padding:11px 8px;border-radius:12px}
+.prow+.prow{border-top:1px dashed var(--line)}
+.prow.phead{padding:0 8px 6px;border:0}
+.prow.phead span{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.prow.pnow{background:linear-gradient(90deg,#1264d614,#1264d600);border-top:0}
+.dark .prow.pnow{background:linear-gradient(90deg,#3f8bff1f,#3f8bff00)}
+.pname{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pname b{font-size:13.5px;font-weight:800;overflow-wrap:anywhere}
+.pname em{font-style:normal;font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.pacct{font-size:19px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.pdep{font-size:15.5px;font-weight:800;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.pdep small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:2px}
+.prow .pacct.hi{color:var(--green)}
+.pnote{margin:8px 2px 2px;font-size:11px;color:var(--muted)}
 #dashboard .metric{position:relative;border-radius:16px;padding:14px}
 #dashboard .metric strong{font-size:20px;margin-top:6px}
 #dashboard .metric small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
@@ -179,6 +198,9 @@ input[type=date],input[type=month]{min-height:46px}
   .dash-row{grid-template-columns:1.35fr 1fr}
   #dashboard .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .dh-amount{font-size:40px}
+  .prow{grid-template-columns:minmax(150px,1.2fr) minmax(90px,.6fr) minmax(0,1.2fr)}
+  .pacct{font-size:21px}
+  .pdep{font-size:17px}
 }
 
 /* ---------------- bottom navigation ---------------- */
@@ -373,17 +395,32 @@ const CLOUD_API=SYNC_CONFIG.API_PATH;
    switch. Sync is not a setting. */
 const LIVE_CONFIG={
   API_PATH:SYNC_CONFIG.LIVE_API_PATH,
-  /* how long one request may be parked; the server caps it at 55s */
+  /* How long one request is parked. This is only a starting point: every answer
+     carries X-Live-Max-Wait-Ms, the longest hold the deployment will really
+     honour, and a hold that dies early teaches us the same thing. Asking for
+     more than a host can hold is what made two phones look out of sync: the
+     platform kills the request at its function timeout, which the app can only
+     read as a broken channel, and then it backs off. */
   WAIT_MS:20000,
-  /* client-side abort, a beat longer than the server's own hold */
-  TIMEOUT_MS:25000,
-  /* idle backoff: after LIVE_IDLE_BACKOFF_AFTER quiet holds, wait this long
-     before parking again — a device left open overnight must not hammer */
-  IDLE_BACKOFF_AFTER:15,
-  IDLE_BACKOFF_MS:120000,
-  /* retry backoff when the channel errors or the server does not know /api/live */
+  /* Never ask for less than this (too many requests) or more than this. */
+  WAIT_MIN_MS:3000,
+  WAIT_MAX_MS:25000,
+  /* Client-side abort, this much after the server should have answered. */
+  TIMEOUT_SLACK_MS:6000,
+  /* Idle backoff: after LIVE_IDLE_BACKOFF_AFTER quiet holds, wait this long
+     before parking again — a device left open all day must not hammer. */
+  IDLE_BACKOFF_AFTER:8,
+  IDLE_BACKOFF_MS:60000,
+  /* Retry backoff when the channel genuinely errors (a 5xx, a dead network). */
   RETRY_BASE_MS:5000,
-  RETRY_MAX_MS:120000,
+  RETRY_MAX_MS:60000,
+  /* Safety net: with no parked request (an older deploy, or the channel failing)
+     look for changes on this timer anyway, so a phone that never hears the live
+     signal still follows the cloud. */
+  FALLBACK_POLL_MS:45000,
+  /* Coming back to a tab that was hidden this long: check the cloud right away
+     instead of waiting for the next hold to answer. */
+  RESUME_CATCHUP_AFTER_MS:30000,
   /* edit -> upload */
   UPLOAD_DEBOUNCE_MS:1500
 };
@@ -430,7 +467,7 @@ function save(){
   try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
   persistLocalAsync();
   markDirtyAndSchedule();
-}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
+}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function dateShort(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>{const on=x.dataset.page===page;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});window.scrollTo(0,0)}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
 function renderDashboard(){
@@ -451,6 +488,37 @@ function renderDashboard(){
   const dim=new Date(Number(t.slice(0,4)),Number(t.slice(5,7)),0).getDate();
   const daysLeft=Math.max(0,dim-Number(t.slice(8,10)));
   const p2=n=>String(n).padStart(2,'0');
+  /* ---- the four periods the branch reads at a glance ---------------------
+     today / this (branch) week / this month / the last 30 days, each with the
+     accounts opened and the deposit collected in it. The week follows the
+     branch's own weeklyStart..weeklyEnd (Sunday-Thursday by default), the same
+     window History groups by and the weekly report is filed against. */
+  const dayOf=d=>new Date(d+'T12:00');
+  const shift=(d,n)=>{const x=dayOf(d);x.setDate(x.getDate()+n);return x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate())};
+  const weekStart=shift(t,-(((dayOf(t).getDay())+7-(Number(settings.weeklyStart)||0))%7));
+  const weekEnd=shift(weekStart,Math.max(0,(Number(settings.weeklyEnd)||0)-(Number(settings.weeklyStart)||0)));
+  const inRange=(a,b)=>records.filter(r=>r.date>=a&&r.date<=b);
+  const acOf=a=>a.reduce((x,r)=>x+accountsCount(r),0);
+  const acDepOf=a=>a.reduce((x,r)=>x+accountsTotal(r),0);
+  const visOfList=a=>a.reduce((x,r)=>x+visits(r),0);
+  const periods=[
+    {key:'today',en:'Today',bn:'\u0986\u099c\u0995\u09c7\u09b0',rows:now?[now]:[]},
+    {key:'week',en:'This week',bn:'\u098f\u0987 \u09b8\u09be\u09aa\u09cd\u09a4\u09be\u09b9\u09c7\u09b0',rows:inRange(weekStart,weekEnd)},
+    {key:'month',en:'This month',bn:'\u098f\u0987 \u09ae\u09be\u09b8\u09c7\u09b0',rows:month},
+    {key:'30d',en:'Last 30 days',bn:'\u0997\u09a4 \u09e9\u09e6 \u09a6\u09bf\u09a8\u09c7\u09b0',rows:inRange(shift(t,-29),t)}
+  ];
+  const periodRows=periods.map(pd=>{
+    const dep=sum(pd.rows),ac=acOf(pd.rows);
+    const sub=pd.key==='today'
+      ?(pd.rows.length?(visOfList(pd.rows)+' visit'+(visOfList(pd.rows)===1?'':'s')):'no entry yet')
+      :(pd.rows.length+' day'+(pd.rows.length===1?'':'s')+' \u00b7 '+visOfList(pd.rows)+' visits');
+    return '<div class="prow'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
+      +'<span class="pname"><b>'+pd.en+'</b><em>'+pd.bn+'</em></span>'
+      +'<span class="pacct" data-acct="'+pd.key+'">'+ac+'</span>'
+      +'<span class="pdep" data-dep="'+pd.key+'">\u09f3 '+money(dep)+'<small>'+sub+'</small></span>'
+      +'</div>';
+  }).join('');
+  const weekNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   /* last seven days (today last) as a small bar chart */
   const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
   const recOf=k=>records.find(z=>z.date===k);
@@ -484,13 +552,13 @@ function renderDashboard(){
       :`<div class="empty">Track the month against a target \u2014 set one in Settings.</div><button class="outline" id="dashGoalCfg" type="button" style="width:100%;margin-top:4px">Open Settings</button>`}
     </div>
   </div>
-  <div class="grid metrics">
-    <div class="card metric accent"><label>Today\u2019s Deposit</label><strong>\u09f3 ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div>
-    <div class="card metric green"><label>Today\u2019s Visits</label><strong>${now?visits(now):0}</strong><small>places visited</small></div>
-    <div class="card metric"><label>Weekly Deposit</label><strong>\u09f3 ${money(sum(week))}</strong><small>${week.length} day${week.length===1?'':'s'} logged</small></div>
-    <div class="card metric"><label>Monthly Deposit</label><strong>\u09f3 ${money(monthDep)}</strong><small>${month.length} day${month.length===1?'':'s'}${target>0?(' \u00b7 '+pct+'% of target'):''}</small></div>
-    <div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong><small>${monthAc} this month</small></div>
-    <div class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(now?accountsTotal(now):0)}</strong><small>${lac(now?accountsTotal(now):0)}</small></div>
+  <div class="card dash-periods">
+    <div class="dh-row"><div class="sectiontitle">Accounts &amp; Deposit</div><span class="pill">${monthAc} this month</span></div>
+    <div class="ptable">
+      <div class="prow phead"><span class="pname">Period</span><span class="pacct">Accounts</span><span class="pdep">Deposit (\u09f3)</span></div>
+      ${periodRows}
+    </div>
+    <div class="pnote">Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]} (${dateShort(weekStart)} to ${dateShort(weekEnd)}) \u00b7 Last 30 days includes today \u00b7 New-account deposits: \u09f3 ${money(acDepOf(periods[3].rows))} in 30 days</div>
   </div>
   <div class="card dash-hi">
     <div class="sectiontitle">Highlights</div>
@@ -1073,6 +1141,20 @@ function scheduleAutoUpload(){
   if(!navigator.onLine)return;
   _debounceT=setTimeout(()=>{maybeAutoUpload('edit');},LIVE_CONFIG.UPLOAD_DEBOUNCE_MS);
 }
+/* An edit must reach the cloud before the phone goes back in a pocket: background
+   tabs throttle timers, so the 1.5s debounce can stretch to a minute once the app
+   is hidden. Sending it now is what makes the other phone see the entry while the
+   officer is still standing there. */
+function flushUploadsNow(trigger){
+  if(uploadsHeld())return false;
+  if(!navigator.onLine)return false;
+  try{if(isPublicView())return false;}catch(e){}
+  if(pendingCount()<=0)return false;
+  clearTimeout(_debounceT);_debounceT=null;
+  try{console.info('FSIB auto sync ('+(trigger||'hidden')+') \u00b7 '+pendingCount()+' pending');}catch(e){}
+  syncNow('auto-upload').catch(()=>{});
+  return true;
+}
 function maybeAutoUpload(trigger){
   if(uploadsHeld())return false;
   if(_syncInProgress)return false;
@@ -1159,12 +1241,25 @@ let _live={
   token:0,              // generation guard: only the newest loop may keep going
   fails:0,
   quietHolds:0,
+  waitMs:LIVE_CONFIG.WAIT_MS,   // the hold we ask for now (learns the host's ceiling)
+  serverMaxWaitMs:0,            // X-Live-Max-Wait-Ms from the last answer, 0 = unknown
+  holdCuts:0,                   // holds the host cut short (not our fault, not its)
+  lastHoldMs:0,
   lastChangeAt:'',
   lastErrorAt:'',
   lastError:'',
   notSupported:false,
   changesApplied:0
 };
+/* When this tab last went to the background: a long absence earns a catch-up
+   check the moment it comes back. */
+let _hiddenAt=0;
+/* The hold to actually ask for: what we have learned is safe, clamped, and never
+   below the floor that keeps a parked device from turning into a flood. */
+function liveAskWaitMs(){
+  const ceil=Math.min(LIVE_CONFIG.WAIT_MAX_MS,_live.serverMaxWaitMs>0?_live.serverMaxWaitMs*0.95:LIVE_CONFIG.WAIT_MAX_MS);
+  return Math.round(Math.min(Math.max(_live.waitMs||LIVE_CONFIG.WAIT_MS,LIVE_CONFIG.WAIT_MIN_MS),Math.max(LIVE_CONFIG.WAIT_MIN_MS,ceil)));
+}
 function liveEnabled(){
   /* Always. The per-device real-time switch is gone. */
   return true;
@@ -1191,6 +1286,10 @@ function liveInfo(){
     fails:_live.fails,
     quietHolds:_live.quietHolds,
     changesApplied:_live.changesApplied,
+    waitMs:liveAskWaitMs(),
+    serverMaxWaitMs:_live.serverMaxWaitMs,
+    holdCuts:_live.holdCuts,
+    lastHoldMs:_live.lastHoldMs,
     lastChangeAt:_live.lastChangeAt||'',
     lastError:_live.lastError||'',
     label:liveStatusText(),
@@ -1229,6 +1328,35 @@ function liveNextDelay(){
   if(_live.quietHolds>=LIVE_CONFIG.IDLE_BACKOFF_AFTER)return LIVE_CONFIG.IDLE_BACKOFF_MS;
   return 250;
 }
+/* ---------- safety net (no parked request, no stale report) ----------
+   The long-poll carries the news when it is parked. When it is not — an older
+   deploy without /api/live, a gateway that keeps killing the hold, a phone that
+   has been asleep — this timer looks for changes anyway. One GET every
+   LIVE_CONFIG.FALLBACK_POLL_MS, and only while a change could be visible: the
+   tab is in the foreground and the device is online. That is the difference
+   between "device B shows it" and "device B shows it if the channel works". */
+function setFallbackPollDelay(ms){
+  /* Test seam, like setAutoUploadDelay. Not a setting, never stored. */
+  LIVE_CONFIG.FALLBACK_POLL_MS=Math.max(200,Math.floor(Number(ms)||0));
+  startFallbackWatch();
+  return LIVE_CONFIG.FALLBACK_POLL_MS;
+}
+let _fallbackT=null;
+function fallbackWatching(){
+  if(document.hidden||!navigator.onLine)return false;
+  const st=_live.state;
+  return st==='watching'||st==='starting'||st==='updating';
+}
+function startFallbackWatch(){
+  clearInterval(_fallbackT);
+  _fallbackT=setInterval(()=>{
+    if(fallbackWatching())return;
+    if(_syncInProgress)return;
+    if(pendingCount()>0){flushUploadsNow('fallback');return;}
+    try{if(isPublicView()){syncNow('visible').catch(()=>{});return;}}catch(e){}
+    syncNow('fallback').catch(()=>{});
+  },LIVE_CONFIG.FALLBACK_POLL_MS);
+}
 function liveSchedule(delay){
   const token=_live.token;
   clearTimeout(_live.timer);
@@ -1244,6 +1372,50 @@ function startLiveWatch(){
   setLiveState('starting');
   liveWatchLoop(_live.token);
 }
+/* A hold that ended earlier than we asked is not a broken channel — it is the
+   host telling us its real ceiling. Learn it and re-park instead of backing off,
+   which is what used to leave a phone showing an old report for minutes. */
+function liveLearnHold(askedMs,heldMs,answered){
+  _live.lastHoldMs=heldMs;
+  const advertised=Number(_live.serverMaxWaitMs)||0;
+  const cap=advertised>0?Math.round(advertised*0.95):0;
+  if(answered&&heldMs>=askedMs*0.9){
+    /* Held for the whole wait: this host can do it, so ask for a little more. */
+    const grown=Math.round(askedMs*1.5);
+    _live.waitMs=cap>0?Math.min(grown,cap):grown;
+    return false;
+  }
+  /* Cut short (or answered early by the server's own clamp): ask for less.
+     Without an advertised ceiling leave a wide margin — the platform's kill
+     lands right on its timeout, so asking for what we just measured would be
+     cut again. */
+  const learned=Math.max(LIVE_CONFIG.WAIT_MIN_MS,Math.round(heldMs*(advertised>0?0.9:0.6)));
+  _live.waitMs=cap>0?Math.min(learned,cap):learned;
+  return true;
+}
+/* Note a hold's length without judging the host: a 200 that answers early is a
+   change arriving, not a ceiling (only a 304 or a cut request teaches us that). */
+function liveRecordHold(heldMs){_live.lastHoldMs=heldMs;}
+/* Every answer, 304 included, carries the longest hold this deployment honours. */
+function liveLearnCeiling(res){
+  try{
+    const n=parseInt(String(res.headers.get('x-live-max-wait-ms')||''),10);
+    if(Number.isFinite(n)&&n>0&&n!==_live.serverMaxWaitMs){
+      _live.serverMaxWaitMs=n;
+      _live.waitMs=Math.min(_live.waitMs,_live.serverMaxWaitMs);
+    }
+  }catch(e){}
+}
+/* The host cut the request without answering (its function timeout, or its
+   gateway). Re-park at once, at the smaller hold we just learned. */
+function liveHostCutTheHold(){
+  _live.holdCuts++;
+  _live.fails=0;_live.quietHolds++;
+  setLiveState('watching');
+  /* Re-park at once — but if this host cuts EVERY hold, the idle backoff still
+     slows the loop down instead of leaving it in a hot retry spin. */
+  liveSchedule(Math.min(4000,liveNextDelay()));
+}
 async function liveWatchLoop(token){
   if(token!==_live.token)return;                 // a newer loop owns the channel
   if(!navigator.onLine){setLiveState('disabled');return;}
@@ -1254,18 +1426,19 @@ async function liveWatchLoop(token){
   if(_syncInProgress||document.hidden){liveSchedule(1200);return;}
 
   const version=liveCursor();
+  const askedMs=liveAskWaitMs();
+  const startedAt=Date.now();
   const ctrl=(typeof AbortController==='function')?new AbortController():null;
   _live.abort=ctrl;
   /* The server answers within `wait` seconds. This second timer is for the case
      where it cannot — a proxy that buffers, a network that black-holes — so a
      parked request can never wedge the channel. */
   let timedOut=false,timer=null;
-  if(ctrl)timer=setTimeout(()=>{timedOut=true;try{ctrl.abort();}catch(e){}},LIVE_CONFIG.TIMEOUT_MS);
+  if(ctrl)timer=setTimeout(()=>{timedOut=true;try{ctrl.abort();}catch(e){}},askedMs+LIVE_CONFIG.TIMEOUT_SLACK_MS);
   setLiveState('watching');
   let res=null;
   try{
-    const wait=Math.round(Math.min(LIVE_CONFIG.WAIT_MS,55000)/1000);
-    res=await fetch(LIVE_API+'?version='+version+'&wait='+wait,{
+    res=await fetch(LIVE_API+'?version='+version+'&wait='+Math.max(1,Math.round(askedMs/1000)),{
       method:'GET',
       headers:{accept:'application/json'},
       cache:'no-store',
@@ -1274,11 +1447,28 @@ async function liveWatchLoop(token){
   }catch(e){
     clearTimeout(timer);_live.abort=null;
     if(token!==_live.token)return;
-    /* Our own abort (offline / a sync started / the page hid) is not a failure.
-       Our own watchdog timing out IS: back off and try again. */
+    const held=Date.now()-startedAt;
+    /* Our own abort (offline / a sync started / the page hid) is not a failure. */
     if(e&&e.name==='AbortError'&&!timedOut){liveSchedule(600);return;}
+    /* Our own watchdog fired: the request was parked and nothing came back. That
+       is a real problem (a buffering proxy, a black-holed connection), so shrink
+       the hold hard and back off. */
+    if(timedOut){
+      _live.waitMs=Math.max(LIVE_CONFIG.WAIT_MIN_MS,Math.round(askedMs*0.5));
+      _live.fails++;
+      setLiveState('error','no answer from '+LIVE_API);
+      liveSchedule(liveNextDelay());
+      return;
+    }
+    /* A request that lived a while and then died was cut by the host, not by a
+       dead network and not by a missing endpoint. */
+    if(held>=1500){
+      liveLearnHold(askedMs,held,false);
+      liveHostCutTheHold();
+      return;
+    }
     _live.fails++;
-    setLiveState('error',timedOut?'no answer from '+LIVE_API:((e&&e.message)||'network'));
+    setLiveState('error',(e&&e.message)||'network');
     liveSchedule(liveNextDelay());
     return;
   }
@@ -1286,19 +1476,30 @@ async function liveWatchLoop(token){
   _live.abort=null;
   if(token!==_live.token)return;
   noteRequest();
+  liveLearnCeiling(res);
+  const held=Date.now()-startedAt;
 
   if(res.status===404||res.status===405||res.status===501){
-    /* An older deploy without /api/live. Stop asking; edits still upload. */
+    /* An older deploy without /api/live. Stop asking; edits still upload, and
+       the safety net below keeps the report current. */
     _live.notSupported=true;
     setLiveState('disabled','endpoint-missing');
-    addSyncLog('Real-time unavailable','This server has no '+LIVE_API+' endpoint ('+res.status+'). Live downloads are off; edits still upload automatically.').catch(()=>{});
+    addSyncLog('Real-time unavailable','This server has no '+LIVE_API+' endpoint ('+res.status+'). Live downloads are off; a safety net still refreshes every '+Math.round(LIVE_CONFIG.FALLBACK_POLL_MS/1000)+'s while the app is open.').catch(()=>{});
     return;
   }
   if(res.status===304){
     _live.fails=0;_live.quietHolds++;
+    liveLearnHold(askedMs,held,true);
     const etag=res.headers.get('etag');
-    if(etag){const n=parseInt(String(etag).replace(/"/g,''),10);if(Number.isFinite(n)&&n>=0&&_live.version<0)_live.version=n;}
+    if(etag){const n=parseInt(String(etag).replace(/\"/g,''),10);if(Number.isFinite(n)&&n>=0&&_live.version<0)_live.version=n;}
     liveSchedule(liveNextDelay());
+    return;
+  }
+  /* 502/503/504 is the platform killing the function mid-hold — the exact shape
+     a function timeout takes. The channel is fine; the hold was simply too long. */
+  if(res.status===502||res.status===503||res.status===504){
+    liveLearnHold(askedMs,held,false);
+    liveHostCutTheHold();
     return;
   }
   if(!res.ok){
@@ -1307,7 +1508,6 @@ async function liveWatchLoop(token){
     liveSchedule(liveNextDelay());
     return;
   }
-
   let data={};
   try{data=(await res.json())||{};}catch(e){data={};}
   _live.fails=0;_live.quietHolds=0;
@@ -1329,6 +1529,7 @@ async function liveWatchLoop(token){
     liveSchedule(250);
     return;
   }
+  liveRecordHold(held);
   if(data.reset===true){
     /* The cloud moved backwards (cleared, or an older backup restored). */
     if(haveOffered)_live.version=offered;
@@ -1520,6 +1721,11 @@ async function syncNow(reason,opts){
   if(_initPromise){try{await _initPromise}catch(e){}}
   const auto=(reason==='auto-upload');
   const livePull=(reason==='live');
+  /* Background reasons that must really look at the cloud rather than trusting
+     the local hash: the safety net, a tab coming back to the foreground, and
+     the network returning. These are what keep two phones together when the
+     long-poll cannot be parked. */
+  const catchUp=(reason==='fallback'||reason==='visible'||reason==='online');
   try{if(isPublicView())return {skipped:'public-view'};}catch(e){}
   if(_syncInProgress)return {skipped:'busy'};
   if(!navigator.onLine){setSyncStatus('offline');if(!auto&&!livePull)toast('Offline \u2014 changes saved locally');return {offline:true};}
@@ -1539,7 +1745,7 @@ async function syncNow(reason,opts){
        synced has an empty hash too, and an empty local state hashes the same as
        an empty lastHash — without the lastHash check a brand-new phone would
        "sync" to nothing forever and never see the branch's data. */
-    if(!needsUpload&&lastHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!auto&&!livePull){setSyncStatus('synced');return {noop:true};}
+    if(!needsUpload&&lastHash&&localHash===lastHash&&!explicit&&!catchUp&&reason!=='startup'&&!auto&&!livePull){setSyncStatus('synced');return {noop:true};}
 
     const g=await cloudGet();
     const cloud=g.state;
@@ -1557,7 +1763,7 @@ async function syncNow(reason,opts){
       await addSyncLog(livePull?'Real-time update':'Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
       setSyncStatus('synced');refreshAfterSync();
       if(explicit||(reason==='startup'&&(applied.added+applied.updated)>0))toast('Synced from cloud ('+records.length+' records)');
-      else if(livePull&&(applied.added+applied.updated)>0)liveToast('Live update \u2014 '+(applied.added+applied.updated)+' change(s) from another device');
+      else if((livePull||catchUp)&&(applied.added+applied.updated)>0)liveToast('Live update \u2014 '+(applied.added+applied.updated)+' change(s) from another device');
       return {downloaded:applied,downloadApplied:applied.added+applied.updated,version:cloud.version};
     }
 
@@ -1760,6 +1966,7 @@ function syncPanelHtml(){
   return '<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
     +'<div>Real-time: <b>'+esc(liveStatusText())+'</b></div>'
+    +'<div>Live hold: <b>'+Math.round(liveAskWaitMs()/1000)+'s</b>'+(Number(_live.serverMaxWaitMs)>0?(' of '+Math.round(_live.serverMaxWaitMs/1000)+'s this server allows'):'')+'</div>'
     +(_live.lastChangeAt?('<div>Last cloud change seen: <b>'+esc(fmtSyncTime(_live.lastChangeAt))+'</b> \u00b7 '+_live.changesApplied+' live update(s) this session</div>'):'')
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
@@ -1779,6 +1986,7 @@ function renderSyncDetails(){
   document.getElementById('syncDetails').innerHTML='<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
     +'<div>Real-time: <b>'+esc(liveStatusText())+'</b></div>'
+    +'<div>Live hold: <b>'+Math.round(liveAskWaitMs()/1000)+'s</b>'+(Number(_live.serverMaxWaitMs)>0?(' of '+Math.round(_live.serverMaxWaitMs/1000)+'s this server allows'):'')+'</div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
     +'<div>Uploads: <b>'+esc(autoSyncStatusText())+'</b></div>'
@@ -1868,22 +2076,38 @@ function network(){
     return;
   }
   if(_syncStatus==='offline'){_syncStatus=pendingCount()>0?'pending':'synced';updateSyncUI();}
-  /* Coming back online: re-open the live channel and flush what queued up. */
+}
+/* Coming back from offline: re-open the live channel, push what queued up, and
+   look for anything another phone saved while this one had no signal. This runs
+   on the online EVENT only — the boot path has its own syncNow('startup'), and
+   two catch-ups racing at launch is how a live pull ends up skipped as busy. */
+function networkReturned(){
+  if(!navigator.onLine)return;
   _live.notSupported=false;_live.fails=0;
   startLiveWatch();
-  maybeAutoUpload('online');
+  if(!maybeAutoUpload('online'))syncNow('online').catch(()=>{});
 }
-addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
+addEventListener('online',()=>{network();networkReturned();});addEventListener('offline',network);let deferredPrompt=null;
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){
     /* Background tabs must not hold a parked request: browsers throttle timers
        and kill sockets, which would only produce retries nobody can see. */
+    _hiddenAt=Date.now();
+    flushUploadsNow('hidden');
     liveStop();
     return;
   }
   _live.notSupported=false;
   startLiveWatch();
   maybeAutoUpload('visible');
+  /* Returning to a tab that was away for a while: do not wait for the parked
+     request to answer — check the cloud now, so the screen the user is looking
+     at is current the moment they look at it. */
+  if(_hiddenAt&&(Date.now()-_hiddenAt)>=LIVE_CONFIG.RESUME_CATCHUP_AFTER_MS){
+    _hiddenAt=0;
+    syncNow('visible').catch(()=>{});
+  }
+  _hiddenAt=0;
 });
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
@@ -1910,17 +2134,31 @@ function isInstalledPWA(){
 if(isInstalledPWA()){
   document.getElementById("installBtn")?.classList.add("hidden");
 }
+let _swReloaded=false;
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker
-      .register("./service-worker.js",{scope:"./"})
+      .register("./service-worker.js",{scope:"./",updateViaCache:"none"})
       .then(registration=>{
         console.log("FSIB Marketing PWA registered:",registration.scope);
+        /* Check for a new build on every launch instead of waiting for the
+           browser's own schedule. */
+        try{registration.update();}catch(e){}
       })
       .catch(error=>{
         console.error("FSIB Marketing PWA registration failed:",error);
       });
   });
+  /* A new service worker taking over an already-installed app: reload once so
+     this phone is running the build it just downloaded. This is what breaks the
+     "device B is still running last month's app" loop — an old cache-first
+     worker would otherwise keep serving the stale shell forever. */
+  if(navigator.serviceWorker.controller){
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{
+      if(_swReloaded)return;_swReloaded=true;
+      try{location.reload();}catch(e){}
+    });
+  }
 }
 $('#closePdfPreview').onclick=closePdfPreview;
 $('#pdfBackBtn').onclick=closePdfPreview;
@@ -1941,17 +2179,24 @@ function wireModalUX(){
   });
   syncModalLock();
 }
-theme();network();renderDashboard();resetLock();
+theme();renderDashboard();resetLock();
 wireSyncUI();
 wireModalUX();
+/* Open the local store BEFORE anything can talk to the cloud: syncNow() waits
+   on this promise, and a network() that ran first would download the cloud's
+   own rows into a device whose first-run migration had not happened yet —
+   which then queued those rows straight back up as "local data". */
 _initPromise=initLocalDB();
+network();
 _initPromise.then(()=>{
   refreshAfterSync();
   updateSyncUI();
   if(isPublicView()){loadPublicView();return;}
   /* Open the real-time channel first: it is what makes the rest of the app
-     converge without anyone tapping Sync. */
+     converge without anyone tapping Sync. The safety net runs underneath it, in
+     case this host cannot hold a request at all. */
   startLiveWatch();
+  startFallbackWatch();
   /* On open, with nobody tapping Sync: anything queued goes up and whatever
      the cloud has comes down. */
   if(navigator.onLine&&!uploadsHeld())setTimeout(()=>{syncNow('startup').catch(()=>{});},700);

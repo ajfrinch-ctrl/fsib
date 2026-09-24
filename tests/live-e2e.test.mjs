@@ -290,7 +290,7 @@ test("two devices converge in real time with nobody tapping Sync", async (t) => 
   /* Both dashboards now tell the same story, and the cloud holds every day. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthly = (w) => [...w.document.querySelectorAll("#dashboard .metric")][3].textContent.replace(/\s+/g, " ").trim();
+  const monthly = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthly(a.window), monthly(b.window));
 
   const cloud = await (await fetch(`${BASE}/api/sync`)).json();
