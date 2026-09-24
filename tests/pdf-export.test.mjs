@@ -414,6 +414,52 @@ test("an account row is a type and an amount — no account number anywhere", as
   assert.doesNotMatch(w2.document.querySelector("#reports").innerHTML, /1001/);
 });
 
+test("every report section is closed until it is tapped", async () => {
+  const { window } = bootOffline({
+    records: [day("2026-09-21", "1250000"), day("2026-09-24", "2405000")]
+  });
+  await new Promise((r) => setTimeout(r, 250));
+  window.renderReports("monthly", "2026-09-01");
+  const doc = window.document;
+  const sections = [...doc.querySelectorAll("#reports details.repsec")];
+  assert.deepEqual(sections.map((s) => s.querySelector(".repsec-title").textContent),
+    ["Summary", "Deposit by method", "Activity", "Daily details"]);
+  assert.deepEqual(sections.map((s) => s.open), [false, false, false, false],
+    "the page opens short: the hero carries the headline figure, the rest waits");
+  /* A closed header still says what is inside it. */
+  assert.match(sections[0].querySelector(".repsec-sub").textContent, /2 recorded days/);
+  assert.match(sections[3].querySelector(".repsec-sub").textContent, /2 days/);
+
+  /* Tap to open; the others stay as they were. */
+  sections[0].querySelector("summary").click();
+  assert.equal(sections[0].open, true);
+  assert.equal(sections.slice(1).every((s) => !s.open), true);
+  assert.equal(sections[0].querySelectorAll(".metric").length, 5);
+
+  /* Day rows are closed too — five open day cards is what made the page endless. */
+  const days = [...doc.querySelectorAll("#reports details.daycard")];
+  assert.equal(days.length, 2);
+  assert.deepEqual(days.map((d) => d.open), [false, false]);
+  assert.match(days[0].querySelector(".daydate").textContent, /24 Sep/);
+  assert.match(days[0].querySelector(".daymeta").textContent, /places · \d+ account/);
+  assert.match(days[0].querySelector(".dayamt").textContent, /24,05,000/);
+  days[0].querySelector("summary").click();
+  assert.equal(days[0].open, true);
+  assert.match(days[0].querySelector(".daybody").textContent, /Deposit Details/);
+  days[0].querySelector("summary").click();
+  assert.equal(days[0].open, false);
+
+  /* The accounts view is grouped by day and closed the same way. */
+  window.renderAccountReport("monthly", "2026-09-01");
+  const accountSections = [...doc.querySelectorAll("#reports details.repsec")];
+  assert.deepEqual(accountSections.map((s) => s.open), [false, false]);
+  assert.match(accountSections[0].querySelector(".repsec-sub").textContent, /1 account ·/);
+  assert.match(accountSections[1].querySelector(".repsec-sub").textContent, /1 account ·/);
+  assert.equal(doc.querySelectorAll("#reports .aitem").length, 2, "the accounts are there, one tap away");
+  assert.match(doc.querySelector(".rep-hero .rh-amount").textContent, /40,000/);
+  assert.match(doc.querySelector(".rep-hero .rh-sub").textContent, /2 accounts across 2 recorded days/);
+});
+
 test("closing the preview saves nothing", async () => {
   const { window, downloads, blobs } = bootOffline({ records: [day("2026-09-21", "1250000")] });
   await new Promise((r) => setTimeout(r, 250));

@@ -270,26 +270,48 @@ input[type=date],input[type=month]{min-height:46px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;overflow-wrap:anywhere}
 .chip b{color:var(--blue)}
-.daystats{display:flex;gap:8px;margin:10px 0 2px}
+.daystats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 11px}
 .daystat{flex:1;min-width:0;background:var(--soft);border-radius:10px;padding:8px 9px}
 .daystat label{margin-bottom:3px}
 .daystat b{font-size:13.5px;overflow-wrap:anywhere}
-details.det{margin-top:10px;border-top:1px dashed var(--line);padding-top:4px}
-details.det summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:40px;font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.3px}
-details.det summary::-webkit-details-marker{display:none}
-details.det summary::after{content:"\25BE";margin-left:auto;transition:transform .15s}
-details.det[open] summary::after{transform:rotate(180deg)}
-.detrow{margin-top:8px}
-.detrow:last-child{padding-bottom:4px}
-.vitem h3,.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
+/* ---------------- collapsible report sections ----------------
+   Every section is closed until it is tapped, and its header carries a
+   one-line summary so the page still says what is inside it. */
+.repsec{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  margin-bottom:10px;overflow:hidden}
+.repsec-head{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px;min-height:52px}
+.repsec-head::-webkit-details-marker{display:none}
+.repsec-head:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.repsec-title{flex:0 0 auto;font-size:12px;font-weight:900;color:var(--blue);letter-spacing:.5px;text-transform:uppercase}
+.repsec-sub{flex:1 1 auto;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.repsec-chev{flex:0 0 auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(-45deg);transition:transform .18s ease}
+.repsec[open] .repsec-chev{transform:rotate(45deg)}
+.repsec[open] .repsec-head{border-bottom:1px solid var(--line)}
+.repsec-body{padding:13px}
+.repsec-body>:first-child{margin-top:0}
+/* a panel inside a section is a panel, not a card inside a card */
+.repsec-body>.card:not(.daycard){box-shadow:none;background:var(--soft)}
+.repsec-body>.card{box-shadow:none;border-radius:11px}
+/* one row per day: date, what happened, the day's deposit */
+.daycard{display:block;margin-bottom:8px;padding:11px 12px}
+.daycard:last-child{margin-bottom:0}
+.dayhead{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px}
+.dayhead::-webkit-details-marker{display:none}
+.daydate{flex:0 0 auto;font-weight:800;font-size:13px}
+.daymeta{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dayamt{flex:0 0 auto;font-weight:800;font-size:13px;color:var(--blue)}
+.daybody{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px}
+.detrow{margin-top:9px}
+.detrow:last-child{padding-bottom:2px}
+.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
 .rec-meta{display:grid;gap:8px}
 .rec-meta b{overflow-wrap:anywhere}
-@media(prefers-reduced-motion:reduce){details.det summary::after{transition:none}}
+@media(prefers-reduced-motion:reduce){.repsec-chev{transition:none}}
 @media(min-width:700px){
   .rep-hero{padding:22px 20px 18px}
   .rh-amount{font-size:40px}
   #reports .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .rec-meta{grid-template-columns:1fr 1fr 1fr}
 }
 
 .pdfpreview{margin:4px 0 12px}
@@ -738,11 +760,30 @@ function bindRepControls(go,type,ref){
   if(n)n.onclick=()=>go(type,periodShift(type,ref,1));
   if(inp)inp.onchange=e=>{const v=e.target.value;if(!v)return;go(type,type==='monthly'?v.slice(0,7)+'-01':v)};
 }
+/* One collapsible report section: closed until it is tapped, with a one-line
+   summary in the header so the page still says what is inside it. */
+function repSection(title,sub,body){
+  return `<details class="repsec"><summary class="repsec-head"><span class="repsec-title">${esc(title)}</span>`
+    +`<span class="small repsec-sub">${esc(sub)}</span><span class="repsec-chev"></span></summary>`
+    +`<div class="repsec-body">${body}</div></details>`;
+}
+/* One row per day: the date, what happened in it and what it collected. The
+   full breakdown is a tap away instead of twenty open cards. */
 function dayCard(r){
   const breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': \u09f3 '+money(x[1])).join(' \u00b7 ')||'No deposit breakdown';
   const accountInfo=accountRows(r).map(a=>a.category+': \u09f3 '+money(a.amount)).join(' \u00b7 ')||'No new account';
   const officers=(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' \u00b7 ')||'No officer entered';
-  return `<article class="card daycard"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">\u09f3 ${money(total(r))}</span></div><div class="daystats"><div class="daystat"><label>New Accounts</label><b>${accountsCount(r)}</b></div><div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div><details class="det"><summary>Full details</summary><div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div><div class="detrow"><label>Officers</label><div class="small">${officers}</div></div><div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></details></article>`;
+  const ac=accountsCount(r);
+  return `<details class="card daycard"><summary class="dayhead"><span class="daydate">${dateShort(r.date)}</span>`
+    +`<span class="daymeta">${visits(r)} places \u00b7 ${ac} account${ac===1?'':'s'}</span>`
+    +`<span class="dayamt">\u09f3 ${money(total(r))}</span><span class="repsec-chev"></span></summary>`
+    +`<div class="daybody"><div class="daystats">`
+    +`<div class="daystat"><label>Places</label><b>${visits(r)}</b></div>`
+    +`<div class="daystat"><label>New Accounts</label><b>${ac}</b></div>`
+    +`<div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div>`
+    +`<div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div>`
+    +`<div class="detrow"><label>Officers</label><div class="small">${officers}</div></div>`
+    +`<div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></div></details>`;
 }
 function renderReports(type='monthly',ref=today()){
   const d=buildReport(type,ref);
@@ -757,7 +798,11 @@ function renderReports(type='monthly',ref=today()){
   }).join('');
   const typeChips=Object.entries(d.types).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No detailed visits</span>';
   const offChips=Object.entries(d.officerCount).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No officer data</span>';
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div><div class="sectionhead"><h2>Deposit Breakdown</h2><span class="small">share of total</span></div><div class="card">${depRows}</div><div class="sectionhead"><h2>Activity</h2></div><div class="card"><label>Officer Activity</label><div class="chips">${offChips}</div></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="pill">${d.rs.length} days</span></div>${[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>${repSection('Summary',d.rs.length+' recorded day'+(d.rs.length===1?'':'s')+' \u00b7 '+d.ac+' accounts \u00b7 '+lac(d.dep),`<div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>`)}
+${repSection('Deposit by method',Object.keys(d.methods).length+' methods \u00b7 '+lac(d.dep),`<div class="card">${depRows}</div>`)}
+${repSection('Activity',Object.keys(d.officerCount).length+' officer'+(Object.keys(d.officerCount).length===1?'':'s')+' \u00b7 '+Object.keys(d.types).length+' visit type'+(Object.keys(d.types).length===1?'':'s'),`<div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div><label style="margin-top:12px">Officer Activity</label><div class="chips">${offChips}</div></div>`)}
+${repSection('Daily details',d.rs.length+' day'+(d.rs.length===1?'':'s')+' \u00b7 \u09f3 '+money(d.dep),[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`)}
+<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderReports,type,ref);
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
@@ -769,11 +814,21 @@ function renderAccountReport(type='monthly',ref=today()){
   /* What used to sit beside the (now retired) account number: how much of that
      day's new-account money this one account brought in. */
   const dayTotal={};items.forEach(a=>dayTotal[a.date]=(dayTotal[a.date]||0)+num(a.amount));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div><div><label>Share of the day\u2019s new-account deposit</label><b>${(dayTotal[a.date]>0?num(a.amount)/dayTotal[a.date]*100:0).toFixed(0)}%</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  const byDate={};items.forEach(a=>(byDate[a.date]??=[]).push(a));
+  const acItem=a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div><div><label>Share of the day\u2019s new-account deposit</label><b>${(dayTotal[a.date]>0?num(a.amount)/dayTotal[a.date]*100:0).toFixed(0)}%</b></div></div></article>`;
+  const daySections=Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).map(dt=>{
+    const list=byDate[dt],n=list.length;
+    return repSection(dateText(dt),n+' account'+(n===1?'':'s')+' \u00b7 \u09f3 '+money(dayTotal[dt]),list.map(acItem).join(''));
+  }).join('');
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}
+  <div class="rep-hero"><div class="rh-label">New account report</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.acDep)}</div><div class="rh-sub">${items.length} accounts across ${d.rs.length} recorded day${d.rs.length===1?'':'s'} \u00b7 ${lac(d.acDep)}</div></div>
+  ${daySections||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}
+  <div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderAccountReport,type,ref);
   $$('.pdf-dl').forEach(b=>b.onclick=()=>openReportPdf(type,ref,'BranchAccountReport',periodTitle(type,ref)));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
 /* Offline PDF export: the file bytes are assembled right here in the browser

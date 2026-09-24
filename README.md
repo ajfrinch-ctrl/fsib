@@ -78,6 +78,28 @@ and the report cannot disagree. A column with no entry is `0`, never blank.
 Below it the dashboard keeps the today hero (with the entry button), the 7-day
 trend, the monthly target and the highlights.
 
+## Reports
+
+Both report views keep only what the branch reads at a glance always visible —
+the period tabs, the period picker and the hero (period, the period's total, the
+target progress). Everything else is a **closed section with a one-line summary
+in its header**, so a tap opens it and the page never arrives as twenty open
+cards:
+
+```
+> Summary          5 recorded days · 10 accounts · 78.50 Lac
+> Deposit by method 5 methods · 78.50 Lac
+> Activity         2 officers · 1 visit type
+> Daily details    5 days · ৳ 78,50,000
+    > 24 Sep       7 places · 2 accounts      ৳ 15,90,000
+```
+
+A day row is closed the same way — date, what happened, what it collected — and
+opens onto the places / new accounts / A/C deposit trio plus the deposit,
+officer and account breakdowns. The accounts view groups by day the same way
+and carries a hero of its own. Native `<details>`, so a tap, Enter or Space all
+work, and opening one section leaves any other open section alone.
+
 ## WhatsApp share
 
 The report the branch sends has two parts, both built in the page:
@@ -213,7 +235,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 84 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number
+npm test           # 87 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
