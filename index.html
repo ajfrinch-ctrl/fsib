@@ -138,6 +138,48 @@ input[type=date],input[type=month]{min-height:46px}
 .bar{background:linear-gradient(#4c97ff,#1264d6);flex:1;min-width:10px;border-radius:5px 5px 0 0;position:relative}
 .bar em{position:absolute;bottom:-19px;width:100%;font-size:9px;text-align:center;color:var(--muted);font-style:normal}
 
+/* ---------------- dashboard (hero, 7-day trend, target, highlights) ---------------- */
+.dash-hero{border-radius:18px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#06377d,#1264d6 60%,#3f8bff);box-shadow:0 12px 30px #0a479d33;margin-bottom:10px}
+.dash-hero::after{content:"";position:absolute;right:-34px;top:-46px;width:150px;height:150px;border-radius:50%;background:#ffffff14}
+.dash-hero.todo{background:linear-gradient(135deg,#31456b,#5a7bb8 60%,#86a8de)}
+.dark .dash-hero{background:linear-gradient(135deg,#000,#061d43 65%,#0a3a7a)}
+.dark .dash-hero.todo{background:linear-gradient(135deg,#10141f,#28344e 65%,#3a5a8c)}
+.dh-top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:relative;z-index:1}
+.dh-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;opacity:.85}
+.dh-pill{background:#ffffff26;border:1px solid #ffffff40;border-radius:20px;padding:5px 10px;font-size:10px;font-weight:800;white-space:nowrap}
+.dh-amount{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:10px;position:relative;z-index:1;overflow-wrap:anywhere}
+.dh-sub{font-size:12.5px;opacity:.92;margin-top:5px;position:relative;z-index:1;overflow-wrap:anywhere}
+.dh-cta{margin-top:14px;width:100%;min-height:var(--tap);border:0;border-radius:12px;background:#fff;color:#0a479d;
+  font-weight:800;font-size:14px;padding:12px;position:relative;z-index:1}
+.dark .dh-cta{background:#1264d6;color:#fff}
+.dash-row{display:grid;gap:10px;margin-bottom:10px}
+.dh-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dh-row .sectiontitle{margin:0}
+.tbars{display:flex;gap:7px;align-items:end;height:112px;margin-top:12px;border-bottom:2px solid var(--line);padding:0 2px}
+.tbar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.tbar i{display:block;width:100%;max-width:36px;min-height:4px;border-radius:6px 6px 0 0;background:linear-gradient(#7fb2ff,#1264d6)}
+.dark .tbar i{background:linear-gradient(#2c66c4,#468fff)}
+.tbar.now i{background:linear-gradient(#38c48a,#0b9562)}
+.dark .tbar.now i{background:linear-gradient(#0f7a52,#31c48a)}
+.tbar em{font-style:normal;font-size:10px;font-weight:700;color:var(--muted);margin-top:5px}
+.tbar.now em{color:var(--green)}
+.dash-goal .dh-goalnum{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
+.dash-goal .progress i{background:linear-gradient(90deg,#3f8bff,#1264d6)}
+#dashboard .metric{position:relative;border-radius:16px;padding:14px}
+#dashboard .metric strong{font-size:20px;margin-top:6px}
+#dashboard .metric small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+.dash-hi{margin-top:10px}
+.hirow{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed var(--line)}
+.hirow:last-child{border-bottom:0;padding-bottom:2px}
+.hilabel{flex:1 1 90px;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.hirow b{font-size:15px;overflow-wrap:anywhere}
+@media(min-width:700px){
+  .dash-row{grid-template-columns:1.35fr 1fr}
+  #dashboard .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dh-amount{font-size:40px}
+}
+
 /* ---------------- bottom navigation ---------------- */
 .nav{position:fixed;z-index:35;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);
   display:flex;justify-content:center;padding-bottom:var(--sab);box-shadow:0 -4px 16px #1d4c8a12}
@@ -316,7 +358,77 @@ function save(){
 }function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>{const on=x.dataset.page===page;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});window.scrollTo(0,0)}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
-function renderDashboard(){let t=today(), now=records.find(r=>r.date===t), start=new Date();start.setDate(start.getDate()-6);let week=records.filter(r=>new Date(r.date+'T12:00')>=start), month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7)), sum=a=>a.reduce((x,r)=>x+total(r),0), best=[...records].sort((a,b)=>total(b)-total(a))[0], bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];let officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));let bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];$('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="small">${dateText(t)}</span></div><div class="grid metrics"><div class="card metric accent"><label>Today’s Deposit</label><strong>৳ ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div><div class="card metric green"><label>Today’s Visits</label><strong>${now?visits(now):0}</strong></div><div class="card metric"><label>Weekly Deposit</label><strong>৳ ${money(sum(week))}</strong></div><div class="card metric"><label>Monthly Deposit</label><strong>৳ ${money(sum(month))}</strong></div><div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong></div><div class="card metric"><label>Account Deposit</label><strong>৳ ${money(now?accountsTotal(now):0)}</strong></div></div>`}
+function renderDashboard(){
+  const t=today();
+  const now=records.find(r=>r.date===t);
+  const start=new Date();start.setDate(start.getDate()-6);
+  const week=records.filter(r=>new Date(r.date+'T12:00')>=start);
+  const month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7));
+  const sum=a=>a.reduce((x,r)=>x+total(r),0);
+  const best=[...records].sort((a,b)=>total(b)-total(a))[0];
+  const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
+  const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
+  const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
+  const monthDep=sum(month);
+  const monthAc=month.reduce((a,r)=>a+accountsCount(r),0);
+  const target=num(settings.target);
+  const pct=target>0?Math.min(100,Math.round(monthDep/target*100)):0;
+  const dim=new Date(Number(t.slice(0,4)),Number(t.slice(5,7)),0).getDate();
+  const daysLeft=Math.max(0,dim-Number(t.slice(8,10)));
+  const p2=n=>String(n).padStart(2,'0');
+  /* last seven days (today last) as a small bar chart */
+  const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
+  const recOf=k=>records.find(z=>z.date===k);
+  const depOf=k=>{const r=recOf(k);return r?total(r):0};
+  const visOf=k=>{const r=recOf(k);return r?visits(r):0};
+  const maxDep=Math.max(1,...dayKeys.map(depOf));
+  const bars=dayKeys.map(k=>{
+    const dep=depOf(k);
+    const h=dep>0?Math.max(8,Math.round(dep/maxDep*100)):4;
+    const tip=dateText(k)+' \u00b7 \u09f3 '+money(dep)+' \u00b7 '+visOf(k)+' visits';
+    return '<div class="'+(k===t?'tbar now':'tbar')+'" title="'+esc(tip)+'"><i style="height:'+h+'%"></i><em>'+'SMTWTFS'[new Date(k+'T12:00').getDay()]+'</em></div>';
+  }).join('');
+  $('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2><span class="small">${esc(settings.branch)} \u00b7 ${esc(settings.zone)}</span></div><span class="small">${dateText(t)}</span></div>
+  <div class="dash-hero${now?'':' todo'}">
+    <div class="dh-top"><span class="dh-eyebrow">Today\u2019s Deposit</span><span class="dh-pill">${now?'Entry saved':'No entry yet'}</span></div>
+    <div class="dh-amount">\u09f3 ${money(now?total(now):0)}</div>
+    <div class="dh-sub">${lac(now?total(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
+    <button class="dh-cta" id="dashCta" type="button">${now?'Edit Today\u2019s Entry':'Add Today\u2019s Data'}</button>
+  </div>
+  <div class="dash-row">
+    <div class="card dash-trend">
+      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sum(week))}</span></div>
+      <div class="tbars">${bars}</div>
+    </div>
+    <div class="card dash-goal">
+      <div class="dh-row"><div class="sectiontitle">Monthly Target</div>${target>0?('<span class="pill">'+pct+'%</span>'):''}</div>
+      ${target>0?`
+      <div class="dh-goalnum">\u09f3 ${money(monthDep)} <span class="small">/ \u09f3 ${money(target)}</span></div>
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <div class="small" style="margin-top:8px">${daysLeft>0?(daysLeft+' days left this month'):'Last day of the month'} \u00b7 ${month.length} day${month.length===1?'':'s'} recorded</div>`
+      :`<div class="empty">Track the month against a target \u2014 set one in Settings.</div><button class="outline" id="dashGoalCfg" type="button" style="width:100%;margin-top:4px">Open Settings</button>`}
+    </div>
+  </div>
+  <div class="grid metrics">
+    <div class="card metric accent"><label>Today\u2019s Deposit</label><strong>\u09f3 ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div>
+    <div class="card metric green"><label>Today\u2019s Visits</label><strong>${now?visits(now):0}</strong><small>places visited</small></div>
+    <div class="card metric"><label>Weekly Deposit</label><strong>\u09f3 ${money(sum(week))}</strong><small>${week.length} day${week.length===1?'':'s'} logged</small></div>
+    <div class="card metric"><label>Monthly Deposit</label><strong>\u09f3 ${money(monthDep)}</strong><small>${month.length} day${month.length===1?'':'s'}${target>0?(' \u00b7 '+pct+'% of target'):''}</small></div>
+    <div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong><small>${monthAc} this month</small></div>
+    <div class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(now?accountsTotal(now):0)}</strong><small>${lac(now?accountsTotal(now):0)}</small></div>
+  </div>
+  <div class="card dash-hi">
+    <div class="sectiontitle">Highlights</div>
+    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(total(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
+    ${bestV?('<div class="hirow"><span class="hilabel">Most visits</span><b>'+visits(bestV)+' visits</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
+    ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
+    ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}
+  </div>`;
+  const cta=document.getElementById('dashCta');
+  if(cta)cta.onclick=()=>{nav('entry');if(now)renderEntry(now);};
+  const cfg=document.getElementById('dashGoalCfg');
+  if(cfg)cfg.onclick=()=>nav('settings');
+}
 function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-ano"><span class="rl">Account Number</span><input class="ano" placeholder="Account number" value="${esc(a.no||'')}"></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
 function renderEntry(record){record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),officers:[],visits:[],accounts:[]};$('#entry').innerHTML=`<div class="sectionhead"><h2>Daily Data Entry</h2><span class="small" id="draftStatus">Draft ready</span></div><div class="notice">Draft is saved automatically. Tap <b>Save Daily Data</b> to finalize the report.</div><form id="form"><div class="formwide"><div class="formgroup"><label>Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label>Total Places Visited</label><input id="places" class="amount" inputmode="numeric" value="${record.places||''}" placeholder="0"></div><div class="formgroup"><label>Branch</label><input value="${esc(settings.branch)}" readonly></div><div class="formgroup"><label>Zone · Team · Total Branch</label><input value="${esc(settings.zone)} · ${esc(settings.team)} · ${settings.totalBranch}" readonly></div></div><div class="section"><div class="sectiontitle">Officers</div><div id="officers">${(record.officers||[]).map(officerRow).join('')}</div><button class="add" type="button" id="addOfficer">+ Add officer</button></div><div class="section"><div class="sectiontitle">Visit Details</div><div id="visits">${(record.visits||[]).map(visitRow).join('')}</div><button class="add" type="button" id="addVisit">+ Add visit</button></div><div class="section"><div class="sectiontitle">Deposit Entry</div><div class="formwide">${[['cash','Cash'],['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label>${l} (৳)</label><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div>`).join('')}<div class="total full">Total Deposit: <b id="depTotal">৳ 0</b> <span class="small" id="depLac"></span></div></div></div><div class="section"><div class="sectiontitle">New Accounts</div><div id="accounts">${(record.accounts||[]).map(accountRow).join('')}</div><button class="add" type="button" id="addAccount">+ Add account</button><div class="total" style="margin-top:9px">Accounts: <b id="acCount">0</b> · Account Deposit: <b id="acTotal">৳ 0</b></div></div><div id="sharePanel"></div><button class="primary" style="width:100%;margin-top:18px" type="submit">Save Daily Data</button></form>`;bindEntry();calcEntry()}
 function currentForm(){let f=$('#form');return {date:$('#date').value,places:$('#places').value, cash:$('#cash').value,clearing:$('#clearing').value,rtgs:$('#rtgs').value,npsb:$('#npsb').value,agent:$('#agent').value,officers:$$('.officer').map(x=>({name:x.querySelector('.oname').value,designation:x.querySelector('.odes').value})).filter(x=>x.name),visits:$$('.visit').map(x=>({officer:x.querySelector('.vofficer').value,type:x.querySelector('.vtype').value,name:x.querySelector('.vname').value,address:x.querySelector('.vaddress').value,mobile:x.querySelector('.vmobile').value})).filter(x=>x.name||x.address||x.mobile),accounts:$$('.account').map(x=>({category:x.querySelector('.acat').value,no:x.querySelector('.ano').value.trim(),amount:x.querySelector('.aamount').value})).filter(x=>x.no||x.amount),updated:new Date().toISOString()}}
