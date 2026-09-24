@@ -33,6 +33,8 @@ const day = (date, cash) => ({
   agent: "",
   officers: [{ name: "Harun Or Rashid", designation: "Assistant Vice President" }],
   visits: [{ officer: "Harun Or Rashid", type: "School", name: "Tantar High", address: "Tantar", mobile: "01711111111" }],
+  /* `no` is what an older build used to store; the number is not collected
+     or shown anymore, and a row that still has one must be unaffected. */
   accounts: [{ category: "Savings", no: "1001", amount: "20000" }],
   created: date + "T09:00:00.000Z",
   updated: date + "T09:00:00.000Z"
@@ -182,7 +184,8 @@ test("the monthly statement PDF is a date table with blank columns", async () =>
   assert.match(body, /School/);
   assert.match(body, /Tantar High/);
   assert.match(body, /01711111111/);
-  assert.match(body, /Savings 1001 20,000/);
+  assert.match(body, /Savings 20,000/);
+  assert.doesNotMatch(body, /1001/, "an account number is not printed anywhere");
   const total = lines.find((l) => l.startsWith("TOTAL"));
   const totalCells = statementCells(total, cols);
   assert.equal(totalCells[2].trim(), "21,30,000");
@@ -263,7 +266,8 @@ test("the account report exports offline too", async () => {
   assert.match(accountPdf, /School/);
   assert.match(accountPdf, /Tantar High/);
   assert.match(accountPdf, /01711111111/);
-  assert.match(accountPdf, /Savings 1001 20,000/);
+  assert.match(accountPdf, /Savings 20,000/);
+  assert.doesNotMatch(accountPdf, /1001/);
   assert.match(accountPdf, /12,50,000/);
   const accountText = [...accountPdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
   const expected = window.statementLines("2026-09-01").filter((s) => s.trim())
@@ -375,6 +379,39 @@ test("the entry form keeps Total Places Visited and saves it with the day", asyn
   const form = window.currentForm();
   assert.equal(form.places, "6", "the typed count is part of the record");
   assert.equal(window.visits({ date: "2026-09-21", places: form.places, accounts: [] }), 6);
+});
+
+test("an account row is a type and an amount — no account number anywhere", async () => {
+  const { window } = bootOffline({ records: [] });
+  await new Promise((r) => setTimeout(r, 250));
+  window.renderEntry();
+  const doc = window.document;
+  assert.equal(doc.querySelector("#accounts .ano"), null, "the entry form does not ask for an account number");
+  assert.doesNotMatch(doc.querySelector("#accounts").innerHTML, /Account Number/i);
+
+  doc.querySelector("#addAccount").click();
+  const row = doc.querySelector("#accounts .account");
+  row.querySelector(".acat").value = "MTDR";
+  row.querySelector(".aamount").value = "45000";
+  const accounts = window.currentForm().accounts;
+  assert.equal(accounts.length, 1);
+  assert.equal(accounts[0].category, "MTDR");
+  assert.equal(accounts[0].amount, "45000");
+  assert.deepEqual(Object.keys(accounts[0]).sort(), ["amount", "category"],
+    "the record carries the type and the money, nothing else");
+
+  /* A day saved by an older build still has numbers in it: they are ignored,
+     never shown, and never written back. */
+  const { window: w2 } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  w2.renderAccountReport("daily", "2026-09-21");
+  const card = w2.document.querySelector("#reports .aitem");
+  assert.match(card.querySelector("h3").textContent, /Savings/);
+  assert.doesNotMatch(card.innerHTML, /Account Number/i);
+  assert.doesNotMatch(card.innerHTML, /1001/);
+  assert.match(card.innerHTML, /Initial Deposit/);
+  w2.renderReports("daily", "2026-09-21");
+  assert.doesNotMatch(w2.document.querySelector("#reports").innerHTML, /1001/);
 });
 
 test("closing the preview saves nothing", async () => {

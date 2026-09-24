@@ -151,6 +151,23 @@ test("normalizeRecords drops malformed rows and keeps the newest write per date"
   assert.deepEqual(rows[1].visits, [{ type: "School", name: "X" }]);
 });
 
+test("normalizeRecords drops the retired account number but keeps the rest of the row", () => {
+  const rows = normalizeRecords([
+    {
+      date: "2026-09-03",
+      accounts: [
+        { category: "Savings", no: "1001", amount: "20000" },
+        { category: "MTDR", amount: "45000" }
+      ]
+    }
+  ]);
+  assert.deepEqual(rows[0].accounts, [
+    { category: "Savings", amount: "20000" },
+    { category: "MTDR", amount: "45000" }
+  ]);
+  assert.equal(JSON.stringify(rows).includes("1001"), false);
+});
+
 test("normalizeSettings keeps device preferences but never the PIN or retired sync switches", () => {
   const out = normalizeSettings({
     branch: "Tantar",

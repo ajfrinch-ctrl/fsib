@@ -93,10 +93,13 @@ The report the branch sends has two parts, both built in the page:
   **lakh** beside the full figure (`Tk 15,00,000 (15.00 Lac)`), because that is
   the unit the branch reads.
 
-An account number is a local record detail: it stays in the saved record, the
-Accounts report and the PDF, but it is never broadcast on WhatsApp. The detailed
-message says **`NUMBER OF ACCOUNTS:`** instead — how many accounts were opened
-that day — and lists each new account by type and amount.
+An account number is not collected at all. The entry form asks for an account
+type and the money it brought in, and the detailed message says
+**`NUMBER OF ACCOUNTS:`** — how many accounts were opened that day — and lists
+each new account by type and amount. The number is dropped on every read and
+write by the same rule that drops the retired sync switches (`no` in
+`RETIRED_ACCOUNT_FIELDS`), so an older blob cannot bring it back, and a day
+saved by an older build simply loses it on the next sync.
 
 ## API
 
@@ -210,7 +213,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 82 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text
+npm test           # 84 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
