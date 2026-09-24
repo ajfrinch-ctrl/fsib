@@ -435,6 +435,18 @@ test("the Save button sits under everything it saves, and it saves all of it", a
   assert.equal(after(doc.querySelector("#sTemplate")), true, "the button comes after the WhatsApp template");
   assert.equal(save.closest(".settings-card"), null, "it is not buried inside one section");
 
+  /* The profile fields are grouped, not one long unbroken list of inputs. */
+  const groups = [...doc.querySelectorAll("#settings .settings-group")].map((g) => g.textContent.trim());
+  assert.deepEqual(groups, ["Branch", "Manager", "Monthly target"]);
+  const profile = doc.querySelectorAll("#settings .settings-card")[0];
+  assert.deepEqual(
+    [...profile.querySelectorAll("input")].map((i) => i.id),
+    ["sBranch", "sZone", "sTeam", "sBranches", "sManager", "sManagerDesignation", "sTarget"],
+    "the profile card holds every profile field, the target included"
+  );
+  assert.equal(profile.querySelector("#sBranch").closest(".formgroup").classList.contains("wide"), true,
+    "the long branch name spans the row, the short fields pair up");
+
   doc.querySelector("#sBranch").value = "Cumilla Branch";
   doc.querySelector("#sTarget").value = "5000000";
   doc.querySelector("#sTemplate").value = "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}";
