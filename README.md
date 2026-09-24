@@ -19,19 +19,19 @@ Two devices now converge in about a second, with nobody tapping **Sync**:
   `/api/sync` and merges. A quiet channel costs one `304` with an empty body per
   hold, and backs off while the app sits idle.
 - **Upload** — an edit saves to IndexedDB/localStorage first, then uploads by
-  itself ~1.5 s after the last keystroke.
-- **Safety net** — automatic syncs are budgeted at `LIVE_CONFIG.MAX_PER_DAY`
-  (500) per device per day. When the budget runs out, uploads fall back to the
-  old *one scheduled sync per day* and the live channel keeps pulling, because a
-  parked request is not a write.
+  itself ~1.5 s after the last keystroke. Every time: there is no daily gate and
+  no budget — as long as **Auto-sync** is on, every change goes up on its own.
+  Turning Auto-sync off holds uploads back until **Sync Now**.
 - **Offline** — nothing changes: edits queue locally, the parked request is
   dropped, and the queue flushes the moment the device is back online.
 
 Long-poll rather than SSE/WebSocket because a Netlify Function is stateless and
 capped at 60 s: a held GET works on every host this repo deploys to, with no
-reconnect choreography and no sticky session. Real-time can be switched off per
-device in **Settings → Cloud Sync**, and a deploy without `/api/live` is
-detected once (404/405) and never retried — the scheduled sync takes over.
+reconnect choreography and no sticky session. The live download channel can be
+switched off per device in **Settings → Cloud Sync** (uploads keep running
+automatically while Auto-sync is on), and a deploy without `/api/live` is
+detected once (404/405) and never retried — downloads then arrive on startup
+and manual refresh while edits still upload by themselves.
 
 The header shows the truth about the channel: `LIVE` (parked and watching),
 `UPDATING` (pulling), `RETRY` (backing off), `NO LIVE` (server has no endpoint)
@@ -81,7 +81,8 @@ the platform's 60 s function limit).
 | anything but `GET`/`HEAD` | `405 { error: "method-not-allowed" }` |
 
 A client that gets `404`/`405` marks the channel unavailable and stops asking,
-so an older deploy degrades to scheduled sync instead of being hammered.
+so an older deploy is left alone instead of being hammered; uploads keep
+working either way.
 
 The `pin` setting is device-only (`localStorage["bmr_v1_pin"]`) and is stripped
 server-side, so a lost phone's PIN never reaches a blob every device can read.
@@ -111,7 +112,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 60 tests: store, live channel, client merge, app↔API, two devices over real HTTP
+npm test           # 64 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -130,11 +131,16 @@ rm .tmp/dev-state.json             # reset the cloud state
 `npm test` boots the real `index.html` in jsdom and points its `fetch` at the
 real handlers from `src/lib/store.ts` and `src/lib/live.ts`, so the app's
 `syncNow()` and its live channel are tested against the same code Netlify runs —
-including a lost-race 409 that must re-merge and retry, a server with no
-`/api/live`, and a spent real-time budget. `tests/live-e2e.test.mjs` goes one
+including a lost-race 409 that must re-merge and retry, unlimited automatic
+uploads with no daily gate, and a server with no `/api/live` whose edits still
+upload by themselves. `tests/live-e2e.test.mjs` goes one
 step further: it spawns `dev-server.mjs` on a free port and runs two devices
 against it over real sockets, and reports the observed keystroke-to-other-screen
-latency.
+latency. `tests/pdf-export.test.mjs` boots the app with every network call
+failing and walks the whole report flow — pick a date, generate, check the
+preview, download — proving all three report PDFs (statement, visiting,
+accounts) are built and saved by the browser alone, and that nothing is
+written to disk unless Download is tapped.
 
 ## Deploy
 

@@ -1,8 +1,8 @@
 # FSIB Branch Marketing Report — Netlify config
 #
-# Static PWA shell + one Netlify Function (/api/sync) backed by Netlify Blobs.
-# The build copies the app shell into public/ so that node_modules, src, server
-# and the tests never ship in the deploy.
+# Static PWA shell + two Netlify Functions (/api/sync, /api/live) backed by
+# Netlify Blobs. The build copies the app shell into public/ so that
+# node_modules, src, server and the tests never ship in the deploy.
 
 [build]
   command = "npm run build"

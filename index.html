@@ -45,9 +45,7 @@ button,a,input,select,textarea,label.outline{touch-action:manipulation}
   justify-content:space-between;gap:8px 10px;box-shadow:0 4px 12px #0003}
 .top>div:first-child{min-width:0;flex:1 1 100%}
 .dark .top{background:linear-gradient(125deg,#000,#061d43)}
-.bank{font-size:10px;letter-spacing:1.1px;font-weight:800;opacity:.9;overflow-wrap:anywhere}
-.branch{font-size:16px;font-weight:800;margin:3px 0;overflow-wrap:anywhere}
-.reportname{font-size:11px;letter-spacing:.5px;color:#e8f2ff;overflow-wrap:anywhere}
+.reportname{font-size:15px;font-weight:800;letter-spacing:.4px;color:#fff;overflow-wrap:anywhere}
 .head-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;width:100%;justify-content:flex-end}
 .iconbtn,.top button{border:1px solid #ffffff55;background:#ffffff1d;color:#fff;border-radius:10px;
   min-width:var(--tap);min-height:var(--tap);font:inherit;font-weight:800;cursor:pointer;padding:0 12px;
@@ -138,6 +136,48 @@ input[type=date],input[type=month]{min-height:46px}
 .bar{background:linear-gradient(#4c97ff,#1264d6);flex:1;min-width:10px;border-radius:5px 5px 0 0;position:relative}
 .bar em{position:absolute;bottom:-19px;width:100%;font-size:9px;text-align:center;color:var(--muted);font-style:normal}
 
+/* ---------------- dashboard (hero, 7-day trend, target, highlights) ---------------- */
+.dash-hero{border-radius:18px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#06377d,#1264d6 60%,#3f8bff);box-shadow:0 12px 30px #0a479d33;margin-bottom:10px}
+.dash-hero::after{content:"";position:absolute;right:-34px;top:-46px;width:150px;height:150px;border-radius:50%;background:#ffffff14}
+.dash-hero.todo{background:linear-gradient(135deg,#31456b,#5a7bb8 60%,#86a8de)}
+.dark .dash-hero{background:linear-gradient(135deg,#000,#061d43 65%,#0a3a7a)}
+.dark .dash-hero.todo{background:linear-gradient(135deg,#10141f,#28344e 65%,#3a5a8c)}
+.dh-top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:relative;z-index:1}
+.dh-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;opacity:.85}
+.dh-pill{background:#ffffff26;border:1px solid #ffffff40;border-radius:20px;padding:5px 10px;font-size:10px;font-weight:800;white-space:nowrap}
+.dh-amount{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:10px;position:relative;z-index:1;overflow-wrap:anywhere}
+.dh-sub{font-size:12.5px;opacity:.92;margin-top:5px;position:relative;z-index:1;overflow-wrap:anywhere}
+.dh-cta{margin-top:14px;width:100%;min-height:var(--tap);border:0;border-radius:12px;background:#fff;color:#0a479d;
+  font-weight:800;font-size:14px;padding:12px;position:relative;z-index:1}
+.dark .dh-cta{background:#1264d6;color:#fff}
+.dash-row{display:grid;gap:10px;margin-bottom:10px}
+.dh-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dh-row .sectiontitle{margin:0}
+.tbars{display:flex;gap:7px;align-items:end;height:112px;margin-top:12px;border-bottom:2px solid var(--line);padding:0 2px}
+.tbar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.tbar i{display:block;width:100%;max-width:36px;min-height:4px;border-radius:6px 6px 0 0;background:linear-gradient(#7fb2ff,#1264d6)}
+.dark .tbar i{background:linear-gradient(#2c66c4,#468fff)}
+.tbar.now i{background:linear-gradient(#38c48a,#0b9562)}
+.dark .tbar.now i{background:linear-gradient(#0f7a52,#31c48a)}
+.tbar em{font-style:normal;font-size:10px;font-weight:700;color:var(--muted);margin-top:5px}
+.tbar.now em{color:var(--green)}
+.dash-goal .dh-goalnum{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
+.dash-goal .progress i{background:linear-gradient(90deg,#3f8bff,#1264d6)}
+#dashboard .metric{position:relative;border-radius:16px;padding:14px}
+#dashboard .metric strong{font-size:20px;margin-top:6px}
+#dashboard .metric small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+.dash-hi{margin-top:10px}
+.hirow{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed var(--line)}
+.hirow:last-child{border-bottom:0;padding-bottom:2px}
+.hilabel{flex:1 1 90px;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.hirow b{font-size:15px;overflow-wrap:anywhere}
+@media(min-width:700px){
+  .dash-row{grid-template-columns:1.35fr 1fr}
+  #dashboard .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dh-amount{font-size:40px}
+}
+
 /* ---------------- bottom navigation ---------------- */
 .nav{position:fixed;z-index:35;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);
   display:flex;justify-content:center;padding-bottom:var(--sab);box-shadow:0 -4px 16px #1d4c8a12}
@@ -159,6 +199,71 @@ input[type=date],input[type=month]{min-height:46px}
   box-shadow:0 -8px 30px #0004}
 .modalbox h3{margin-top:0}
 .modal-scroll{max-height:92dvh;overflow:auto}
+/* ---------------- reports (view tabs, period bar, statement hero, breakdown) ---------------- */
+.rep-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.rep-tabs button{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:12px;min-height:var(--tap);font-size:12.5px;font-weight:800;padding:8px 6px}
+.rep-tabs button.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 16px #1264d640}
+.dark .rep-tabs button.on{background:#1264d6;color:#fff}
+.rep-seg{display:flex;gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:8px}
+.rep-seg button{flex:1;min-width:0;border:0;background:transparent;border-radius:9px;min-height:40px;font-size:12.5px;font-weight:800;color:var(--muted);padding:0 4px}
+.rep-seg button.on{background:var(--card);color:var(--blue);box-shadow:var(--shadow)}
+.rep-bar{display:flex;align-items:stretch;gap:8px;margin-bottom:12px}
+.rep-nav{flex:0 0 46px;border:1px solid var(--line);background:var(--card);border-radius:12px;font-size:22px;font-weight:800;color:var(--blue);min-height:46px}
+.rep-nav:disabled{opacity:.35}
+.rep-date{flex:1;margin:0;min-width:0}
+.rep-hero{border-radius:18px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0b1f3f,#163a73 55%,#2b63c9);box-shadow:0 12px 30px #0b1f3f33;margin-bottom:12px}
+.rep-hero::after{content:"";position:absolute;right:-40px;bottom:-56px;width:160px;height:160px;border-radius:50%;background:#ffffff12}
+.dark .rep-hero{background:linear-gradient(135deg,#000,#0a1830 60%,#14315f)}
+.rh-label{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.75;position:relative;z-index:1}
+.rh-period{font-size:15px;font-weight:800;margin-top:2px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-amount{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:12px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-sub{font-size:12.5px;opacity:.92;margin-top:5px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-progwrap{margin-top:12px;position:relative;z-index:1}
+.rh-prog{height:10px;border-radius:6px;background:#ffffff2e;overflow:hidden}
+.rh-prog i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#8fd0ff,#4be08a)}
+.rep-metrics{margin-bottom:2px}
+.deprow{padding:9px 0}
+.deprow:first-child{padding-top:2px}
+.deprow:last-child{padding-bottom:2px}
+.deprow .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:6px}
+.deprow .lbl span{font-weight:800;overflow-wrap:anywhere}
+.deprow .lbl b{overflow-wrap:anywhere}
+.deprow .lbl small{color:var(--muted);font-weight:700}
+.dep-track{height:10px;border-radius:6px;background:var(--soft);border:1px solid var(--line);overflow:hidden}
+.dep-fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#4c97ff,#1264d6)}
+.dark .dep-fill{background:linear-gradient(90deg,#2b63c9,#4c97ff)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+.chip b{color:var(--blue)}
+.daystats{display:flex;gap:8px;margin:10px 0 2px}
+.daystat{flex:1;min-width:0;background:var(--soft);border-radius:10px;padding:8px 9px}
+.daystat label{margin-bottom:3px}
+.daystat b{font-size:13.5px;overflow-wrap:anywhere}
+details.det{margin-top:10px;border-top:1px dashed var(--line);padding-top:4px}
+details.det summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:40px;font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.3px}
+details.det summary::-webkit-details-marker{display:none}
+details.det summary::after{content:"\25BE";margin-left:auto;transition:transform .15s}
+details.det[open] summary::after{transform:rotate(180deg)}
+.detrow{margin-top:8px}
+.detrow:last-child{padding-bottom:4px}
+.vitem h3,.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
+.rec-meta{display:grid;gap:8px}
+.rec-meta b{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){details.det summary::after{transition:none}}
+@media(min-width:700px){
+  .rep-hero{padding:22px 20px 18px}
+  .rh-amount{font-size:40px}
+  #reports .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rec-meta{grid-template-columns:1fr 1fr 1fr}
+}
+
+.pdfpreview{margin:4px 0 12px}
+.pdfpage{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px;margin-bottom:10px;box-shadow:var(--shadow)}
+.pdfpage-no{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.pdfpage pre{margin:0;overflow-x:auto;white-space:pre;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.55;-webkit-overflow-scrolling:touch}
+.dark .pdfpage{background:var(--soft)}
+
 .empty{text-align:center;color:var(--muted);padding:28px}
 .notice{padding:11px;border-radius:10px;background:#fff5d8;color:#755400;font-size:12px;margin-bottom:10px}
 .dark .notice{background:#2a2410;color:#ffd98a}
@@ -236,10 +341,10 @@ input[type=date],input[type=month]{min-height:46px}
   .modalbox{max-height:96dvh}
 }
 </style></head><body><main class="app">
-<header class="top"><div><div class="bank">FIRST SECURITY ISLAMI BANK PLC</div><div class="branch" id="headerBranch">TANTAR BRANCH</div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><span class="livedot off" id="liveBadge" title="Real-time cloud channel"><i></i><span id="liveBadgeText">LIVE</span></span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
+<header class="top"><div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><span class="livedot off" id="liveBadge" title="Real-time cloud channel"><i></i><span id="liveBadgeText">LIVE</span></span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
 </main><nav class="nav" aria-label="Main navigation"><div class="navinner"><button class="active" data-page="dashboard" aria-current="page"><span aria-hidden="true">⌂</span><b>Dashboard</b></button><button data-page="entry"><span aria-hidden="true">✚</span><b>Data Entry</b></button><button data-page="history"><span aria-hidden="true">◷</span><b>History</b></button><button data-page="reports"><span aria-hidden="true">▥</span><b>Reports</b></button><button data-page="settings"><span aria-hidden="true">⚙</span><b>Settings</b></button></div></nav><div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small" id="pinText">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="reportModal"><div class="modalbox modal-scroll"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
+<div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="pdfModal"><div class="modalbox modal-scroll"><div class="sectionhead"><div><h2 id="pdfPreviewTitle">Report Preview</h2><span class="small" id="pdfPreviewMeta"></span></div><button class="outline" id="closePdfPreview">×</button></div><div id="pdfPreviewBody" class="pdfpreview"></div><div class="actions"><button class="primary" id="pdfDownloadBtn">⬇ Download PDF</button><button class="outline" id="pdfBackBtn">Back</button></div><p class="small">Saved straight to this device — works offline.</p></div></div><div class="modal" id="reportModal"><div class="modalbox modal-scroll"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
 <script>
 
 /* Cloud config — shared by all devices through this site's own /api/sync route, which is
@@ -249,15 +354,10 @@ input[type=date],input[type=month]{min-height:46px}
 const SYNC_CONFIG={
   API_PATH:'/api/sync',
   LIVE_API_PATH:'/api/live',
-  SCHEMA_VERSION:3,
-  AUTO_SYNC_MAX_PER_DAY:1,
-  AUTO_SYNC_DEBOUNCE_MS:45000,
-  AUTO_REFRESH_DAYS:3,
   MAX_SYNC_LOG:30,
   MAX_STATE_BYTES:4000000,
   /* the PIN unlocks one phone; it must never travel to the shared blob */
-  DEVICE_ONLY_SETTING_KEYS:['pin'],
-  DEVICE_PREFERENCE_KEYS:['theme','autoLock','lastBackup','lastSync','autoSync','realtime','settingsUpdatedAt']
+  DEVICE_ONLY_SETTING_KEYS:['pin']
 };
 const CLOUD_API=SYNC_CONFIG.API_PATH;
 
@@ -268,12 +368,9 @@ const CLOUD_API=SYNC_CONFIG.API_PATH;
    wait expires with nothing to report (304, empty body). No polling loop, no
    document shipped — the device only learns "the cloud moved", then pulls.
 
-   UPLOAD: an edit debounces LIVE_UPLOAD_DEBOUNCE_MS and goes up immediately,
-   instead of waiting for the day's single automatic sync. A per-device daily
-   budget (LIVE_SYNC_MAX_PER_DAY) is the safety net: a stuck loop or a runaway
-   queue can burn that budget and then falls back to the old once-a-day gate,
-   never to unlimited traffic. The live channel itself keeps running, so
-   downloads stay real-time even while uploads are capped. */
+   UPLOAD: every edit debounces LIVE_CONFIG.UPLOAD_DEBOUNCE_MS and goes up by
+   itself — automatically, every time, with no daily gate and no budget. The
+   only cap is the user's own Auto-sync switch in Settings. */
 const LIVE_CONFIG={
   API_PATH:SYNC_CONFIG.LIVE_API_PATH,
   /* how long one request may be parked; the server caps it at 55s */
@@ -288,17 +385,17 @@ const LIVE_CONFIG={
   RETRY_BASE_MS:5000,
   RETRY_MAX_MS:120000,
   /* edit -> upload */
-  UPLOAD_DEBOUNCE_MS:1500,
-  /* per-device safety net on automatic syncs per day (0 = fall back to 1/day) */
-  MAX_PER_DAY:500
+  UPLOAD_DEBOUNCE_MS:1500
 };
 const LIVE_API=LIVE_CONFIG.API_PATH;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
-const legacyTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\n{{officers}}';
+const DEFAULT_SETTINGS={branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
+/* Merge over the defaults: a stored or cloud settings object written by an
+   older build can be missing keys, and a missing weeklyStart used to take the
+   History screen down with an invalid date. */
+let settings=Object.assign({},DEFAULT_SETTINGS,JSON.parse(localStorage.getItem(K+'settings')||'null')||{});
 const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
-if(settings.template===legacyTemplate) settings.template=treasuryTemplate;
 if(settings.autoSync===undefined){settings.autoSync=true;}
 /* Real-time is on by default: it is what makes several branch phones show the
    same report without anyone tapping Sync. It can be switched off per device
@@ -318,7 +415,7 @@ const CLOUD_VERSION_KEY=K+'cloud_version';
 function getCloudVersion(){const v=parseInt(localStorage.getItem(CLOUD_VERSION_KEY)||'0',10);return (Number.isFinite(v)&&v>0)?v:0}
 function setCloudVersion(v){const n=Number(v)||0;try{localStorage.setItem(CLOUD_VERSION_KEY,String(n))}catch(e){}_meta.lastCloudVersion=n;return n}
 settings.manager=settings.manager||'Harun Or Rashid'; settings.managerDesignation=settings.managerDesignation||'Manager';
-let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), deferred, locked=false, activity;
+let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), locked=false, activity;
 const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
 function save(){
   try{settings._seq=(settings._seq||0)+1;}catch(e){}
@@ -328,9 +425,79 @@ function save(){
 }function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>{const on=x.dataset.page===page;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});window.scrollTo(0,0)}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
-function renderDashboard(){let t=today(), now=records.find(r=>r.date===t), start=new Date();start.setDate(start.getDate()-6);let week=records.filter(r=>new Date(r.date+'T12:00')>=start), month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7)), sum=a=>a.reduce((x,r)=>x+total(r),0), best=[...records].sort((a,b)=>total(b)-total(a))[0], bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];let officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));let bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];$('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="small">${dateText(t)}</span></div><div class="grid metrics"><div class="card metric accent"><label>Today’s Deposit</label><strong>৳ ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div><div class="card metric green"><label>Today’s Visits</label><strong>${now?visits(now):0}</strong></div><div class="card metric"><label>Weekly Deposit</label><strong>৳ ${money(sum(week))}</strong></div><div class="card metric"><label>Monthly Deposit</label><strong>৳ ${money(sum(month))}</strong></div><div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong></div><div class="card metric"><label>Account Deposit</label><strong>৳ ${money(now?accountsTotal(now):0)}</strong></div></div>`}
+function renderDashboard(){
+  const t=today();
+  const now=records.find(r=>r.date===t);
+  const start=new Date();start.setDate(start.getDate()-6);
+  const week=records.filter(r=>new Date(r.date+'T12:00')>=start);
+  const month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7));
+  const sum=a=>a.reduce((x,r)=>x+total(r),0);
+  const best=[...records].sort((a,b)=>total(b)-total(a))[0];
+  const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
+  const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
+  const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
+  const monthDep=sum(month);
+  const monthAc=month.reduce((a,r)=>a+accountsCount(r),0);
+  const target=num(settings.target);
+  const pct=target>0?Math.min(100,Math.round(monthDep/target*100)):0;
+  const dim=new Date(Number(t.slice(0,4)),Number(t.slice(5,7)),0).getDate();
+  const daysLeft=Math.max(0,dim-Number(t.slice(8,10)));
+  const p2=n=>String(n).padStart(2,'0');
+  /* last seven days (today last) as a small bar chart */
+  const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
+  const recOf=k=>records.find(z=>z.date===k);
+  const depOf=k=>{const r=recOf(k);return r?total(r):0};
+  const visOf=k=>{const r=recOf(k);return r?visits(r):0};
+  const maxDep=Math.max(1,...dayKeys.map(depOf));
+  const bars=dayKeys.map(k=>{
+    const dep=depOf(k);
+    const h=dep>0?Math.max(8,Math.round(dep/maxDep*100)):4;
+    const tip=dateText(k)+' \u00b7 \u09f3 '+money(dep)+' \u00b7 '+visOf(k)+' visits';
+    return '<div class="'+(k===t?'tbar now':'tbar')+'" title="'+esc(tip)+'"><i style="height:'+h+'%"></i><em>'+'SMTWTFS'[new Date(k+'T12:00').getDay()]+'</em></div>';
+  }).join('');
+  $('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2></div><span class="small">${dateText(t)}</span></div>
+  <div class="dash-hero${now?'':' todo'}">
+    <div class="dh-top"><span class="dh-eyebrow">Today\u2019s Deposit</span><span class="dh-pill">${now?'Entry saved':'No entry yet'}</span></div>
+    <div class="dh-amount">\u09f3 ${money(now?total(now):0)}</div>
+    <div class="dh-sub">${lac(now?total(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
+    <button class="dh-cta" id="dashCta" type="button">${now?'Edit Today\u2019s Entry':'Add Today\u2019s Data'}</button>
+  </div>
+  <div class="dash-row">
+    <div class="card dash-trend">
+      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sum(week))}</span></div>
+      <div class="tbars">${bars}</div>
+    </div>
+    <div class="card dash-goal">
+      <div class="dh-row"><div class="sectiontitle">Monthly Target</div>${target>0?('<span class="pill">'+pct+'%</span>'):''}</div>
+      ${target>0?`
+      <div class="dh-goalnum">\u09f3 ${money(monthDep)} <span class="small">/ \u09f3 ${money(target)}</span></div>
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <div class="small" style="margin-top:8px">${daysLeft>0?(daysLeft+' days left this month'):'Last day of the month'} \u00b7 ${month.length} day${month.length===1?'':'s'} recorded</div>`
+      :`<div class="empty">Track the month against a target \u2014 set one in Settings.</div><button class="outline" id="dashGoalCfg" type="button" style="width:100%;margin-top:4px">Open Settings</button>`}
+    </div>
+  </div>
+  <div class="grid metrics">
+    <div class="card metric accent"><label>Today\u2019s Deposit</label><strong>\u09f3 ${money(now?total(now):0)}</strong><small>${lac(now?total(now):0)}</small></div>
+    <div class="card metric green"><label>Today\u2019s Visits</label><strong>${now?visits(now):0}</strong><small>places visited</small></div>
+    <div class="card metric"><label>Weekly Deposit</label><strong>\u09f3 ${money(sum(week))}</strong><small>${week.length} day${week.length===1?'':'s'} logged</small></div>
+    <div class="card metric"><label>Monthly Deposit</label><strong>\u09f3 ${money(monthDep)}</strong><small>${month.length} day${month.length===1?'':'s'}${target>0?(' \u00b7 '+pct+'% of target'):''}</small></div>
+    <div class="card metric"><label>New Accounts</label><strong>${now?accountsCount(now):0}</strong><small>${monthAc} this month</small></div>
+    <div class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(now?accountsTotal(now):0)}</strong><small>${lac(now?accountsTotal(now):0)}</small></div>
+  </div>
+  <div class="card dash-hi">
+    <div class="sectiontitle">Highlights</div>
+    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(total(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
+    ${bestV?('<div class="hirow"><span class="hilabel">Most visits</span><b>'+visits(bestV)+' visits</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
+    ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
+    ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}
+  </div>`;
+  const cta=document.getElementById('dashCta');
+  if(cta)cta.onclick=()=>{nav('entry');if(now)renderEntry(now);};
+  const cfg=document.getElementById('dashGoalCfg');
+  if(cfg)cfg.onclick=()=>nav('settings');
+}
 function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-ano"><span class="rl">Account Number</span><input class="ano" placeholder="Account number" value="${esc(a.no||'')}"></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
-function renderEntry(record){record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),officers:[],visits:[],accounts:[]};$('#entry').innerHTML=`<div class="sectionhead"><h2>Daily Data Entry</h2><span class="small" id="draftStatus">Draft ready</span></div><div class="notice">Draft is saved automatically. Tap <b>Save Daily Data</b> to finalize the report.</div><form id="form"><div class="formwide"><div class="formgroup"><label>Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label>Total Places Visited</label><input id="places" class="amount" inputmode="numeric" value="${record.places||''}" placeholder="0"></div><div class="formgroup"><label>Branch</label><input value="${esc(settings.branch)}" readonly></div><div class="formgroup"><label>Zone · Team · Total Branch</label><input value="${esc(settings.zone)} · ${esc(settings.team)} · ${settings.totalBranch}" readonly></div></div><div class="section"><div class="sectiontitle">Officers</div><div id="officers">${(record.officers||[]).map(officerRow).join('')}</div><button class="add" type="button" id="addOfficer">+ Add officer</button></div><div class="section"><div class="sectiontitle">Visit Details</div><div id="visits">${(record.visits||[]).map(visitRow).join('')}</div><button class="add" type="button" id="addVisit">+ Add visit</button></div><div class="section"><div class="sectiontitle">Deposit Entry</div><div class="formwide">${[['cash','Cash'],['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label>${l} (৳)</label><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div>`).join('')}<div class="total full">Total Deposit: <b id="depTotal">৳ 0</b> <span class="small" id="depLac"></span></div></div></div><div class="section"><div class="sectiontitle">New Accounts</div><div id="accounts">${(record.accounts||[]).map(accountRow).join('')}</div><button class="add" type="button" id="addAccount">+ Add account</button><div class="total" style="margin-top:9px">Accounts: <b id="acCount">0</b> · Account Deposit: <b id="acTotal">৳ 0</b></div></div><div id="sharePanel"></div><button class="primary" style="width:100%;margin-top:18px" type="submit">Save Daily Data</button></form>`;bindEntry();calcEntry()}
+function renderEntry(record){record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),officers:[],visits:[],accounts:[]};$('#entry').innerHTML=`<div class="sectionhead"><h2>Daily Data Entry</h2><span class="small" id="draftStatus">Draft ready</span></div><div class="notice">Draft is saved automatically. Tap <b>Save Daily Data</b> to finalize the report.</div><form id="form"><div class="formwide"><div class="formgroup"><label>Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label>Total Places Visited</label><input id="places" class="amount" inputmode="numeric" value="${record.places||''}" placeholder="0"></div></div><div class="section"><div class="sectiontitle">Officers</div><div id="officers">${(record.officers||[]).map(officerRow).join('')}</div><button class="add" type="button" id="addOfficer">+ Add officer</button></div><div class="section"><div class="sectiontitle">Visit Details</div><div id="visits">${(record.visits||[]).map(visitRow).join('')}</div><button class="add" type="button" id="addVisit">+ Add visit</button></div><div class="section"><div class="sectiontitle">Deposit Entry</div><div class="formwide">${[['cash','Cash'],['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label>${l} (৳)</label><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div>`).join('')}<div class="total full">Total Deposit: <b id="depTotal">৳ 0</b> <span class="small" id="depLac"></span></div></div></div><div class="section"><div class="sectiontitle">New Accounts</div><div id="accounts">${(record.accounts||[]).map(accountRow).join('')}</div><button class="add" type="button" id="addAccount">+ Add account</button><div class="total" style="margin-top:9px">Accounts: <b id="acCount">0</b> · Account Deposit: <b id="acTotal">৳ 0</b></div></div><div id="sharePanel"></div><button class="primary" style="width:100%;margin-top:18px" type="submit">Save Daily Data</button></form>`;bindEntry();calcEntry()}
 function currentForm(){let f=$('#form');return {date:$('#date').value,places:$('#places').value, cash:$('#cash').value,clearing:$('#clearing').value,rtgs:$('#rtgs').value,npsb:$('#npsb').value,agent:$('#agent').value,officers:$$('.officer').map(x=>({name:x.querySelector('.oname').value,designation:x.querySelector('.odes').value})).filter(x=>x.name),visits:$$('.visit').map(x=>({officer:x.querySelector('.vofficer').value,type:x.querySelector('.vtype').value,name:x.querySelector('.vname').value,address:x.querySelector('.vaddress').value,mobile:x.querySelector('.vmobile').value})).filter(x=>x.name||x.address||x.mobile),accounts:$$('.account').map(x=>({category:x.querySelector('.acat').value,no:x.querySelector('.ano').value.trim(),amount:x.querySelector('.aamount').value})).filter(x=>x.no||x.amount),updated:new Date().toISOString()}}
 function message(r){
   let os=(r.officers||[]).map((o,i)=>`${i+1}. ${o.name}, ${o.designation}`).join('\n')||'No officer entered';
@@ -360,7 +527,7 @@ function openShareModal(record){
 }
 function calcEntry(){if(!$('#form'))return;let r=currentForm();$('#depTotal').textContent='৳ '+money(total(r));$('#depLac').textContent='('+lac(total(r))+')';$('#acCount').textContent=accountsCount(r);$('#acTotal').textContent='৳ '+money(accountsTotal(r));let panel=$('#sharePanel');if(panel)panel.innerHTML=''}function bindEntry(){let f=$('#form');f.addEventListener('input',e=>{if(e.target.classList.contains('amount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9.]/g,'');e.target.setSelectionRange(p,p)}localStorage.setItem(K+'draft',JSON.stringify(currentForm()));$('#draftStatus').textContent='Draft saved · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});calcEntry()});f.addEventListener('change',e=>{if(e.target.classList.contains('oname'))e.target.closest('.officer').querySelector('.odes').value=officers[e.target.value]||'';calcEntry()});f.onclick=e=>{if(e.target.id==='addOfficer'){$('#officers').insertAdjacentHTML('beforeend',officerRow());calcEntry()}if(e.target.id==='addVisit'){$('#visits').insertAdjacentHTML('beforeend',visitRow());calcEntry()}if(e.target.id==='addAccount'){$('#accounts').insertAdjacentHTML('beforeend',accountRow());calcEntry()}if(e.target.classList.contains('remove')){e.target.parentElement.remove();calcEntry()}if(e.target.id==='copy'){navigator.clipboard?.writeText(message(currentForm()));toast('Current report copied')}if(e.target.id==='whatsapp')window.open('https://wa.me/?text='+encodeURIComponent(message(currentForm())),'_blank');if(e.target.id==='copyDetailed'){navigator.clipboard?.writeText(detailedMessage(currentForm()));toast('Detailed activity copied')}if(e.target.id==='whatsappDetailed')window.open('https://wa.me/?text='+encodeURIComponent(detailedMessage(currentForm())),'_blank')};f.onsubmit=e=>{e.preventDefault();saveRecord()}}
 function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>(a.no&&!a.amount)||(!a.no&&a.amount)))return toast('অসম্পূর্ণ account row সম্পন্ন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;queueRecordChange(r.date,(index>=0?'UPDATE':'CREATE'),r);save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r)}
-function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2><span class="small">${esc(settings.branch)}</span></div><span class="pill">${records.length} saved</span></div><input id="search" type="search" inputmode="search" autocomplete="off" aria-label="Search saved records" placeholder="Search date, officer, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts · ${(r.officers||[]).map(o=>o.name).join(', ')||'No officer'}</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
+function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2></div><span class="pill">${records.length} saved</span></div><input id="search" type="search" inputmode="search" autocomplete="off" aria-label="Search saved records" placeholder="Search date, officer, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts · ${(r.officers||[]).map(o=>o.name).join(', ')||'No officer'}</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
 function deleteRecord(d){if(!confirm('Delete this daily record? It can be restored from Trash.'))return;let i=records.findIndex(r=>r.date===d),r=records.splice(i,1)[0];trash.push({...r,deleted:new Date().toISOString()});queueRecordDelete(d);save();toast('Deleted. Available in Trash.');renderHistory();renderDashboard()}
 function reportRange(type, ref){
   if(type==='daily') return {label:'Daily Report · '+dateText(ref),records:records.filter(r=>r.date===ref)};
@@ -372,26 +539,99 @@ function buildReport(type,ref){
   let methods={Cash:0,'Clearing / BFTN':0,RTGS:0,NPSB:0,'Agent Outlet':0},types={},officerCount={};rs.forEach(r=>{methods.Cash+=num(r.cash);methods['Clearing / BFTN']+=num(r.clearing);methods.RTGS+=num(r.rtgs);methods.NPSB+=num(r.npsb);methods['Agent Outlet']+=num(r.agent);(r.visits||[]).forEach(x=>types[x.type]=(types[x.type]||0)+1);(r.officers||[]).forEach(x=>officerCount[x.name]=(officerCount[x.name]||0)+1)});let best=[...rs].sort((a,b)=>total(b)-total(a))[0],bestV=[...rs].sort((a,b)=>visits(b)-visits(a))[0];
   return {result,rs,dep,v,ac,acDep,days,methods,types,officerCount,best,bestV};
 }
-function reportText(d){return `${d.result.label}\n${settings.branch} · ${settings.zone} · ${settings.team}\n\nTotal Deposit: Tk ${money(d.dep)} (${lac(d.dep)})\nTotal Places Visited: ${d.v}\nTotal New Accounts: ${d.ac}\nAccount Deposit: Tk ${money(d.acDep)}\nAverage Daily Deposit: Tk ${money(d.dep/d.days)}\n\nDeposit Breakdown\n${Object.entries(d.methods).map(x=>x[0]+': Tk '+money(x[1])).join('\n')}\n\nDaily Records\n${d.rs.map(r=>dateText(r.date)+' — Tk '+money(total(r))+' · '+visits(r)+' visits').join('\n')||'No saved records'}`}
+function periodTitle(type,ref){return reportRange(type,ref).label.split(' \u00b7 ').slice(1).join(' \u00b7 ')||reportRange(type,ref).label}
+function periodShift(type,ref,dir){
+  if(type==='monthly'){const d=new Date(ref.slice(0,7)+'-01T12:00');d.setMonth(d.getMonth()+dir);return d.toISOString().slice(0,10)}
+  const d=new Date(ref+'T12:00');d.setDate(d.getDate()+dir*(type==='weekly'?7:1));return d.toISOString().slice(0,10);
+}
+function periodAtEnd(type,ref){
+  const t=today();
+  if(type==='monthly')return ref.slice(0,7)>=t.slice(0,7);
+  const wk=d=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()-x.getDay());return x.toISOString().slice(0,10)};
+  return type==='weekly'?wk(ref)>=wk(t):ref>=t;
+}
+/* One shared control strip for all three report views: view tabs, period kind
+   and a prev/next period picker. Every choice applies at once \u2014 no Generate
+   button to remember. */
+function repControls(view,type,ref){
+  const isM=type==='monthly';
+  const tabs=[['statement','Statement','marketingPage'],['visits','Visiting','visitingPage'],['accounts','Accounts','accountPage']]
+    .map(([v,l,id])=>`<button type="button" id="${id}" class="${view===v?'on':''}">${l}</button>`).join('');
+  const segs=[['daily','Daily'],['weekly','Weekly'],['monthly','Monthly']]
+    .map(([v,l])=>`<button type="button" data-tp="${v}" class="${type===v?'on':''}">${l}</button>`).join('');
+  return `<div class="rep-tabs">${tabs}</div><div class="rep-seg" id="repSeg">${segs}</div><div class="rep-bar"><button type="button" class="rep-nav" id="repPrev" aria-label="Previous period">\u2039</button><div class="formgroup rep-date"><input id="repDate" type="${isM?'month':'date'}" max="${isM?today().slice(0,7):today()}" value="${isM?ref.slice(0,7):ref}" aria-label="Period"></div><button type="button" class="rep-nav" id="repNext" aria-label="Next period" ${periodAtEnd(type,ref)?'disabled':''}>\u203a</button></div>`;
+}
+function bindRepControls(go,type,ref){
+  $$('#repSeg button').forEach(b=>b.onclick=()=>{const t=b.dataset.tp;go(t,t==='monthly'?ref.slice(0,7)+'-01':ref)});
+  const p=$('#repPrev'),n=$('#repNext'),inp=$('#repDate');
+  if(p)p.onclick=()=>go(type,periodShift(type,ref,-1));
+  if(n)n.onclick=()=>go(type,periodShift(type,ref,1));
+  if(inp)inp.onchange=e=>{const v=e.target.value;if(!v)return;go(type,type==='monthly'?v.slice(0,7)+'-01':v)};
+}
+function dayCard(r){
+  const breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': \u09f3 '+money(x[1])).join(' \u00b7 ')||'No deposit breakdown';
+  const accountInfo=(r.accounts||[]).filter(a=>a.no).map(a=>a.category+' ('+a.no+'): \u09f3 '+money(a.amount)).join(' \u00b7 ')||'No new account';
+  const visitInfo=(r.visits||[]).map(v=>v.type+(v.name?' \u2014 '+esc(v.name):'')).join(' \u00b7 ')||'No detailed visit';
+  const officers=(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' \u00b7 ')||'No officer entered';
+  return `<article class="card daycard"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">\u09f3 ${money(total(r))}</span></div><div class="daystats"><div class="daystat"><label>Places</label><b>${visits(r)}</b></div><div class="daystat"><label>New Accounts</label><b>${accountsCount(r)}</b></div><div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div><details class="det"><summary>Full details</summary><div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div><div class="detrow"><label>Officers</label><div class="small">${officers}</div></div><div class="detrow"><label>Visit Details</label><div class="small">${visitInfo}</div></div><div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></details></article>`;
+}
 function renderReports(type='monthly',ref=today()){
-  let d=buildReport(type,ref),pct=settings.target&&type==='monthly'?Math.min(100,d.dep/settings.target*100):0;
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="pill">Report Preview</span></div><div class="actions" style="margin:0 0 12px"><button class="outline" id="marketingPage">Marketing Statement</button><button class="outline" id="visitingPage">Visiting Report</button><button class="outline" id="accountPage">New Account Report</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="reportType"><option value="daily" ${type==='daily'?'selected':''}>Daily Report</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly Report (Sun–Thu)</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly Report</option></select></div><div class="formgroup"><label>Choose Date / Month</label><input id="reportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="showReport">Generate Report</button></div><div class="card" style="margin-top:12px"><div class="sectiontitle">${esc(settings.branch).toUpperCase()}</div><h2 style="margin:2px 0 6px">MARKETING REPORT</h2><div class="small">STATEMENT PERIOD: ${d.result.label}</div><div class="small" style="margin-top:4px">FIRST SECURITY ISLAMI BANK PLC · ${esc(settings.team)} (${esc(settings.zone)} Zone)</div><div class="grid metrics" style="margin-top:12px"><div class="metric accent"><label>Total Deposit</label><strong>৳ ${money(d.dep)}</strong><small>${lac(d.dep)}</small></div><div class="metric green"><label>Total Visits</label><strong>${d.v}</strong></div><div class="metric"><label>New Accounts</label><strong>${d.ac}</strong></div><div class="metric"><label>Account Deposit</label><strong>৳ ${money(d.acDep)}</strong></div><div class="metric"><label>Recorded Days</label><strong>${d.rs.length}</strong></div><div class="metric"><label>Average Deposit</label><strong>৳ ${money(d.dep/d.days)}</strong></div></div>${type==='monthly'?`<div class="sectionhead"><h2>Target Achievement</h2><span class="pill">${pct.toFixed(1)}%</span></div><div class="progress"><i style="width:${pct}%"></i></div><div class="small" style="margin-top:6px">Target: ৳ ${money(settings.target)} · Remaining: ৳ ${money(Math.max(0,num(settings.target)-d.dep))}</div>`:''}</div><div class="sectionhead"><h2>Deposit Breakdown</h2></div><div class="grid metrics">${Object.entries(d.methods).map(([k,x])=>`<div class="card metric"><label>${k}</label><strong>৳ ${money(x)}</strong></div>`).join('')}</div><div class="sectionhead"><h2>Activity Overview</h2></div><div class="card"><div class="row"><div><label>Visit Types</label><b>${Object.entries(d.types).map(x=>x[0]+' ('+x[1]+')').join(' · ')||'No detailed visits'}</b></div></div><hr style="border:0;border-top:1px solid var(--line);margin:12px 0"><label>Officer Activity</label><b>${Object.entries(d.officerCount).map(x=>esc(x[0])+' ('+x[1]+')').join(' · ')||'No officer data'}</b></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="small">প্রতিদিনের সম্পূর্ণ তথ্য</span></div>${d.rs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{let breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': ৳ '+money(x[1])).join(' · ')||'No deposit breakdown';let accountInfo=(r.accounts||[]).filter(a=>a.no).map(a=>a.category+' ('+a.no+'): ৳ '+money(a.amount)).join(' · ')||'No new account';let visitInfo=(r.visits||[]).map(v=>v.type+(v.name?' — '+esc(v.name):'')).join(' · ')||'No detailed visit';return `<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">Total: ৳ ${money(total(r))}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;margin:10px 0"><div><label>Places Visited</label><b>${visits(r)}</b></div><div><label>New Accounts</label><b>${accountsCount(r)} · ৳ ${money(accountsTotal(r))}</b></div></div><label>Deposit Details</label><div class="small">${breakdown}</div><label style="margin-top:9px">Officers</label><div class="small">${(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' · ')||'No officer entered'}</div><label style="margin-top:9px">Visit Details</label><div class="small">${visitInfo}</div><label style="margin-top:9px">Account Details</label><div class="small">${accountInfo}</div></article>`}).join('')||'<div class="empty">এই সময়ের জন্য কোনো saved record পাওয়া যায়নি।</div>'}<div class="actions"><button class="primary" id="downloadPDF">Download PDF</button></div>`;
-  $('#showReport').onclick=()=>renderReports($('#reportType').value,$('#reportDate').value+(($('#reportType').value==='monthly')?'-01':''));$('#reportType').onchange=e=>renderReports(e.target.value,today());$('#downloadPDF').onclick=()=>downloadPDF(d);$('#marketingPage').onclick=()=>renderReports(type,ref);$('#visitingPage').onclick=()=>renderVisitReport(type,ref);$('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  const d=buildReport(type,ref);
+  const isM=type==='monthly';
+  const pct=settings.target&&isM?Math.min(100,d.dep/settings.target*100):0;
+  const rem=Math.max(0,num(settings.target)-d.dep);
+  const calDays=isM?new Date(+ref.slice(0,4),+ref.slice(5,7),0).getDate():(type==='weekly'?5:1);
+  const depTotal=d.dep||0;
+  const depRows=Object.entries(d.methods).map(([k,x])=>{
+    const share=depTotal>0?x/depTotal*100:0;
+    return `<div class="deprow"><div class="lbl"><span>${k}</span><b>\u09f3 ${money(x)}<small> \u00b7 ${share.toFixed(0)}%</small></b></div><div class="dep-track"><i class="dep-fill" style="width:${share.toFixed(1)}%"></i></div></div>`;
+  }).join('');
+  const typeChips=Object.entries(d.types).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No detailed visits</span>';
+  const offChips=Object.entries(d.officerCount).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No officer data</span>';
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>Total Visits</label><strong>${d.v}</strong><small>${(d.v/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div><div class="sectionhead"><h2>Deposit Breakdown</h2><span class="small">share of total</span></div><div class="card">${depRows}</div><div class="sectionhead"><h2>Activity</h2></div><div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div><label style="margin-top:12px">Officer Activity</label><div class="chips">${offChips}</div></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="pill">${d.rs.length} days</span></div>${[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  bindRepControls(renderReports,type,ref);
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(marketingLines(d),pdfName('BranchMarketingReport',d.result.label),'Branch Marketing Report'));
+  const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function renderVisitReport(type='monthly',ref=today()){
-  let d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(settings.branch)} · ${d.result.label}</span></div><button class="outline" id="backReports">← Reports</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="visitReportType"><option value="daily" ${type==='daily'?'selected':''}>Daily</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly</option></select></div><div class="formgroup"><label>Date / Month</label><input id="visitReportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="loadVisits">Show Visiting Report</button></div><div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map((v,i)=>`<article class="card record"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Place / Institution</label><b>${esc(v.name||'—')}</b></div></div><label style="margin-top:10px">Address</label><div>${esc(v.address||'—')}</div><label style="margin-top:10px">Mobile Number</label><div>${esc(v.mobile||'—')}</div></article>`).join('')||'<div class="empty">এই সময়ের কোনো visit detail পাওয়া যায়নি।</div>'}`;
-  $('#backReports').onclick=()=>renderReports(type,ref);$('#loadVisits').onclick=()=>{let t=$('#visitReportType').value,v=$('#visitReportDate').value;renderVisitReport(t,v+(t==='monthly'?'-01':''))};
+  const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(periodTitle(type,ref))}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('visits',type,ref)}<div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map(v=>`<article class="card record vitem"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><h3>${esc(v.name||'\u2014')}</h3><div class="rec-meta"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Address</label><b>${esc(v.address||'\u2014')}</b></div><div><label>Mobile Number</label><b>${esc(v.mobile||'\u2014')}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb visit detail \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  bindRepControls(renderVisitReport,type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(visitLines(items,periodTitle(type,ref)),pdfName('BranchVisitingReport',periodTitle(type,ref)),'Visiting Report'));
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function renderAccountReport(type='monthly',ref=today()){
-  let d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${esc(settings.branch)} · ${d.result.label}</span></div><button class="outline" id="backReports">← Reports</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="accountReportType"><option value="daily" ${type==='daily'?'selected':''}>Daily</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly</option></select></div><div class="formgroup"><label>Date / Month</label><input id="accountReportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="loadAccounts">Show New Account Report</button></div><div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">${items.length} accounts · ৳ ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">৳ ${money(a.amount)}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div><label>Account Type</label><b>${esc(a.category||'—')}</b></div><div><label>Account Number</label><b>${esc(a.no||'—')}</b></div></div><label style="margin-top:10px">Initial / Account Deposit</label><b>৳ ${money(a.amount)}</b></article>`).join('')||'<div class="empty">এই সময়ের কোনো নতুন account পাওয়া যায়নি।</div>'}`;
-  $('#backReports').onclick=()=>renderReports(type,ref);$('#loadAccounts').onclick=()=>{let t=$('#accountReportType').value,v=$('#accountReportDate').value;renderAccountReport(t,v+(t==='monthly'?'-01':''))};
+  const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
+  bindRepControls(renderAccountReport,type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(accountLines(items,periodTitle(type,ref),d.acDep),pdfName('BranchAccountReport',periodTitle(type,ref)),'New Account Report'));
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
-function downloadPDF(d){
-  // Lightweight, offline PDF builder. The preview above is the exact report selection being exported.
-  const lines=[
+/* Offline PDF export: the file bytes are assembled right here in the browser
+   and handed to the OS through a blob URL \u2014 no server, no library, no network.
+   The download works in airplane mode; the preview on screen is the exact
+   report selection being exported. */
+function savePdf(lines,filename){
+  const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
+  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  /* Appending before the click makes it a real save on picky mobile browsers. */
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},20000);
+  toast('PDF downloaded');
+}
+function marketingLines(d){
+  return [
     'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'BRANCH MARKETING REPORT', '', d.result.label,
     'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
     'SUMMARY', 'Total Deposit: Tk '+money(d.dep)+' ('+lac(d.dep)+')', 'Total Places Visited: '+d.v,
@@ -402,26 +642,72 @@ function downloadPDF(d){
     ...(Object.entries(d.officerCount).map(x=>x[0]+': '+x[1])||[]), '', 'DAILY RECORDS',
     ...(d.rs.length?d.rs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>dateText(r.date)+' | Deposit: Tk '+money(total(r))+' | Visits: '+visits(r)+' | Accounts: '+accountsCount(r)):['No saved records'])
   ];
-  const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
-  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
-function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first <b>real-time</b> sync shared by all devices. An edit saves on this device at once, uploads a moment later on its own, and shows up on every other open device within seconds. Automatic syncs are budgeted (${realtimeMaxPerDay()}\u00d7/day per device) so a stuck queue can never become unlimited traffic; once the budget is spent the app falls back to the scheduled ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day sync. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Real-time endpoint</label><input value="${esc(LIVE_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sRealtime" ${settings.realtime!==false?'checked':''}> Real-time sync \u2014 other devices\u2019 edits arrive here in seconds (\u09b0\u09bf\u09af\u09bc\u09cd\u09af\u09be\u09b2-\u099f\u09be\u0987\u09ae \u09b8\u09bf\u0982\u0995)</label><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 upload without tapping (${realtimeMaxPerDay()}\u00d7/day real-time, fallback ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day scheduled)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
-const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Real-time:</b> '+esc(liveStatusText())+' \u00b7 <b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 '+esc(realtimeBudgetText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits or the network drops. Tap <b>\u2601 Sync Now</b> any time.';
+}
+function visitLines(items,label){
+  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
+  return [
+    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'VISITING REPORT', '', label,
+    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
+    'TOTAL VISITS: '+sorted.length, '', 'DATE-WISE VISIT DETAILS',
+    ...(sorted.length?sorted.flatMap(v=>[
+      dateText(v.date)+' | '+(v.type||'Visit'),
+      '   Place: '+(v.name||'-'),
+      '   Officer: '+(v.officer||'Not selected'),
+      '   Address: '+(v.address||'-'),
+      '   Mobile: '+(v.mobile||'-')
+    ]):['No visit details'])
+  ];
+}
+function accountLines(items,label,acDep){
+  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
+  return [
+    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'NEW ACCOUNT REPORT', '', label,
+    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
+    'TOTAL ACCOUNTS: '+sorted.length, 'Account Deposit: Tk '+money(acDep), '', 'DATE-WISE ACCOUNT DETAILS',
+    ...(sorted.length?sorted.flatMap(a=>[
+      dateText(a.date)+' | '+(a.category||'-'),
+      '   A/C No: '+(a.no||'-'),
+      '   Initial Deposit: Tk '+money(a.amount)
+    ]):['No account details'])
+  ];
+}
+function pdfName(prefix,label){return prefix+'_'+label.replace(/[^a-z0-9]+/gi,'_')+'.pdf'}
+function downloadPDF(d){savePdf(marketingLines(d),pdfName('BranchMarketingReport',d.result.label))}
+function downloadVisitPDF(items,label){savePdf(visitLines(items,label),pdfName('BranchVisitingReport',label))}
+function downloadAccountPDF(items,label,acDep){savePdf(accountLines(items,label,acDep),pdfName('BranchAccountReport',label))}
+
+/* Generate \u2192 preview \u2192 download. The preview shows the generated report page
+   by page, exactly as the PDF writer will lay it out (42 lines per page), so
+   what is on screen is what lands in the file. Everything here is offline. */
+let _pdfPending=null;
+function previewPDF(lines,filename,title){
+  _pdfPending={lines,filename};
+  const pages=[];for(let i=0;i<lines.length;i+=42)pages.push(lines.slice(i,i+42));
+  $('#pdfPreviewTitle').textContent=title||'Report Preview';
+  $('#pdfPreviewMeta').textContent=filename+' \u00b7 '+pages.length+' page'+(pages.length>1?'s':'')+' \u00b7 '+lines.length+' lines';
+  $('#pdfPreviewBody').innerHTML=pages.map((p,i)=>`<div class="pdfpage"><div class="pdfpage-no">Page ${i+1} of ${pages.length}</div><pre>${esc(p.join('\n'))}</pre></div>`).join('');
+  const m=$('#pdfModal');m.classList.add('show');
+  const box=m.querySelector('.modal-scroll');if(box)box.scrollTop=0;
+}
+function closePdfPreview(){$('#pdfModal').classList.remove('show');_pdfPending=null}
+function confirmPdfDownload(){if(!_pdfPending)return;const p=_pdfPending;savePdf(p.lines,p.filename);closePdfPreview()}
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first <b>real-time</b> sync shared by all devices. An edit saves on this device at once, uploads a moment later on its own, and shows up on every other open device within seconds \u2014 automatically, every time, with no daily limit. Manual Sync Now works at any time too.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Real-time endpoint</label><input value="${esc(LIVE_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sRealtime" ${settings.realtime!==false?'checked':''}> Real-time sync \u2014 other devices\u2019 edits arrive here in seconds (\u09b0\u09bf\u09af\u09bc\u09cd\u09af\u09be\u09b2-\u099f\u09be\u0987\u09ae \u09b8\u09bf\u0982\u0995)</label><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 upload every change automatically, right after you type</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Real-time:</b> '+esc(liveStatusText())+' \u00b7 <b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits or the network drops. Tap <b>\u2601 Sync Now</b> any time.';
 if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{
   settings.autoSync=!!$('#sAutoSync')?.checked;
   setRealtimeEnabled(!!$('#sRealtime')?.checked);
-  toast(settings.realtime?(settings.autoSync?'Real-time sync on':'Real-time on \u00b7 auto-upload off'):'Real-time off \u00b7 scheduled sync only');
+  toast(settings.realtime?(settings.autoSync?'Real-time sync on':'Real-time on \u00b7 auto-upload off'):'Live channel off \u00b7 edits still upload automatically');
 };
 /* The toggle also acts at once — nobody expects a switch to need saving. */
 if($('#sRealtime'))$('#sRealtime').onchange=()=>{
   const on=!!$('#sRealtime').checked;
   setRealtimeEnabled(on);
-  toast(on?'Real-time sync on \u2014 watching the cloud':'Real-time sync off \u2014 scheduled sync only');
+  toast(on?'Real-time sync on \u2014 watching the cloud':'Real-time sync off \u2014 edits still upload automatically');
 };
 if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
 if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
 if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
-function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();toast('Settings saved — branch name updated everywhere.')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
+function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();renderDashboard();toast('Settings saved')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
 function restore(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!Array.isArray(d.records))throw 0;let overlap=d.records.filter(x=>records.some(r=>r.date===x.date)).length;if(!confirm(`Backup has ${d.records.length} records (${overlap} duplicate dates). OK = Merge, Cancel = stop.`))return;d.records.forEach(x=>{let i=records.findIndex(r=>r.date===x.date);if(i<0){records.push(x);queueRecordChange(x.date,'CREATE',x)}});save();toast('Backup merged successfully');renderSettings();renderDashboard()}catch{toast('Invalid backup file')}};rd.readAsText(f)}
 function showTrash(){let text=trash.map(r=>`${r.date} · ৳ ${money(total(r))}`).join('\n')||'Trash is empty.';if(!trash.length)return alert(text);let d=prompt(text+'\n\nEnter a date (YYYY-MM-DD) to restore, or Cancel.');if(d){let i=trash.findIndex(r=>r.date===d);if(i<0)return toast('Date not found');let r=trash.splice(i,1)[0];delete r.deleted;records=records.filter(x=>x.date!==r.date);records.push(r);queueRecordChange(r.date,'UPDATE',r);save();toast('Record restored');renderSettings()}}
@@ -438,12 +724,11 @@ function protectedAction(fn){if(!getPin())return fn();askPin(fn)}function setPin
      pulls within seconds. A quiet channel costs one 304 with an empty body
      every LIVE_CONFIG.WAIT_MS, then backs off when the app sits idle.
    - UPLOAD is real-time too: LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last
-     edit, budgeted at LIVE_CONFIG.MAX_PER_DAY automatic syncs per device per
-     day. That budget is the safety net the old once-a-day cap used to be;
-     when it runs out, uploads fall back to ONE scheduled sync per day
-     (AUTO_SYNC_MAX_PER_DAY) and the live channel keeps pulling.
-   - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and unlimited,
-     and never touches the real-time budget.
+     edit, every time, with no daily gate and no budget. Auto-sync in
+     Settings is the only switch; flip it off and uploads wait for the
+     Sync button.
+   - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and always
+     works.
    - Offline: everything keeps working, the parked request is dropped, and the
      queue flushes automatically the moment the device is back online.
    ============================================================ */
@@ -493,10 +778,10 @@ function cloudContentHash(cloud){
 /* ---------- IndexedDB (primary local database) ---------- */
 const IDB_NAME='fsib_marketing_db',IDB_VER=1;
 let _idb=null;
-let _meta={},_queue=[],_syncLog=[],tombstones=[],_initPromise=null;
-let _syncStatus='synced',_syncInProgress=false,_lastSyncError='';
+let _meta={},_queue=[],_syncLog=[],_initPromise=null;
+let _syncStatus='synced',_syncInProgress=false;
 let _debounceT=null,_qPersistT=null,_persistT=null;
-let _qChain=Promise.resolve(),_persistChain=Promise.resolve(),_rateWarned=false;
+let _qChain=Promise.resolve(),_persistChain=Promise.resolve();
 function idbOpen(){
   return new Promise((res,rej)=>{
     if(!('indexedDB' in window))return rej(new Error('no-idb'));
@@ -603,8 +888,6 @@ async function markChangesAsSynced(snapshot){
 }
 function queueRecordChange(date,op,rec){
   try{
-    const ti=tombstones.findIndex(t=>(t.recordId||t.date)===date);
-    if(ti>=0){tombstones.splice(ti,1);kvPut('tombstones',tombstones);try{localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}}
     upsertQueue({store:'records',recordId:date,operation:op,changedAt:(rec&&rec.updated)||new Date().toISOString(),payload:JSON.parse(JSON.stringify(rec))});
   }catch(e){}
   markDirtyAndSchedule();
@@ -612,11 +895,7 @@ function queueRecordChange(date,op,rec){
 function queueRecordDelete(date){
   try{
     const now=new Date().toISOString();
-    const tomb={recordId:date,date:date,deleted:true,deletedAt:now,deviceId:_meta.deviceId||''};
-    const ti=tombstones.findIndex(t=>(t.recordId||t.date)===date);
-    if(ti>=0)tombstones[ti]=tomb;else tombstones.push(tomb);
-    kvPut('tombstones',tombstones);try{localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}
-    upsertQueue({store:'records',recordId:date,operation:'DELETE',changedAt:now,payload:tomb});
+    upsertQueue({store:'records',recordId:date,operation:'DELETE',changedAt:now,payload:{recordId:date,date:date,deleted:true,deletedAt:now,deviceId:_meta.deviceId||''}});
   }catch(e){}
   markDirtyAndSchedule();
 }
@@ -631,130 +910,17 @@ function persistLocalAsync(immediate){
   clearTimeout(_persistT);_persistT=setTimeout(()=>{_persistChain=_persistChain.then(persistLocalInner).catch(()=>{});},250);
 }
 async function persistLocalInner(){
-  await kvPut('records',records);await kvPut('trash',trash);await kvPut('settings',settings);await kvPut('tombstones',tombstones);
+  await kvPut('records',records);await kvPut('trash',trash);await kvPut('settings',settings);
 }
 
-/* ---------- daily auto-sync gate: at most ONE cloud sync per day ----------
-   - _meta.syncDayUsed = the local day (YYYY-MM-DD) whose single sync is already spent.
-   - The day is spent the moment a request actually reaches the cloud (auto OR manual),
-     so a manual sync never triggers a second automatic sync the same day.
-   - Offline / no-key / busy / nothing-to-do decisions make NO request and do NOT spend it. */
-function dayKeyOf(d){
-  const x=d?new Date(d):new Date();
-  if(!x||isNaN(x.getTime()))return '';
-  const p=n=>String(n).padStart(2,'0');
-  return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
-}
-function syncDayUsedToday(){return (_meta.syncDayUsed||'')===dayKeyOf();}
-function markSyncDayUsed(){
-  if((_meta.syncDayUsed||'')===dayKeyOf())return;
-  _meta.syncDayUsed=dayKeyOf();metaPut('syncDayUsed',_meta.syncDayUsed);
-}
-function releaseSyncDay(){_meta.syncDayUsed='';metaPut('syncDayUsed','');}
-function markAutoSyncFired(){
-  const now=new Date().toISOString();
-  _meta.lastAutoSyncAt=now;metaPut('lastAutoSyncAt',now);
-  markSyncDayUsed();
-}
-function noteCloudContact(){
-  const now=new Date().toISOString();
-  _meta.lastCloudContactAt=now;metaPut('lastCloudContactAt',now);
-  markSyncDayUsed();
-}
-function daysSinceCloudContact(){
-  const at=_meta.lastCloudContactAt||_meta.lastSyncAt||settings.lastSync||'';
-  if(!at)return 9999;
-  const t=new Date(at).getTime();
-  if(isNaN(t))return 9999;
-  return (Date.now()-t)/86400000;
-}
-function isDailyAutoReason(r){return r==='daily-upload'||r==='daily-refresh';}
-/* Real-time reasons bypass the once-a-day gate entirely — they are the product.
-   They are budgeted instead (realtimeLeftToday), so a runaway queue still cannot
-   turn into unlimited traffic. */
-function isRealtimeReason(r){return r==='live'||r==='realtime'||r==='realtime-upload';}
-
-/* ---------- real-time budget: automatic syncs per day, per device ----------
-   The safety net the once-a-day cap used to be. Real-time uploads count against
-   LIVE_CONFIG.MAX_PER_DAY; when it runs out the device falls back to the old
-   daily gate and says so, and the live channel keeps pulling other devices'
-   changes because a download is one parked request, not a write. */
-function realtimeUsedToday(){
-  const b=_meta.realtimeBudget;
-  if(!b||b.day!==dayKeyOf())return 0;
-  return Number(b.used)||0;
-}
-/** Per-device ceiling on automatic (real-time) syncs in a day. 0 disables them. */
-function realtimeMaxPerDay(){return Number((LIVE_CONFIG&&LIVE_CONFIG.MAX_PER_DAY)||0)||0;}
-function realtimeLeftToday(){
-  const max=realtimeMaxPerDay();
-  if(!(max>0))return 0;
-  return Math.max(0,max-realtimeUsedToday());
-}
-function markRealtimeSyncUsed(){
-  const day=dayKeyOf();
-  const used=realtimeUsedToday()+1;
-  _meta.realtimeBudget={day:day,used:used,max:realtimeMaxPerDay()};
-  metaPut('realtimeBudget',_meta.realtimeBudget);
-  return used;
-}
-function liveSupported(){return !_live.notSupported;}
-function realtimeUploadAllowed(){
-  if(!settings.autoSync)return false;
-  if(!liveEnabled())return false;
-  /* A deploy without /api/live has no way to learn that another device moved,
-     so instant uploads would be guesswork. Hand over to the scheduled sync. */
-  if(!liveSupported())return false;
-  return realtimeLeftToday()>0;
-}
-function realtimeBudgetText(){
-  const max=realtimeMaxPerDay();
-  if(!(max>0))return 'real-time budget disabled';
-  const used=realtimeUsedToday();
-  return used+' of '+max+' automatic syncs used today';
-}
-function dailyAutoTarget(){
-  if(pendingCount()>0)return 'daily-upload';
-  if(daysSinceCloudContact()>=(SYNC_CONFIG.AUTO_REFRESH_DAYS||3))return 'daily-refresh';
-  return '';
-}
-function dailyAutoSyncDue(){
-  if(!settings.autoSync)return false;
-  try{if(isPublicView())return false;}catch(e){}
-  if(!navigator.onLine)return false;
-  if(syncDayUsedToday())return false;
-  /* Real-time handles both uploads and refreshes while it has budget, so the
-     once-a-day sync stays as the fallback it is now — not a second timer that
-     spends the day's slot before the real-time upload lands. */
-  if(realtimeUploadAllowed())return false;
-  return !!dailyAutoTarget();
-}
-function maybeDailyAutoSync(trigger){
-  if(_syncInProgress)return false;
-  if(!dailyAutoSyncDue())return false;
-  const reason=dailyAutoTarget();
-  if(!reason)return false;
-  try{console.info('FSIB daily auto sync ('+(trigger||'auto')+')');}catch(e){}
-  syncNow(reason).catch(()=>{});
-  return true;
-}
 /** 1500 -> "1.5s", 45000 -> "45s" — the copy must match the actual debounce. */
 function fmtSeconds(ms){
   const sec=(Number(ms)||0)/1000;
   return (Math.round(sec*10)/10)+'s';
 }
-/** The "(max 1/day)" suffix only tells the truth when real-time is not carrying the uploads. */
-function autoSyncLimitNote(){
-  if(realtimeUploadAllowed())return ' <span class="small">(real-time \u00b7 fallback '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span>';
-  return ' <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span>';
-}
 function autoSyncStatusText(){
   if(!settings.autoSync)return 'Off';
-  if(realtimeUploadAllowed())return 'real-time \u00b7 uploads '+fmtSeconds(LIVE_CONFIG.UPLOAD_DEBOUNCE_MS)+' after an edit \u00b7 '+pendingCount()+' pending';
-  if(liveEnabled()&&realtimeLeftToday()<=0)return 'real-time budget spent today \u00b7 scheduled sync only';
-  if(syncDayUsedToday())return 'used today \u00b7 next auto sync tomorrow';
-  const due=!!dailyAutoTarget();
-  return (due?'due now':'idle')+' \u00b7 '+pendingCount()+' pending \u00b7 limit 1/day';
+  return 'real-time \u00b7 uploads '+fmtSeconds(LIVE_CONFIG.UPLOAD_DEBOUNCE_MS)+' after an edit \u00b7 '+pendingCount()+' pending';
 }
 /** Turn the real-time channel on or off. Persisted per device, effective at once. */
 function setRealtimeEnabled(on){
@@ -767,18 +933,6 @@ function setRealtimeEnabled(on){
 function setAutoUploadDelay(ms){
   LIVE_CONFIG.UPLOAD_DEBOUNCE_MS=Math.max(100,Math.floor(Number(ms)||0));
   return LIVE_CONFIG.UPLOAD_DEBOUNCE_MS;
-}
-/** How long the scheduled (fallback) auto-sync waits. Only used when real-time is off or out of budget. */
-function setLegacySyncDelay(ms){
-  SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS=Math.max(100,Math.floor(Number(ms)||0));
-  return SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS;
-}
-/** Raise or lower this device's automatic-sync budget (0 = scheduled sync only). */
-function setRealtimeMaxPerDay(n){
-  LIVE_CONFIG.MAX_PER_DAY=Math.max(0,Math.floor(Number(n)||0));
-  scheduleAutoUpload();
-  updateSyncUI();
-  return LIVE_CONFIG.MAX_PER_DAY;
 }
 /* Switching real-time on or off takes effect at once: open (or drop) the parked
    request, and re-arm the upload debounce for whichever mode is now active. */
@@ -794,7 +948,7 @@ function applyRealtimeSetting(){
   updateSyncUI();
 }
 
-/* ---------- dirty state + conservative auto-sync (debounced, never polling) ---------- */
+/* ---------- dirty state + automatic real-time upload (debounced, never polling) ---------- */
 function markDirtyAndSchedule(){
   const n=pendingCount();
   _meta.pendingChanges=n;
@@ -805,67 +959,38 @@ function markDirtyAndSchedule(){
   scheduleAutoUpload();
 }
 /* ---------- when an edit goes to the cloud ----------
-   Real-time ON  : upload LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last keystroke,
-                   budgeted per day. Two phones typing at once converge in seconds.
-   Real-time OFF : the old behaviour — one debounced automatic sync per day.
-   Either way the edit is already on this device (IndexedDB + localStorage)
-   before any of this runs, so a blocked upload never loses data. */
+   Every edit uploads LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last keystroke,
+   automatically, every time — no daily gate, no budget. Two phones typing at
+   once converge in seconds. The edit is already on this device (IndexedDB +
+   localStorage) before any of this runs, so a blocked upload never loses data.
+   Auto-sync off in Settings is the only way to hold uploads back. */
 function scheduleAutoUpload(){
   clearTimeout(_debounceT);_debounceT=null;
   if(!settings.autoSync)return;
   try{if(isPublicView())return;}catch(e){}
   if(!navigator.onLine)return;
-  /* Real-time ON and inside the budget: the edit is in the cloud a moment after
-     the last keystroke. */
-  if(liveEnabled()&&realtimeUploadAllowed()){
-    _debounceT=setTimeout(()=>{maybeRealtimeUpload('edit');},LIVE_CONFIG.UPLOAD_DEBOUNCE_MS);
-    return;
-  }
-  /* Real-time OFF, or today's budget spent: exactly the old behaviour — one
-     automatic sync per day, debounced. */
-  if(syncDayUsedToday())return;
-  _debounceT=setTimeout(()=>{maybeDailyAutoSync('edit');},SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
+  _debounceT=setTimeout(()=>{maybeAutoUpload('edit');},LIVE_CONFIG.UPLOAD_DEBOUNCE_MS);
 }
-function maybeRealtimeUpload(trigger){
+function maybeAutoUpload(trigger){
   if(_syncInProgress)return false;
   if(!navigator.onLine)return false;
   try{if(isPublicView())return false;}catch(e){}
   if(!settings.autoSync)return false;
-  if(!liveEnabled())return false;
-  if(!realtimeUploadAllowed())return false;
   if(pendingCount()<=0)return false;
-  /* Budget is only spent inside syncNow, and only once a request is really
-     going out — so a no-op never burns a slot. */
-  try{console.info('FSIB real-time upload ('+(trigger||'edit')+') · '+realtimeBudgetText());}catch(e){}
-  syncNow('realtime-upload').catch(()=>{});
+  try{console.info('FSIB auto sync ('+(trigger||'edit')+') · '+pendingCount()+' pending');}catch(e){}
+  syncNow('auto-upload').catch(()=>{});
   return true;
 }
-function scheduleDebouncedSync(){return scheduleAutoUpload();}
-function setSyncStatus(s,err){
+function setSyncStatus(s){
   _syncStatus=s;_meta.syncStatus=s;
-  _lastSyncError=(s==='error')?((err&&err.message)||err||'sync failed'):'';
   metaPut('syncStatus',s);
   updateSyncUI();
 }
 
-/* ---------- request budget + rate-limit awareness ---------- */
+/* ---------- request counter (this device, shown in the sync panel) ---------- */
 function noteRequest(){
   _meta.requestsUsed=(_meta.requestsUsed||0)+1;
-  _meta.requestsSinceLastReset=(_meta.requestsSinceLastReset||0)+1;
-  metaPut('requestsUsed',_meta.requestsUsed);metaPut('requestsSinceLastReset',_meta.requestsSinceLastReset);
-}
-function noteRateHeaders(h){
-  try{
-    const rem=h.get('x-ratelimit-remaining'),lim=h.get('x-ratelimit-limit'),rst=h.get('x-ratelimit-reset');
-    if(rem===null&&lim===null)return;
-    _meta.lastRateLimit={remaining:rem!==null?Number(rem):null,limit:lim!==null?Number(lim):null,reset:rst||null,at:new Date().toISOString()};
-    metaPut('lastRateLimit',_meta.lastRateLimit);
-    if(_meta.lastRateLimit.remaining!==null&&_meta.lastRateLimit.remaining<=100&&!_rateWarned){
-      _rateWarned=true;
-      toast('Cloud request allowance nearly exhausted ('+_meta.lastRateLimit.remaining+' left). Sync sparingly.');
-    }
-    if(_meta.lastRateLimit.remaining===0)toast('Cloud request limit reached. Changes remain saved locally.');
-  }catch(e){}
+  metaPut('requestsUsed',_meta.requestsUsed);
 }
 
 /* ---------- /api/sync transport (Netlify Blobs backend) ----------
@@ -882,7 +1007,7 @@ function stripDeviceOnly(s){
 }
 async function cloudGet(){
   const r=await fetch(CLOUD_API,{method:'GET',headers:{accept:'application/json'},cache:'no-store'});
-  noteRequest();noteRateHeaders(r.headers);
+  noteRequest();
   if(r.status===404)return {found:false,state:emptyCloudState()};
   if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('GET '+r.status+' '+String(t||'').slice(0,120));}
   const j=(await r.json())||{};
@@ -907,17 +1032,12 @@ async function cloudSave(payload,version,force){
     force:force===true
   });
   const r=await fetch(CLOUD_API,{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:body});
-  noteRequest();noteRateHeaders(r.headers);
+  noteRequest();
   const j=await r.json().catch(()=>({}));
   const d=(j&&typeof j==='object'&&j.state&&typeof j.state==='object')?j.state:j;
   if(r.ok)return {ok:true,status:r.status,state:d};
   return {ok:false,status:r.status,error:(j&&j.error)||('HTTP '+r.status),message:(j&&j.message)||'',
     currentVersion:(j&&typeof j.currentVersion==='number')?j.currentVersion:((d&&typeof d.version==='number')?d.version:undefined)};
-}
-async function cloudClear(){
-  const r=await fetch(CLOUD_API,{method:'DELETE'});
-  noteRequest();
-  return r.ok;
 }
 
 /* ---------- real-time channel: /api/live long-poll ----------
@@ -972,7 +1092,6 @@ function liveInfo(){
     lastChangeAt:_live.lastChangeAt||'',
     lastError:_live.lastError||'',
     label:liveStatusText(),
-    budget:{used:realtimeUsedToday(),max:realtimeMaxPerDay(),left:realtimeLeftToday()},
     pending:pendingCount()
   };
 }
@@ -1016,7 +1135,7 @@ function liveSchedule(delay){
 function startLiveWatch(){
   if(!liveEnabled()){setLiveState('disabled');return;}
   /* The server told us it has no channel: stay honest about it instead of
-     showing "connecting" forever. Scheduled sync is carrying the app. */
+     showing "connecting" forever. Automatic uploads keep working. */
   if(_live.notSupported){setLiveState('disabled');return;}
   if(_live.state==='watching'||_live.state==='starting'||_live.state==='updating')return;
   if(!navigator.onLine){setLiveState('disabled');return;}
@@ -1066,13 +1185,13 @@ async function liveWatchLoop(token){
   clearTimeout(timer);
   _live.abort=null;
   if(token!==_live.token)return;
-  noteRequest();noteRateHeaders(res.headers);
+  noteRequest();
 
   if(res.status===404||res.status===405||res.status===501){
-    /* An older deploy without /api/live. Stop asking; the daily gate still runs. */
+    /* An older deploy without /api/live. Stop asking; edits still upload. */
     _live.notSupported=true;
     setLiveState('disabled','endpoint-missing');
-    addSyncLog('Real-time unavailable','This server has no '+LIVE_API+' endpoint ('+res.status+'). Falling back to scheduled sync.').catch(()=>{});
+    addSyncLog('Real-time unavailable','This server has no '+LIVE_API+' endpoint ('+res.status+'). Live downloads are off; edits still upload automatically.').catch(()=>{});
     return;
   }
   if(res.status===304){
@@ -1195,17 +1314,7 @@ function unionRows(a,b){
   rowsByDate(b).forEach((r,d)=>{const cur=m.get(d);if(!cur||rowStamp(r)>=rowStamp(cur))m.set(d,r)});
   return m;
 }
-/* legacy tombstones from the JSONBin build become trash rows, so old deletes still propagate */
-function localTrashRows(){
-  const m=rowsByDate(trash);
-  (tombstones||[]).forEach(t=>{
-    const d=t&&(t.date||t.recordId);if(!d)return;
-    const stamp=t.deletedAt||'';
-    const cur=m.get(d);
-    if(!cur||rowStamp(cur)<stamp)m.set(d,{date:d,deleted:stamp,updated:stamp});
-  });
-  return m;
-}
+function localTrashRows(){return rowsByDate(trash)}
 function localTrashList(){return [...localTrashRows().values()]}
 function splitLiveAndDeleted(recordMap,trashMap){
   const live=[],dead=[];
@@ -1257,7 +1366,6 @@ function applyCloudToLocal(cloud){
   const merged=mergeWithCloud(cloud);
   records=merged.records;
   trash=merged.trash;
-  tombstones=[];
   let added=0,updatedN=0;
   records.forEach(r=>{
     if(!before.has(r.date))added++;
@@ -1274,7 +1382,6 @@ function applyCloudToLocal(cloud){
 function adoptMergedLocally(merged){
   records=[...(merged.records||[])];
   trash=[...(merged.trash||[])];
-  tombstones=[];
   const at=merged.settingsUpdatedAt||'';
   if((at||'')>=(settings.settingsUpdatedAt||'')){
     SHARED_SETTING_KEYS.forEach(k=>{if(merged.settings&&merged.settings[k]!==undefined)settings[k]=merged.settings[k]});
@@ -1282,22 +1389,8 @@ function adoptMergedLocally(merged){
   }
   save();
 }
-function unionTombstones(a,b){
-  const map=new Map();
-  (a||[]).concat(b||[]).forEach(t=>{
-    const k=t&&(t.recordId||t.date);if(!k)return;
-    const cur=map.get(k);
-    if(!cur||(t.deletedAt||'')>(cur.deletedAt||''))map.set(k,t);
-  });
-  return [...map.values()];
-}
-function pruneTombstones(list){
-  const maxMs=90*864e5;const now=Date.now();
-  return (list||[]).filter(t=>{const d=Date.parse(t.deletedAt||0)||0;return (now-d)<maxMs;});
-}
 function sizeGuard(payload){
   let bytes=0;try{bytes=JSON.stringify(payload).length;}catch(e){}
-  _meta.lastPayloadBytes=bytes;
   if(bytes>(SYNC_CONFIG.MAX_STATE_BYTES||4000000)){
     addSyncLog('Cloud data large','State ~'+Math.round(bytes/1024)+' KB is over the '+Math.round((SYNC_CONFIG.MAX_STATE_BYTES||4000000)/1024)+' KB limit /api/sync accepts. Use Backup, then delete very old months from History.');
     toast('Cloud data is large (~'+Math.round(bytes/1024)+' KB). Consider archiving old months.');
@@ -1325,32 +1418,28 @@ async function syncNow(reason,opts){
   opts=opts||{};
   /* Never sync against a half-loaded local store. */
   if(_initPromise){try{await _initPromise}catch(e){}}
-  const dailyAuto=isDailyAutoReason(reason);
-  const realtime=isRealtimeReason(reason);
+  const auto=(reason==='auto-upload');
+  const livePull=(reason==='live');
   try{if(isPublicView())return {skipped:'public-view'};}catch(e){}
   if(_syncInProgress)return {skipped:'busy'};
-  if(!navigator.onLine){setSyncStatus('offline');if(!dailyAuto&&!realtime)toast('Offline \u2014 changes saved locally');return {offline:true};}
-  if(dailyAuto&&syncDayUsedToday())return {skipped:'daily-limit'};
-  /* Real-time syncs are not capped at one a day; they spend a budget instead. */
-  if(realtime&&!realtimeUploadAllowed())return {skipped:'realtime-budget'};
-  /* spend the day's single automatic sync BEFORE the first possible network call */
-  if(dailyAuto)markAutoSyncFired();
+  if(!navigator.onLine){setSyncStatus('offline');if(!auto&&!livePull)toast('Offline \u2014 changes saved locally');return {offline:true};}
   _syncInProgress=true;setSyncStatus('syncing');
   const explicit=(reason==='manual'||reason==='refresh');
   const force=opts.force===true;
   try{
     const pending=await getPendingChanges();
-    const needsUpload=pending.length>0;
+    /* Auto-sync off means ONLY the Sync button may upload. An automatic
+       download (live pull, startup, reconnect) then carries no write at all —
+       the queue stays pending until the user asks for a sync. */
+    const needsUpload=pending.length>0&&(explicit||settings.autoSync);
     const localHash=computeLocalHash();
     const lastHash=_meta.lastCloudHash||'';
-    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry'||dailyAuto||realtime);
-    if(!needsUpload&&!wantsCloudCheck){setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};}
     /* Skip the cloud GET only when we have actually talked to the cloud before
        (lastHash is set) and nothing has changed since. A device that has never
        synced has an empty hash too, and an empty local state hashes the same as
        an empty lastHash — without the lastHash check a brand-new phone would
        "sync" to nothing forever and never see the branch's data. */
-    if(!needsUpload&&lastHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!dailyAuto&&!realtime){setSyncStatus('synced');return {noop:true};}
+    if(!needsUpload&&lastHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!auto&&!livePull){setSyncStatus('synced');return {noop:true};}
 
     const g=await cloudGet();
     const cloud=g.state;
@@ -1360,20 +1449,15 @@ async function syncNow(reason,opts){
     /* Keep the live cursor on the cloud's version so the channel does not
        re-trigger for a change this sync has just read. */
     _live.version=Number(cloud.version)||_live.version;
-    /* Spend the real-time budget only on a write. A live download is one parked
-       request and must keep working even after the upload budget runs out. */
-    if(realtime&&needsUpload)markRealtimeSyncUsed();
-
     /* Nothing to upload — just take the cloud copy if it moved. */
     if(!needsUpload){
       if(g.found&&!cloudChanged){setSyncStatus('synced');return {noop:true,version:cloud.version};}
       const applied=applyCloudToLocal(cloud);
       await afterCloudWrite(cloud,cloudHash);
-      await addSyncLog(realtime?'Real-time update':'Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
+      await addSyncLog(livePull?'Real-time update':'Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
       setSyncStatus('synced');refreshAfterSync();
-      if(explicit||reason==='startup')toast('Synced from cloud ('+records.length+' records)');
-      else if(realtime&&(applied.added+applied.updated)>0)liveToast('Live update \u2014 '+(applied.added+applied.updated)+' change(s) from another device');
-      else if(dailyAuto)toast((applied.added+applied.updated)>0?('Daily auto sync done \u2014 '+(applied.added+applied.updated)+' cloud change(s) downloaded'):'Daily auto sync done \u2014 next automatic sync tomorrow');
+      if(explicit||(reason==='startup'&&(applied.added+applied.updated)>0))toast('Synced from cloud ('+records.length+' records)');
+      else if(livePull&&(applied.added+applied.updated)>0)liveToast('Live update \u2014 '+(applied.added+applied.updated)+' change(s) from another device');
       return {downloaded:applied,downloadApplied:applied.added+applied.updated,version:cloud.version};
     }
 
@@ -1407,26 +1491,23 @@ async function syncNow(reason,opts){
       await metaPut('conflicts',merged.conflicts.concat(prev).slice(0,20));
       await addSyncLog('Conflicts resolved',merged.conflicts.length+' day(s) changed on two devices \u2014 newest kept: '+merged.conflicts.map(c=>c.recordId).join(', '));
     }
-    await addSyncLog(realtime?'Real-time upload':'Sync successful','Uploaded to cloud (version '+newVersion+'). Records uploaded: '+pending.length+(cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
+    await addSyncLog(auto?'Auto sync':'Sync successful','Uploaded to cloud (version '+newVersion+'). Records uploaded: '+pending.length+(cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
     setSyncStatus(pendingCount()>0?'pending':'synced');
     refreshAfterSync();
     if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded, version '+newVersion+')');
-    else if(realtime)liveToast('Uploaded live \u2014 '+pending.length+' change(s), cloud v'+newVersion);
-    else if(dailyAuto)toast('Daily auto sync done \u2014 '+pending.length+' uploaded, next automatic sync tomorrow');
+    else if(auto)liveToast('Auto-uploaded \u2014 '+pending.length+' change(s), cloud v'+newVersion);
     return {uploaded:pending.length,version:newVersion,downloaded:cloudChanged};
   }catch(err){
     console.error('sync failed',err);
     setSyncStatus('error',(err&&err.message)||'error');
     await addSyncLog('Sync failed',String((err&&err.message)||err).slice(0,180)+' \u2014 local data is safe, '+pendingCount()+' change(s) waiting.');
     if(reason==='manual'||reason==='refresh'||reason==='retry')toast('Sync failed. Your local data is safe. '+pendingCount()+' change(s) waiting to sync.');
-    else if(realtime){
+    else if(auto){
       /* No toast storm while someone is typing: the button already shows the
-         error, and the retry lands on the next live tick. */
-      setLiveState('error',(err&&err.message)||'sync-failed');
+         error, and the upload retries by itself. */
       clearTimeout(_debounceT);
-      _debounceT=setTimeout(()=>{maybeRealtimeUpload('retry');},LIVE_CONFIG.RETRY_BASE_MS);
+      _debounceT=setTimeout(()=>{maybeAutoUpload('retry');},LIVE_CONFIG.RETRY_BASE_MS);
     }
-    else if(dailyAuto)toast('Auto sync failed \u2014 today\u2019s automatic sync is used up. Data is safe locally; tap \u2601 Sync Now to retry.');
     return {error:err};
   }finally{
     _syncInProgress=false;updateSyncUI();
@@ -1469,11 +1550,12 @@ async function initLocalDB(){
   }else{try{localStorage.setItem(K+'deviceId',_meta.deviceId);}catch(e){}}
   await queueLoadAll();
   await loadSyncLog();
-  let idbT=await kvGet('tombstones');
-  let lsT=[];try{lsT=JSON.parse(localStorage.getItem(K+'tombstones')||'[]');}catch(e){}
+  /* tombstones were a JSONBin-era delete log; the synced trash list replaced
+     them — drop any leftover so an upgrading device starts clean. */
+  try{localStorage.removeItem(K+'tombstones');}catch(e){}
+  try{await idbReq('appData','readwrite',s=>s.delete('tombstones'));}catch(e){}
   const idbRecords=await kvGet('records');
   if(idbRecords===undefined||idbRecords===null){
-    tombstones=unionTombstones(idbT||[],lsT||[]);
     await persistLocalInner();
     if(!_meta.migrated_v2&&records&&records.length){
       const now=new Date().toISOString();
@@ -1486,16 +1568,14 @@ async function initLocalDB(){
     const idbSettings=(await kvGet('settings'))||null;
     const idbSeq=(idbSettings&&idbSettings._seq)||0,lsSeq=settings._seq||0;
     if(lsSeq>=idbSeq){
-      tombstones=unionTombstones(lsT||[],idbT||[]);
       await persistLocalInner();
     }else{
       records=idbRecords;trash=idbTrash;settings={...settings,...idbSettings};
-      tombstones=unionTombstones(idbT||[],lsT||[]);
-      try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));localStorage.setItem(K+'tombstones',JSON.stringify(tombstones));}catch(e){}
+      try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
     }
   }
   if(!settings.settingsUpdatedAt)settings.settingsUpdatedAt=new Date().toISOString();
-  _meta.requestsUsed=_meta.requestsUsed||0;_meta.requestsSinceLastReset=_meta.requestsSinceLastReset||0;
+  _meta.requestsUsed=_meta.requestsUsed||0;
   await reconcileQueue();
   const n=pendingCount();_meta.pendingChanges=n;
   if(_meta.lastSyncAt&&!settings.lastSync)settings.lastSync=_meta.lastSyncAt;
@@ -1512,7 +1592,6 @@ async function reconcileQueue(){
     const keys=new Set((_queue||[]).map(q=>q.recordKey));
     let added=0;const now=new Date().toISOString();
     records.forEach(r=>{if(r&&r.date&&!keys.has('records:'+r.date)){upsertQueue({store:'records',recordId:r.date,operation:'UPDATE',changedAt:r.updated||now,payload:JSON.parse(JSON.stringify(r))});added++;}});
-    tombstones.forEach(t=>{const k=t.recordId||t.date;if(k&&!keys.has('records:'+k)){upsertQueue({store:'records',recordId:k,operation:'DELETE',changedAt:t.deletedAt||now,payload:t});added++;}});
     if(added){await persistQueueNow();await addSyncLog('Queue repaired',added+' local change(s) re-queued after restart.');}
   }catch(e){}
 }
@@ -1523,7 +1602,7 @@ async function reconcileQueue(){
 function liveBadgeMeta(){
   if(!liveEnabled())return {cls:'off',text:'LIVE OFF',title:'Real-time sync is switched off on this device \u00b7 tap to open Cloud Sync'};
   if(!navigator.onLine)return {cls:'off',text:'OFFLINE',title:'Offline \u00b7 edits are safe on this device and upload when you reconnect'};
-  if(_live.notSupported)return {cls:'warn',text:'NO LIVE',title:'This server has no /api/live endpoint \u00b7 scheduled sync still works'};
+  if(_live.notSupported)return {cls:'warn',text:'NO LIVE',title:'This server has no /api/live endpoint \u00b7 edits still upload automatically'};
   switch(_live.state){
     case 'watching':return {cls:'live',text:'LIVE',title:liveStatusText()+' \u00b7 another device\u2019s edit appears here within seconds'};
     case 'updating':return {cls:'busy',text:'UPDATING',title:'Pulling changes from the cloud right now'};
@@ -1570,23 +1649,15 @@ function updateSyncUI(){
 }
 function syncPanelHtml(){
   const m=syncStatusMeta();
-  const rl=_meta.lastRateLimit;
-  let rate='';
-  if(rl&&(rl.remaining!==null&&rl.remaining!==undefined)){
-    rate='<div>Server reports: <b>'+rl.remaining+'</b> of '+(rl.limit||'?')+' requests remaining</div>';
-    if(rl.remaining!==null&&rl.remaining<=100)rate+='<div>\u26a0 Free allowance nearly exhausted \u2014 sync sparingly.</div>';
-  }else{
-    rate='<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>';
-  }
+  const rate='<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>';
   const conf=Array.isArray(_meta.conflicts)?_meta.conflicts:[];
   return '<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
-    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b>'+(realtimeLeftToday()>0?(' <span class="small">('+esc(realtimeBudgetText())+')</span>'):' <span class="small">(budget spent \u00b7 scheduled sync only)</span>')+'</div>'
+    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b></div>'
     +(_live.lastChangeAt?('<div>Last cloud change seen: <b>'+esc(fmtSyncTime(_live.lastChangeAt))+'</b> \u00b7 '+_live.changesApplied+' live update(s) this session</div>'):'')
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b>'+autoSyncLimitNote()+'</div>'
-    +((pendingCount()>0&&syncDayUsedToday()&&!realtimeUploadAllowed())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b></div>'
     +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
     +rate
     +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')
@@ -1600,11 +1671,10 @@ function renderSyncDetails(){
   const m=syncStatusMeta();
   document.getElementById('syncDetails').innerHTML='<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
-    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b> <span class="small">('+esc(realtimeBudgetText())+')</span></div>'
+    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b></div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b>'+autoSyncLimitNote()+'</div>'
-    +((pendingCount()>0&&syncDayUsedToday()&&!realtimeUploadAllowed())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b></div>'
     +'<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>'
     +'</div>';
   document.getElementById('syncLogMini').textContent=_syncLog.slice(0,8).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n')||'No sync activity yet.';
@@ -1612,7 +1682,6 @@ function renderSyncDetails(){
   if(sb)sb.textContent=(_syncStatus==='error')?'Retry Sync':'Sync Now';
 }
 function refreshAfterSync(){
-  try{$('#headerBranch').textContent=settings.branch.toUpperCase();}catch(e){}
   try{renderDashboard();}catch(e){}
   try{
     const active=(document.querySelector('.page.active')||{}).id||'dashboard';
@@ -1640,7 +1709,6 @@ function publicViewUrl(){return location.origin+location.pathname.replace(/index
 function isPublicView(){try{return new URLSearchParams(location.search).get('view')!==null}catch(e){return false}}
 async function pullCloud(){return syncNow('refresh');}
 async function pushCloud(){return syncNow('manual');}
-async function autoSync(){if(pendingCount()<=0)return {noop:true};return syncNow('auto');}
 
 async function loadPublicView(){
   try{
@@ -1648,7 +1716,6 @@ async function loadPublicView(){
     const d=g.state||emptyCloudState();
     records=Array.isArray(d.records)?d.records:[];
     trash=[];
-    tombstones=[];
     if(d.settings&&typeof d.settings==='object'){
       settings={...settings,...d.settings,autoLock:0};
       setPinValue('');
@@ -1658,7 +1725,7 @@ async function loadPublicView(){
        first run — and loadPublicView has already filled it with the cloud's own
        rows, which would sit there as "pending" forever (and upload them back to
        itself if this browser ever opened the app normally). */
-    _queue=[];tombstones=[];
+    _queue=[];
     await persistQueueNow();
     _meta.pendingChanges=0;
     await metaPut('pendingChanges',0);
@@ -1697,18 +1764,10 @@ function network(){
   /* Coming back online: re-open the live channel and flush what queued up. */
   _live.notSupported=false;_live.fails=0;
   startLiveWatch();
-  maybeRealtimeUpload('online');
-  maybeSyncOnReconnect();
-}
-function maybeSyncOnReconnect(){
-  if(!settings.autoSync)return;
-  try{if(isPublicView())return;}catch(e){}
-  /* The real-time path already flushed the queue in network(); the once-a-day
-     sync is only the fallback for when real-time is off or out of budget. */
-  if(realtimeUploadAllowed())return;
-  if(syncDayUsedToday())return;
-  clearTimeout(window._onlineSyncT);
-  window._onlineSyncT=setTimeout(()=>{maybeDailyAutoSync('online');},1200);
+  maybeAutoUpload('online');
+  /* No live channel on this device: nothing else would notice that the cloud
+     moved while it was away, so take a look now. */
+  if(!liveEnabled()&&settings.autoSync)syncNow('online').catch(()=>{});
 }
 addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
 document.addEventListener('visibilitychange',()=>{
@@ -1720,8 +1779,7 @@ document.addEventListener('visibilitychange',()=>{
   }
   _live.notSupported=false;
   startLiveWatch();
-  maybeRealtimeUpload('visible');
-  maybeDailyAutoSync('visible');
+  maybeAutoUpload('visible');
 });
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
@@ -1760,6 +1818,9 @@ if("serviceWorker" in navigator){
       });
   });
 }
+$('#closePdfPreview').onclick=closePdfPreview;
+$('#pdfBackBtn').onclick=closePdfPreview;
+$('#pdfDownloadBtn').onclick=confirmPdfDownload;
 /* ---------- mobile modal UX: tap outside to dismiss, Escape to close, background scroll lock ---------- */
 function syncModalLock(){document.body.classList.toggle('modal-open',$$('.modal.show').length>0)}
 function wireModalUX(){
@@ -1776,7 +1837,7 @@ function wireModalUX(){
   });
   syncModalLock();
 }
-theme();network();$('#headerBranch').textContent=settings.branch.toUpperCase();renderDashboard();resetLock();
+theme();network();renderDashboard();resetLock();
 wireSyncUI();
 wireModalUX();
 _initPromise=initLocalDB();
@@ -1787,8 +1848,8 @@ _initPromise.then(()=>{
   /* Open the real-time channel first: it is what makes the rest of the app
      converge without anyone tapping Sync. */
   startLiveWatch();
-  /* Anything queued while this device was offline goes up right away. */
-  if(navigator.onLine&&pendingCount()>0)setTimeout(()=>{maybeRealtimeUpload('startup');},700);
-  if(navigator.onLine&&dailyAutoSyncDue()){setTimeout(()=>{maybeDailyAutoSync('startup');},900);}
+  /* On open, with nobody tapping Sync: anything queued goes up and whatever
+     the cloud has comes down. */
+  if(navigator.onLine&&settings.autoSync)setTimeout(()=>{syncNow('startup').catch(()=>{});},700);
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>

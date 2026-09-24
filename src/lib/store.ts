@@ -208,12 +208,6 @@ export function applyWrite(current: CloudState, body: unknown, now?: string): Wr
   return { ok: true, state };
 }
 
-/** Unwrap either a bare state document or the { ok, empty, state } envelope. */
-export function unwrapState(payload: unknown): CloudState {
-  if (isPlainObject(payload) && isPlainObject(payload.state)) return normalizeState(payload.state);
-  return normalizeState(payload);
-}
-
 export function jsonResponse(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
     status,

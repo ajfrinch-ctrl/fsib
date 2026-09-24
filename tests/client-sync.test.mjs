@@ -180,7 +180,7 @@ function bootApp({
       if (metaOverride) window.localStorage.setItem("bmr_v1_syncMeta", JSON.stringify(metaOverride));
 
       /* Delays stay real, so a test can tell "uploaded by itself in real time"
-         from "uploaded by the legacy 45 s debounce". The parked long-poll and
+         from "waiting for the Sync button". The parked long-poll and
          every backoff timer die with the window in after(). */
       window.fetch = async (input, init) => {
         const url = typeof input === "string" ? input : (input && input.url) || "";
@@ -260,7 +260,7 @@ async function appSettled(window, timeoutMs = 8000) {
 test("first sync uploads the local records and records the cloud version", async () => {
   const { window, blob, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")],
-    settings: { realtime: false }
+    settings: { autoSync: false }
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2), "records were not queued for upload");
   await appSettled(window);
@@ -322,7 +322,7 @@ test("a lost race (409) re-merges and retries without losing either device's day
     records: [day("2026-09-10", "1000", "2026-09-10T09:00:00.000Z"), day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")],
     cloud,
     onFirstPost: otherDeviceWrite,
-    settings: { realtime: false }
+    settings: { autoSync: false }
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2));
   await appSettled(window);
@@ -339,7 +339,8 @@ test("a lost race (409) re-merges and retries without losing either device's day
 
 test("the PIN stays on the device and never reaches the blob", async () => {
   const { window, blob, errors } = bootApp({
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")]
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
+    settings: { autoSync: false }
   });
   assert.ok(await waitUntil(() => typeof window.setPinValue === "function"));
   await appSettled(window);
@@ -388,7 +389,7 @@ test("two devices on the same blob converge on the same data", async () => {
   const handler = createSyncHandler(blob.adapter);
 
   /* Device A: has 1 September, syncs first. */
-  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler });
+  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler, settings: { autoSync: false } });
   assert.ok(await waitUntil(() => typeof a.window.pendingCount === "function" && a.window.pendingCount() >= 1));
   await appSettled(a.window);
   const resA = await a.window.syncNow("manual");
@@ -397,7 +398,7 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual(blob.peek().records.map((r) => r.date), ["2026-09-01"]);
 
   /* Device B: fresh phone, its own 20 September, never seen A's data. */
-  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler });
+  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler, settings: { autoSync: false } });
   assert.ok(await waitUntil(() => typeof b.window.pendingCount === "function" && b.window.pendingCount() >= 1));
   await appSettled(b.window);
   const resB = await b.window.syncNow("manual");
@@ -423,41 +424,7 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual([...a.errors, ...b.errors], []);
 });
 
-test("real-time off: the old scheduled rules still hold (pull on first open, then only when there is work)", async () => {
-  const blob = memoryBlob({
-    settings: {},
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
-    trash: [],
-    version: 1,
-    updatedAt: "2026-09-01T09:00:00.000Z"
-  });
-  // realtime:false = a device that switched the live channel off in Settings
-  const { window, requests } = bootApp({ handler: createSyncHandler(blob.adapter), settings: { realtime: false } });
-  assert.ok(await waitUntil(() => typeof window.dailyAutoSyncDue === "function"));
-  await new Promise((r) => setTimeout(r, 300));
-
-  // A phone that has never reached the cloud treats it as "refresh overdue" (9999 days),
-  // so it pulls on first open without the user doing anything.
-  assert.equal(window.daysSinceCloudContact() > 3, true, "no cloud contact yet");
-  assert.equal(window.dailyAutoSyncDue(), true, "first open should auto-pull");
-  assert.equal(window.liveInfo().enabled, false, "the channel is switched off on this device");
-
-  const res = await window.syncNow("refresh");
-  assert.equal(res.error, undefined);
-  assert.deepEqual(localRecords(window).map((r) => r.date), ["2026-09-01"], "pulled the other device's day");
-
-  // Contact is fresh and nothing is pending, so it stays quiet (AUTO_REFRESH_DAYS = 3).
-  assert.equal(window.dailyAutoSyncDue(), false, "nothing to do, cloud contact is fresh");
-
-  // A local edit makes an upload due, which also merges the cloud copy on the way up.
-  window.queueSettingsChange();
-  assert.ok(await waitUntil(() => window.pendingCount() >= 1));
-  assert.equal(window.dailyAutoTarget(), "daily-upload");
-  assert.equal(window.dailyAutoSyncDue(), true);
-  assert.equal(requests.filter((r) => r.live).length, 0, "no /api/live traffic while real-time is off");
-});
-
-test("real-time on: the once-a-day gate stands down while the live channel has budget", async () => {
+test("real-time off: the live channel stays quiet, but edits still upload automatically", async () => {
   const backend = makeBackend({
     settings: {},
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
@@ -465,19 +432,56 @@ test("real-time on: the once-a-day gate stands down while the live channel has b
     version: 1,
     updatedAt: "2026-09-01T09:00:00.000Z"
   });
-  const { window } = bootApp({ backend });
-  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
-  await new Promise((r) => setTimeout(r, 300));
+  // realtime:false = a device that switched the live channel off in Settings
+  const { window, requests } = bootApp({ backend, settings: { realtime: false } });
+  assert.ok(await waitUntil(() => typeof window.queueSettingsChange === "function"));
+  await appSettled(window);
 
-  assert.equal(window.liveInfo().enabled, true);
-  assert.equal(window.realtimeUploadAllowed(), true, "a fresh device has its whole budget");
-  // The scheduled sync must not race the live channel for the same edit.
-  assert.equal(window.dailyAutoSyncDue(), false, "real-time owns uploads while it has budget");
+  assert.equal(window.liveInfo().enabled, false, "the channel is switched off on this device");
+  assert.equal(requests.filter((r) => r.live).length, 0, "no /api/live traffic while real-time is off");
 
+  // Uploads never needed the channel: the edit goes up on its own debounce.
+  window.setAutoUploadDelay(150);
+  const before = requests.filter((r) => r.method === "POST").length;
   window.queueSettingsChange();
   assert.ok(await waitUntil(() => window.pendingCount() >= 1));
-  assert.equal(window.dailyAutoSyncDue(), false, "still real-time's job, not the daily gate's");
-  assert.match(window.autoSyncStatusText(), /real-time/, "the settings copy says real-time");
+  assert.ok(
+    await waitUntil(() => requests.filter((r) => r.method === "POST").length > before, 8000),
+    "the edit never uploaded by itself, even with the live channel off"
+  );
+  assert.match(window.autoSyncStatusText(), /real-time/, "auto uploads are still described as real-time");
+
+  // A manual refresh still pulls the cloud day down.
+  const res = await window.syncNow("refresh");
+  assert.equal(res.error, undefined, JSON.stringify(res.error && res.error.message));
+  assert.deepEqual(localRecords(window).map((r) => r.date), ["2026-09-01"], "pulled the cloud day");
+  assert.equal(requests.filter((r) => r.live).length, 0, "a refresh must not open the live channel");
+});
+
+test("auto sync is unlimited: every edit uploads by itself, with no daily gate", async () => {
+  const backend = makeBackend(null);
+  const { window, requests } = bootApp({ backend });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  await appSettled(window);
+  window.setAutoUploadDelay(150);
+
+  assert.equal(window.autoSyncStatusText().indexOf("1/day"), -1, "the old once-a-day copy is gone");
+
+  for (let i = 1; i <= 3; i++) {
+    const before = requests.filter((r) => r.method === "POST").length;
+    window.queueSettingsChange();
+    assert.ok(
+      await waitUntil(() => requests.filter((r) => r.method === "POST").length > before, 8000),
+      "edit " + i + " never uploaded by itself"
+    );
+    await appSettled(window);
+  }
+  assert.ok(requests.filter((r) => r.method === "POST").length >= 3, "three edits, three uploads: nothing was capped after the first");
+  assert.equal(window.pendingCount(), 0, "every edit reached the cloud — nothing is stuck");
+
+  // Manual sync stays unlimited and unblocked too.
+  const res = await window.syncNow("manual");
+  assert.equal(res.error, undefined, JSON.stringify(res.error && res.error.message));
 });
 
 test("the live channel carries one device's edit to another with nobody tapping Sync", async () => {
@@ -489,7 +493,8 @@ test("the live channel carries one device's edit to another with nobody tapping 
      that reflex while the test sets its starting position by hand. */
   const a = bootApp({
     backend,
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")]
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
+    settings: { autoSync: false }
   });
   assert.ok(await waitUntil(() => typeof a.window.syncNow === "function"));
   a.window.setAutoUploadDelay(60000);
@@ -500,8 +505,10 @@ test("the live channel carries one device's edit to another with nobody tapping 
   assert.ok(backend.blob.peek(), "nothing was written to the cloud");
   assert.equal(backend.blob.peek().version, 1);
 
-  /* Device B: the manager's phone, opened afterwards, never asked to sync. */
-  const b = bootApp({ backend });
+  /* Device B: the manager's phone, opened afterwards, never asked to sync.
+     Auto-upload is off here so the ONLY way this phone can catch up is the
+     live channel — which is exactly what is under test. */
+  const b = bootApp({ backend, settings: { autoSync: false } });
   assert.ok(await waitUntil(() => typeof b.window.liveInfo === "function"));
   assert.ok(
     await waitUntil(() => b.window.liveInfo().state === "watching", 4000),
@@ -516,6 +523,7 @@ test("the live channel carries one device's edit to another with nobody tapping 
   /* A edits. No Sync button is touched on either phone.
      `records` is a script-level binding, so go through the window's own scope. */
   a.window.setAutoUploadDelay(120); // now let the reflex back in
+  a.window.eval("settings.autoSync=true");
   const stamp = new Date().toISOString();
   a.window.eval(`(function(){
     const row = ${JSON.stringify(day("2026-09-21", "777000", stamp))};
@@ -544,63 +552,7 @@ test("the live channel carries one device's edit to another with nobody tapping 
   assert.deepEqual([...a.errors, ...b.errors], []);
 });
 
-test("the real-time budget is the safety net: uploads stop, the live channel does not", async () => {
-  const backend = makeBackend(null);
-  const { window, requests } = bootApp({ backend, settings: { branch: "Tantar Branch" } });
-  assert.ok(await waitUntil(() => typeof window.realtimeLeftToday === "function"));
-  await appSettled(window);
-  const posts = () => requests.filter((r) => r.method === "POST").length;
-
-  // While there is budget, an edit uploads on its own and does NOT spend the
-  // once-a-day slot — that slot is the fallback's, not real-time's.
-  assert.equal(window.realtimeUploadAllowed(), true);
-  const baselinePosts = posts();
-  const baselineUsed = window.realtimeUsedToday();
-  window.queueSettingsChange();
-  assert.ok(await waitUntil(() => posts() > baselinePosts, 8000), "the edit never uploaded by itself");
-  assert.equal(window.realtimeUsedToday(), baselineUsed + 1, "the write was charged to the real-time budget");
-  assert.equal(window.syncDayUsedToday(), false, "a real-time upload must not spend the daily slot");
-
-  // Now spend the rest of the budget: a runaway queue must not write forever.
-  window.setRealtimeMaxPerDay(window.realtimeUsedToday());
-  assert.equal(window.realtimeLeftToday(), 0, "budget spent");
-  assert.equal(window.realtimeUploadAllowed(), false);
-  await appSettled(window);
-  const capped = posts();
-  const skipped = await window.syncNow("realtime-upload");
-  assert.equal(skipped.skipped, "realtime-budget");
-  assert.equal(posts(), capped, "a real-time upload happened while the budget was spent");
-
-  // The scheduled once-a-day sync takes over: exactly one more automatic write.
-  window.setLegacySyncDelay(150);
-  const before = posts();
-  window.queueSettingsChange();
-  assert.equal(window.dailyAutoSyncDue(), true, "the fallback should be armed for the queued edit");
-  assert.ok(await waitUntil(() => posts() > before, 8000), "the scheduled fallback never ran");
-  assert.equal(window.syncDayUsedToday(), true, "the fallback spends the day's single scheduled sync");
-  assert.equal(window.dailyAutoSyncDue(), false, "and then stays quiet until tomorrow");
-
-  // Nothing automatic happens any more today, however much is edited.
-  // (The edit is queued first and only then given time, so the assertion is
-  // about the cap rather than about winning a race with the fallback timer.)
-  window.setLegacySyncDelay(60000);
-  window.queueSettingsChange();
-  assert.ok(window.pendingCount() >= 1, "the capped edit stays queued on the device, not lost");
-  const settled = posts();
-  await new Promise((r) => setTimeout(r, 900));
-  assert.equal(posts(), settled, "more than the one scheduled sync got through the cap");
-
-  // A manual sync is the user's own decision: never budgeted, never blocked.
-  const manual = await window.syncNow("manual");
-  assert.equal(manual.error, undefined, JSON.stringify(manual.error && manual.error.message));
-  assert.equal(window.pendingCount(), 0, "manual sync sent it");
-
-  // Downloads keep flowing: the channel is a parked request, not a write.
-  assert.ok(requests.filter((r) => r.live).length > 0, "the live channel stopped with the budget");
-  assert.equal(window.liveInfo().supported, true);
-});
-
-test("a server without /api/live degrades to the scheduled sync instead of retrying forever", async () => {
+test("a server without /api/live: the channel goes quiet, but edits still upload automatically", async () => {
   const blob = memoryBlob(null);
   // shared /api/sync handler and no live handler == an older deploy
   const { window, requests, errors } = bootApp({ handler: createSyncHandler(blob.adapter) });
@@ -616,31 +568,25 @@ test("a server without /api/live degrades to the scheduled sync instead of retry
   // The badge must not pretend to be connecting.
   assert.equal(window.liveInfo().state, "disabled");
   assert.match(window.liveStatusText(), /unavailable/i);
-  assert.equal(window.realtimeUploadAllowed(), false, "no channel means no real-time uploads");
 
-  // The scheduled sync takes over the moment the app learns there is no channel:
-  // a fresh device's first-open pull has usually already spent today's slot, so
-  // release it here and check that a queued edit goes up on the legacy path.
-  assert.equal(window.dailyAutoTarget() !== "" || window.syncDayUsedToday(), true, "no fallback armed");
-  window.releaseSyncDay();
-  window.setLegacySyncDelay(150);
+  // No channel does not mean no sync: the edit uploads on its own debounce.
+  window.setAutoUploadDelay(150);
   const before = requests.filter((r) => !r.live && r.method === "POST").length;
   window.queueSettingsChange();
   assert.ok(
     await waitUntil(() => requests.filter((r) => !r.live && r.method === "POST").length > before, 8000),
-    "the scheduled sync never took over"
+    "an edit should still upload by itself with no live endpoint"
   );
-  assert.equal(window.syncDayUsedToday(), true, "the fallback spends the day's single scheduled sync");
 
-  // The app still works end to end.
+  // And the app still works end to end.
   const res = await window.syncNow("manual");
-  assert.equal(res.error, undefined);
+  assert.equal(res.error, undefined, JSON.stringify(res.error && res.error.message));
   assert.deepEqual(errors, []);
 });
 
-test("switching real-time off drops the parked request and re-arms the scheduled sync", async () => {
+test("switching real-time off drops the parked request; switching it back on reopens it", async () => {
   const backend = makeBackend(null);
-  const { window } = bootApp({ backend });
+  const { window, requests } = bootApp({ backend });
   assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
   assert.ok(await waitUntil(() => window.liveInfo().state === "watching", 4000));
 
@@ -649,6 +595,15 @@ test("switching real-time off drops the parked request and re-arms the scheduled
   assert.equal(window.liveInfo().enabled, false);
   assert.equal(window.liveInfo().state, "disabled");
   assert.equal(JSON.parse(window.localStorage.getItem("bmr_v1_settings")).realtime, false, "the choice is per device");
+
+  // Uploads keep running while the channel is off.
+  window.setAutoUploadDelay(150);
+  const before = requests.filter((r) => r.method === "POST").length;
+  window.queueSettingsChange();
+  assert.ok(
+    await waitUntil(() => requests.filter((r) => r.method === "POST").length > before, 8000),
+    "an edit must still upload with the channel off"
+  );
 
   // Back on again, without a reload.
   window.setRealtimeEnabled(true);

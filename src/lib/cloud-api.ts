@@ -26,9 +26,6 @@ import type { CloudState, SyncRecord } from "./store.ts";
 export type { CloudState, SyncRecord };
 
 export const DEFAULT_API_PATH = "/api/sync";
-export const CLOUD_VERSION_KEY = "bmr_v1_cloud_version";
-export const PIN_KEY = "bmr_v1_pin";
-
 /** Never uploaded: the PIN is per-device (localStorage key bmr_v1_pin). */
 export const DEVICE_ONLY_SETTING_KEYS = ["pin"];
 
@@ -126,12 +123,7 @@ export async function saveCloudState(
   };
 }
 
-export async function clearCloudState(api: string = DEFAULT_API_PATH): Promise<boolean> {
-  const res = await fetch(api, { method: "DELETE" });
-  return res.ok;
-}
-
-/** Newest write wins per date; deletes (trash + tombstone) beat stale edits. */
+/** Newest write wins per date; deletes (trash rows) beat stale edits. */
 export function mergeRecords(local: SyncRecord[], cloud: SyncRecord[]): { rows: SyncRecord[]; conflicts: string[] } {
   const map = new Map<string, SyncRecord>();
   const conflicts: string[] = [];
@@ -187,7 +179,7 @@ export function mergeStates(
    One request is parked on the server carrying the cloud version this
    device holds. It answers the moment another device saves, so the
    caller learns "the cloud moved" in seconds instead of at the next
-   scheduled sync. It never carries the document: pull /api/sync after
+   manual refresh. It never carries the document: pull /api/sync after
    a `changed` answer.
 ------------------------------------------------------------------ */
 
