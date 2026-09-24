@@ -192,7 +192,7 @@ test("the monthly statement PDF is a date table with blank columns", async () =>
   assert.equal(totalCells[3].trim(), "");
   assert.equal(totalCells[7].trim(), "");
   assert.equal(totalCells[8].trim(), "");
-  assert.equal(totalCells[9].trim(), "");
+  assert.equal(totalCells[9].trim(), "2 a/c", "the TOTAL row adds the accounts opened, the way it adds the money");
 
   const feb2024 = window.statementLines("2024-02-01");
   assert.equal(feb2024.find((l) => l.startsWith("29 Feb")).trim(), "29 Feb");
@@ -412,6 +412,83 @@ test("an account row is a type and an amount — no account number anywhere", as
   assert.match(card.innerHTML, /Initial Deposit/);
   w2.renderReports("daily", "2026-09-21");
   assert.doesNotMatch(w2.document.querySelector("#reports").innerHTML, /1001/);
+});
+
+test("each account row says how many accounts were opened, and every total adds them up", async () => {
+  const { window } = bootOffline({
+    records: [{
+      ...day("2026-09-21", "1250000"),
+      accounts: [
+        { category: "Savings", count: "3", amount: "60000" },
+        { category: "MTDR", amount: "10000" }
+      ]
+    }]
+  });
+  await new Promise((r) => setTimeout(r, 250));
+  const doc = window.document;
+
+  /* The entry form asks how many accounts the row covers; the Number of
+     Accounts total adds those numbers the way Account Deposit adds amounts. */
+  window.renderEntry();
+  doc.querySelector("#addAccount").click();
+  const row = doc.querySelector("#accounts .account");
+  row.querySelector(".acat").value = "DPS / Other";
+  row.querySelector(".acount").value = "5";
+  row.querySelector(".aamount").value = "2500";
+  row.querySelector(".acount").dispatchEvent(new window.Event("input", { bubbles: true }));
+  row.querySelector(".aamount").dispatchEvent(new window.Event("input", { bubbles: true }));
+  assert.deepEqual(Object.keys(window.currentForm().accounts[0]).sort(), ["amount", "category", "count"],
+    "the row carries the type, the count and the money");
+  const saved = window.currentForm().accounts[0];
+  assert.equal(saved.category, "DPS / Other");
+  assert.equal(saved.count, "5", "the typed count is saved with the row");
+  assert.equal(saved.amount, "2500");
+  assert.equal(doc.querySelector("#acCount").textContent, "5", "Number of Accounts adds the typed count");
+
+  /* A stored day: three Savings accounts and one MTDR — 4 accounts, ৳ 70,000. */
+  const rec = {
+    ...day("2026-09-21", "1250000"),
+    accounts: [
+      { category: "Savings", count: "3", amount: "60000" },
+      { category: "MTDR", amount: "10000" }
+    ]
+  };
+  assert.equal(window.accountsCount(rec), 4, "the counts are added up");
+  assert.equal(window.accountsTotal(rec), 70000, "the amounts are added up as before");
+
+  /* WhatsApp: the count travels both in the headline and beside each type. */
+  window.openShareModal(rec);
+  const summary = doc.querySelector("#summaryPreview").textContent;
+  const details = doc.querySelector("#detailPreview").textContent;
+  assert.match(summary, /Total Accounts: 4/);
+  assert.match(details, /\*NUMBER OF ACCOUNTS:\* 4/);
+  assert.match(details, /Savings \(3 a\/c\): Tk 60,000 \(0\.60 Lac\)/);
+  assert.match(details, /MTDR: Tk 10,000 \(0\.10 Lac\)/);
+
+  /* The dashboard's this-month figure counts 4 accounts opened. */
+  window.renderDashboard();
+  const pacct = doc.querySelector('#dashboard .prow[data-period="month"] .pacct');
+  assert.equal(pacct.textContent.replace(/\s+/g, " ").trim(), "4");
+
+  /* The statement PDF: the day cell carries the count, the header says 4, and
+     the TOTAL row adds them up like it adds the money. */
+  const cols = window.statementColumns();
+  const lines = window.statementLines("2026-09-21", "daily");
+  assert.match(lines.join("\n"), /Accounts: 4/);
+  const dayCells = statementCells(lines.find((l) => /^21 Sep /.test(l)), cols);
+  assert.equal(dayCells[9].trim(), "Savings x3 60,000");
+  assert.match(lines.join("\n"), /MTDR 10,000/);
+  const totalCells = statementCells(lines.find((l) => l.startsWith("TOTAL")), cols);
+  assert.equal(totalCells[9].trim(), "4 a/c");
+
+  /* The New Account report: the hero and the per-day headings count 4, and
+     each card names how many accounts the row covers. */
+  window.renderAccountReport("daily", "2026-09-21");
+  assert.match(doc.querySelector(".rep-hero .rh-sub").textContent, /4 accounts across 1 recorded day/);
+  const counts = [...doc.querySelectorAll("#reports .aitem")].map((c) =>
+    [...c.querySelectorAll(".rec-meta div")].find((d) => /No\. of A\/C/.test(d.textContent)).textContent.replace(/\D+/g, "")
+  );
+  assert.deepEqual(counts, ["3", "1"], "Savings covers 3 accounts, MTDR defaults to 1");
 });
 
 test("every report section is closed until it is tapped", async () => {

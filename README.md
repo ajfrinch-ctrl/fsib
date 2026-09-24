@@ -116,12 +116,17 @@ The report the branch sends has two parts, both built in the page:
   the unit the branch reads.
 
 An account number is not collected at all. The entry form asks for an account
-type and the money it brought in, and the detailed message says
-**`NUMBER OF ACCOUNTS:`** — how many accounts were opened that day — and lists
-each new account by type and amount. The number is dropped on every read and
-write by the same rule that drops the retired sync switches (`no` in
-`RETIRED_ACCOUNT_FIELDS`), so an older blob cannot bring it back, and a day
-saved by an older build simply loses it on the next sync.
+type, **how many accounts of that type were opened** (`No. of A/C`), and the
+money they brought in — and the detailed message says
+**`NUMBER OF ACCOUNTS:`** — those counts added up, the way `ACCOUNT DEPOSIT`
+adds the amounts — and lists each new account by type, count and amount. The
+same total appears everywhere a number belongs: the dashboard, the day cards,
+the statement PDF (each day's Accounts cell, and the `TOTAL` row sums the
+counts beside the summed money) and the New Account report. A row whose count
+is left empty — every day saved by an older build — is one account. The
+account *number* itself is still dropped on every read and write by the same
+rule that drops the retired sync switches (`no` in `RETIRED_ACCOUNT_FIELDS`),
+so an older blob cannot bring it back.
 
 ## API
 
@@ -235,7 +240,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 87 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number
+npm test           # 88 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number, the per-row accounts-opened count
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
