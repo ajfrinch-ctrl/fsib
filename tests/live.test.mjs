@@ -343,6 +343,32 @@ test("a write from another instance reaches a parked request even though a hub e
   assert.ok(body.waitedMs < 1000, `the poller should find a remote write quickly (${body.waitedMs}ms)`);
 });
 
+test("the long-poll answers a cross-origin preflight and exposes its headers", async () => {
+  /* A shell on GitHub Pages parks its long-poll on the Netlify deployment.
+     That is a CORS request with a header the app reads (X-Live-Max-Wait-Ms),
+     so both the preflight and the exposure have to be right — without them the
+     browser hides the answer and the phone behaves like there is no channel. */
+  const { adapter } = memoryAdapter(state(1));
+  const handler = createLiveHandler(adapter, undefined, fast);
+
+  const preflight = await handler(
+    new Request("https://fsib.netlify.app/api/live?version=1", { method: "OPTIONS", headers: { origin: "https://ajfrinch-ctrl.github.io" } })
+  );
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
+  assert.equal(preflight.headers.get("allow"), "GET, HEAD, OPTIONS");
+  assert.equal(preflight.headers.get(LIVE_MAX_WAIT_HEADER), "400", "the ceiling rides along on the preflight too");
+
+  const answer = await handler(liveRequest("?version=1&wait=0.05", { origin: "https://ajfrinch-ctrl.github.io" }));
+  assert.equal(answer.status, 304);
+  assert.equal(answer.headers.get("access-control-allow-origin"), "*");
+  assert.match(answer.headers.get("access-control-expose-headers"), /x-live-max-wait-ms/);
+
+  const change = await handler(liveRequest("?wait=0", { origin: "https://ajfrinch-ctrl.github.io", "if-none-match": '"0"' }));
+  assert.equal(change.status, 200);
+  assert.equal(change.headers.get("access-control-allow-origin"), "*");
+});
+
 test("the live handler never needs a hub and works with the bare blob adapter", async () => {
   const { adapter } = memoryAdapter(emptyState());
   const res = await createLiveHandler(adapter)(liveRequest("?version=0&wait=0.05"));

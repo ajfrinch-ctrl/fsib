@@ -381,7 +381,30 @@ const SYNC_CONFIG={
   /* old Settings switches — dropped on the way up, never read */
   RETIRED_SYNC_SETTING_KEYS:['autoSync','realtime']
 };
-const CLOUD_API=SYNC_CONFIG.API_PATH;
+/* Where the cloud lives. Normally this site's own /api/* — but the app shell can
+   be served from a host that cannot run server code at all (GitHub Pages serves
+   static files only). An install from there still needs the cloud, so it talks to
+   the Netlify deployment cross-origin; those functions answer CORS, preflight
+   included. Without this, a Pages install saves on the phone and nowhere else —
+   which looks exactly like "device A saved and device B never shows it". */
+const STATIC_HOST_API={
+  'ajfrinch-ctrl.github.io':'https://fsib.netlify.app'
+};
+const API_ORIGIN_KEY='bmr_v1_apiOrigin';
+function cloudOrigin(){
+  try{
+    /* ?api=https://host — explicit override for a test or a new host, remembered. */
+    const q=new URLSearchParams(location.search).get('api');
+    if(q){const o=q.replace(/\/+$/,'');try{localStorage.setItem(API_ORIGIN_KEY,o)}catch(e){};return o}
+    const saved=localStorage.getItem(API_ORIGIN_KEY);
+    if(saved)return String(saved).replace(/\/+$/,'');
+    const hit=STATIC_HOST_API[location.hostname];
+    if(hit)return hit;
+  }catch(e){}
+  return '';
+}
+const CLOUD_ORIGIN=cloudOrigin();
+const CLOUD_API=CLOUD_ORIGIN+SYNC_CONFIG.API_PATH;
 
 /* Real-time config — the /api/live long-poll channel plus instant uploads.
 
@@ -424,7 +447,7 @@ const LIVE_CONFIG={
   /* edit -> upload */
   UPLOAD_DEBOUNCE_MS:1500
 };
-const LIVE_API=LIVE_CONFIG.API_PATH;
+const LIVE_API=CLOUD_ORIGIN+LIVE_CONFIG.API_PATH;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const DEFAULT_SETTINGS={branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
@@ -1977,6 +2000,7 @@ function syncPanelHtml(){
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
     +'<div>Uploads: <b>'+esc(autoSyncStatusText())+'</b></div>'
     +'<div>Cloud version: <b>'+esc(String(getCloudVersion()||'not synced yet'))+'</b></div>'
+    +'<div>Cloud host: <b>'+esc(CLOUD_ORIGIN?CLOUD_ORIGIN:'this site')+'</b></div>'
     +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
     +rate
     +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')

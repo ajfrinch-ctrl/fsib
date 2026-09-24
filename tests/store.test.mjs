@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  ALLOWED_ORIGINS_ENV,
   MAX_STATE_BYTES,
   applyWrite,
   createSyncHandler,
@@ -182,4 +183,68 @@ test("applyWrite refuses a state over the size limit", () => {
 test("normalizeState repairs a corrupt blob instead of throwing", () => {
   const state = normalizeState({ settings: "nope", records: { nope: 1 }, trash: null, version: "12", updatedAt: 5 });
   assert.deepEqual(state, { settings: {}, records: [], trash: [], version: 12, updatedAt: null });
+});
+
+/* ------------------------------------------------------------------
+   CORS — an app shell served from a static host (GitHub Pages runs no
+   server code) has to reach this API on the Netlify deployment, so the
+   preflight and the answer itself both have to be readable.
+------------------------------------------------------------------ */
+
+test("the preflight is answered, and every answer is cross-origin readable", async () => {
+  const { adapter } = memoryAdapter(null);
+  const sync = createSyncHandler(adapter);
+
+  const preflight = await sync(
+    new Request("https://fsib.netlify.app/api/sync", { method: "OPTIONS", headers: { origin: "https://ajfrinch-ctrl.github.io" } })
+  );
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
+  assert.match(preflight.headers.get("access-control-allow-methods"), /POST/);
+  assert.match(preflight.headers.get("access-control-allow-headers"), /content-type/);
+  assert.match(preflight.headers.get("allow"), /OPTIONS/);
+
+  const get = await sync(new Request("https://fsib.netlify.app/api/sync", { headers: { origin: "https://ajfrinch-ctrl.github.io" } }));
+  assert.equal(get.status, 200);
+  assert.equal(get.headers.get("access-control-allow-origin"), "*");
+  assert.match(get.headers.get("access-control-expose-headers"), /etag/);
+
+  const post = await sync(
+    new Request("https://fsib.netlify.app/api/sync", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://ajfrinch-ctrl.github.io" },
+      body: JSON.stringify({ settings: {}, records: [day("2026-09-15", "5000", "2026-09-15T09:00:00.000Z")], trash: [], version: 0 })
+    })
+  );
+  assert.equal(post.status, 201);
+  assert.equal(post.headers.get("access-control-allow-origin"), "*");
+
+  const notModified = await sync(
+    new Request("https://fsib.netlify.app/api/sync", { headers: { origin: "https://ajfrinch-ctrl.github.io", "if-none-match": '"1"' } })
+  );
+  assert.equal(notModified.status, 304);
+  assert.equal(notModified.headers.get("access-control-allow-origin"), "*", "a 304 is read too");
+});
+
+test("FSIB_ALLOWED_ORIGINS restricts the API to the hosts you name", async () => {
+  const { adapter } = memoryAdapter(null);
+  const sync = createSyncHandler(adapter);
+  const previous = process.env[ALLOWED_ORIGINS_ENV];
+  process.env[ALLOWED_ORIGINS_ENV] = "https://ajfrinch-ctrl.github.io, https://fsib.netlify.app/";
+  try {
+    const listed = await sync(new Request("https://fsib.netlify.app/api/sync", { headers: { origin: "https://ajfrinch-ctrl.github.io" } }));
+    assert.equal(listed.headers.get("access-control-allow-origin"), "https://ajfrinch-ctrl.github.io");
+    assert.equal(listed.headers.get("vary"), "origin");
+
+    /* A trailing slash and stray spaces in the setting must not break the match. */
+    const second = await sync(new Request("https://fsib.netlify.app/api/sync", { headers: { origin: "https://fsib.netlify.app" } }));
+    assert.equal(second.headers.get("access-control-allow-origin"), "https://fsib.netlify.app");
+
+    const stranger = await sync(new Request("https://fsib.netlify.app/api/sync", { headers: { origin: "https://evil.example" } }));
+    assert.equal(stranger.headers.get("access-control-allow-origin"), null, "an unlisted origin is not granted");
+    assert.equal(stranger.status, 200, "the API still answers; the browser is what refuses to hand it over");
+  } finally {
+    if (previous === undefined) delete process.env[ALLOWED_ORIGINS_ENV];
+    else process.env[ALLOWED_ORIGINS_ENV] = previous;
+  }
 });

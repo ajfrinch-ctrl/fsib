@@ -38,7 +38,7 @@
    and the "wake me when something changed" signal are both injected.
 ------------------------------------------------------------------ */
 
-import { normalizeState, type BlobAdapter, type CloudState } from "./store.ts";
+import { corsHeaders, normalizeState, withCors, type BlobAdapter, type CloudState } from "./store.ts";
 
 export type LiveRevision = { version: number; updatedAt: string | null };
 
@@ -138,11 +138,19 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
     pollIntervalMs: options?.pollIntervalMs ?? LIVE_POLL_INTERVAL_MS
   };
 
-  return async function handleLiveRequest(req: Request): Promise<Response> {
+  const handle = async function handleLiveRequest(req: Request): Promise<Response> {
     const method = (req.method || "GET").toUpperCase();
     /* Every answer — including a 304 — carries the real hold ceiling. */
     const answer = (status: number, payload: unknown) => jsonResponse(status, payload, opts);
     try {
+      if (method === "OPTIONS") {
+        /* Cross-origin preflight: the app shell may be served from a static host
+           (GitHub Pages) while the cloud lives on the Netlify deployment. */
+        return new Response(null, {
+          status: 204,
+          headers: { ...corsHeaders(req), ...jsonHeaders(opts, undefined), allow: "GET, HEAD, OPTIONS" }
+        });
+      }
       if (method !== "GET" && method !== "HEAD") {
         return answer(405, {
           ok: false,
@@ -257,6 +265,10 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
       const message = err instanceof Error ? err.message : String(err);
       return answer(500, { ok: false, error: "internal", message: message.slice(0, 200) });
     }
+  };
+  /* A shell on another host must be able to read a 200, a 304 and a 400 alike. */
+  return async function handleLiveRequest(req: Request): Promise<Response> {
+    return withCors(req, await handle(req));
   };
 }
 

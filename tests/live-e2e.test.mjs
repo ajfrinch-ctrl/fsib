@@ -140,7 +140,7 @@ function fakeIndexedDB(window) {
 
 const booted = [];
 
-function bootDevice({ records = [], meta = null, label = "device", query = "" }) {
+function bootDevice({ records = [], meta = null, label = "device", query = "", url = "" }) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on("jsdomError", (e) => {
@@ -153,7 +153,7 @@ function bootDevice({ records = [], meta = null, label = "device", query = "" })
   const dom = new JSDOM(HTML, {
     runScripts: "dangerously",
     pretendToBeVisual: true,
-    url: BASE + "/" + query,
+    url: url || BASE + "/" + query,
     virtualConsole: vc,
     beforeParse(window) {
       fakeIndexedDB(window);
@@ -300,6 +300,42 @@ test("two devices converge in real time with nobody tapping Sync", async (t) => 
   }
   assert.deepEqual(a.errors, []);
   assert.deepEqual(b.errors, []);
+});
+
+test("an install served from GitHub Pages syncs through the Netlify API", async (t) => {
+  /* The branch's phones open the app from GitHub Pages, which serves static
+     files and nothing else: /api/sync there is a 404. The shell points its API
+     calls at the Netlify deployment (cross-origin, CORS answered there), which
+     is the difference between "device A's entry shows on device B" and each
+     phone keeping its own private copy. */
+  const pages = bootDevice({
+    label: "pages",
+    records: [],
+    url: `https://ajfrinch-ctrl.github.io/fsib/?api=${BASE}`
+  });
+  await until(() => typeof pages.window.liveInfo === "function", 15000, "the Pages install to boot");
+  assert.equal(pages.window.eval("CLOUD_ORIGIN"), BASE, "the shell did not target the cloud host");
+
+  await settledOnCloud(pages.window, "pages");
+  assert.ok(localDates(pages.window).includes("2026-09-01"), "the Pages install never loaded the branch's cloud data");
+
+  /* Another phone saves straight into the cloud; this install must see it live. */
+  const cloud = await (await fetch(`${BASE}/api/sync`)).json();
+  const write = await fetch(`${BASE}/api/sync`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      settings: cloud.state.settings,
+      records: [...cloud.state.records, day("2026-09-27", "412000", new Date().toISOString())],
+      trash: cloud.state.trash,
+      version: cloud.state.version
+    })
+  });
+  assert.equal(write.status, 201);
+
+  const latency = await until(() => localDates(pages.window).includes("2026-09-27"), 20000, "the Pages install to follow the cloud");
+  t.diagnostic(`the Pages install saw another phone's entry ${latency}ms after it was saved`);
+  assert.deepEqual(pages.errors, []);
 });
 
 test("the public read-only view follows the cloud live", async () => {

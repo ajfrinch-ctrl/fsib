@@ -80,6 +80,9 @@ trend, the monthly target and the highlights.
 
 ## API
 
+`OPTIONS` on either endpoint is a 204 preflight, so a shell served from another
+host (GitHub Pages) can use this cloud.
+
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/sync` | Load the full state (`ETag` = cloud version) |
@@ -135,11 +138,40 @@ Retired sync switches (`autoSync`, `realtime`) are stripped on every read and
 write too. Sync is always real-time. Settings does not contain a sync section,
 and an older blob cannot bring those switches back.
 
+## Two hosts: the shell and the cloud
+
+The app shell is static, the cloud is not. Normally both live on the Netlify
+deployment. But the branch's phones have the **GitHub Pages** link
+(`ajfrinch-ctrl.github.io/fsib`) on their home screens, and GitHub Pages serves
+files only — `/api/sync` there is a **404**, so each phone saved into its own
+localStorage and no device ever saw another's entry. That is not a sync bug that
+a retry can fix; there is nothing to retry against.
+
+So the shell knows where its cloud is:
+
+- `STATIC_HOST_API` in `index.html` maps a static host to the API origin
+  (`ajfrinch-ctrl.github.io` → `https://fsib.netlify.app`). An install from
+  Pages therefore syncs through the Netlify functions.
+- `?api=https://host` overrides the origin for a test or a new host, and is
+  remembered in `localStorage["bmr_v1_apiOrigin"]`. The sync panel shows the
+  origin it is using as **Cloud host**.
+- Both endpoints answer CORS, preflight included (`OPTIONS` → 204), and expose
+  the headers the app reads (`etag`, `x-live-max-wait-ms`). The default is
+  `access-control-allow-origin: *` — this API has never carried a credential, so
+  that is not a new exposure; set `FSIB_ALLOWED_ORIGINS` on the Netlify site to a
+  comma-separated list to restrict it to the hosts you name.
+
+Data that a phone saved while it was running a Pages install with no cloud lives
+in that device's localStorage under the Pages origin, so switching to the
+Netlify link does not upload it: use **Settings → Backup JSON** in the old app
+and **Restore Backup** in the new one (or keep using the Pages link, which now
+syncs too).
+
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The whole PWA: UI, local-first storage, sync client, real-time channel, dashboard |
+| `index.html` | The whole PWA: UI, local-first storage, sync client, real-time channel, dashboard, API-origin resolution |
 | `src/lib/store.ts` | The `/api/sync` contract + blob-agnostic state logic (the only implementation) |
 | `src/lib/live.ts` | The `/api/live` long-poll contract + the in-process wake-up hub |
 | `src/lib/cloud-api.ts` | Typed browser client for both contracts |
@@ -158,7 +190,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 75 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, safety net, two devices over real HTTP, offline report generate/preview/download
+npm test           # 80 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -196,6 +228,10 @@ and is not this table.
 
 `netlify.toml` builds with `npm run build` and publishes `public/`; both
 functions are picked up from `netlify/functions/`.
+
+A GitHub Pages deploy of the same branch is supported as a *shell only*: the
+app runs there and talks to this API cross-origin (see above). Nothing about the
+cloud runs on Pages, so a Pages URL alone can never sync.
 
 `service-worker.js` is network-first for the app shell: a phone must never keep
 running an old build (a cache-first shell is exactly how a device "works" while

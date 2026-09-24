@@ -130,7 +130,11 @@ function bootApp({
   backend = null,
   live = true,
   /* Hold automatic uploads so a test can drive syncNow() itself. Not a setting. */
-  holdUpload = false
+  holdUpload = false,
+  /* Where the app shell is served from (default: a host that has the API). */
+  url = "https://example.test/",
+  /* Extra localStorage keys to seed before the app boots. */
+  storage = null
 } = {}) {
   const own = backend || makeBackend(cloud);
   const blob = own.blob;
@@ -152,7 +156,7 @@ function bootApp({
   const dom = new JSDOM(HTML, {
     runScripts: "dangerously",
     pretendToBeVisual: true,
-    url: "https://example.test/",
+    url,
     virtualConsole: vc,
     beforeParse(window) {
       if (holdUpload) window.__fsibHoldUpload = true;
@@ -181,6 +185,7 @@ function bootApp({
         );
       }
       if (metaOverride) window.localStorage.setItem("bmr_v1_syncMeta", JSON.stringify(metaOverride));
+      for (const [key, value] of Object.entries(storage || {})) window.localStorage.setItem(key, value);
 
       /* Delays stay real, so a test can tell "uploaded by itself in real time"
          from "waiting for the Sync button". The parked long-poll and
@@ -193,7 +198,8 @@ function bootApp({
           // a deploy without /api/live: the app must notice and fall back
           return new Response(JSON.stringify({ ok: false, error: "not-found" }), { status: 404 });
         }
-        // the app calls the relative "/api/sync"; Node's Request needs an absolute URL
+        // the app calls "/api/sync" relative, or an absolute URL when the shell
+        // is served from a static host; Node's Request needs it absolute either way
         const absolute = /^https?:/.test(url) ? url : "https://example.test" + url;
         const req = new Request(absolute, init || {});
         const body = init && typeof init.body === "string" ? JSON.parse(init.body) : null;
@@ -625,6 +631,38 @@ test("an edit is flushed before the phone goes back in a pocket", async () => {
     "the edit never reached the cloud"
   );
   assert.deepEqual(errors, []);
+});
+
+test("a shell on GitHub Pages talks to the cloud on Netlify, not to itself", async () => {
+  /* GitHub Pages serves static files only: /api/sync there is a 404, so an
+     install from that link would save on the phone and nowhere else — the
+     "device A saved, device B never shows it" bug. The shell must point its
+     API calls at the host that actually runs them. */
+  const { window, requests, errors } = bootApp({ url: "https://ajfrinch-ctrl.github.io/fsib/" });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => requests.length > 0, 5000), "the app never called the cloud");
+
+  const targets = [...new Set(requests.map((r) => r.url.split("?")[0]))];
+  assert.deepEqual(
+    targets.sort(),
+    ["https://fsib.netlify.app/api/live", "https://fsib.netlify.app/api/sync"],
+    "a static-host install must use the Netlify API: " + JSON.stringify(targets)
+  );
+  assert.deepEqual(errors, []);
+});
+
+test("?api=<origin> moves the cloud, and the choice is remembered", async () => {
+  const { window, requests } = bootApp({ url: "https://ajfrinch-ctrl.github.io/fsib/?api=https://cloud.example" });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => requests.length > 0, 5000));
+  for (const r of requests) assert.match(r.url, /^https:\/\/cloud\.example\/api\//);
+  assert.equal(window.localStorage.getItem("bmr_v1_apiOrigin"), "https://cloud.example");
+
+  /* And it sticks for the next launch on this device. */
+  const second = bootApp({ storage: { bmr_v1_apiOrigin: "https://cloud.example" } });
+  assert.ok(await waitUntil(() => typeof second.window.liveInfo === "function"));
+  assert.equal(second.window.eval("CLOUD_ORIGIN"), "https://cloud.example");
+  assert.deepEqual(second.errors, []);
 });
 
 test("the app parks for the hold the server advertises", async () => {
