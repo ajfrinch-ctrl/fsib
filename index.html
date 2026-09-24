@@ -201,6 +201,67 @@ input[type=date],input[type=month]{min-height:46px}
   box-shadow:0 -8px 30px #0004}
 .modalbox h3{margin-top:0}
 .modal-scroll{max-height:92dvh;overflow:auto}
+/* ---------------- reports (view tabs, period bar, statement hero, breakdown) ---------------- */
+.rep-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.rep-tabs button{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:12px;min-height:var(--tap);font-size:12.5px;font-weight:800;padding:8px 6px}
+.rep-tabs button.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 16px #1264d640}
+.dark .rep-tabs button.on{background:#1264d6;color:#fff}
+.rep-seg{display:flex;gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:8px}
+.rep-seg button{flex:1;min-width:0;border:0;background:transparent;border-radius:9px;min-height:40px;font-size:12.5px;font-weight:800;color:var(--muted);padding:0 4px}
+.rep-seg button.on{background:var(--card);color:var(--blue);box-shadow:var(--shadow)}
+.rep-bar{display:flex;align-items:stretch;gap:8px;margin-bottom:12px}
+.rep-nav{flex:0 0 46px;border:1px solid var(--line);background:var(--card);border-radius:12px;font-size:22px;font-weight:800;color:var(--blue);min-height:46px}
+.rep-nav:disabled{opacity:.35}
+.rep-date{flex:1;margin:0;min-width:0}
+.rep-hero{border-radius:18px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0b1f3f,#163a73 55%,#2b63c9);box-shadow:0 12px 30px #0b1f3f33;margin-bottom:12px}
+.rep-hero::after{content:"";position:absolute;right:-40px;bottom:-56px;width:160px;height:160px;border-radius:50%;background:#ffffff12}
+.dark .rep-hero{background:linear-gradient(135deg,#000,#0a1830 60%,#14315f)}
+.rh-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;opacity:.85;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-branch{font-size:12.5px;font-weight:700;opacity:.95;margin-top:3px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-label{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.75;margin-top:12px;position:relative;z-index:1}
+.rh-period{font-size:15px;font-weight:800;margin-top:2px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-amount{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:12px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-sub{font-size:12.5px;opacity:.92;margin-top:5px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-progwrap{margin-top:12px;position:relative;z-index:1}
+.rh-prog{height:10px;border-radius:6px;background:#ffffff2e;overflow:hidden}
+.rh-prog i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#8fd0ff,#4be08a)}
+.rep-metrics{margin-bottom:2px}
+.deprow{padding:9px 0}
+.deprow:first-child{padding-top:2px}
+.deprow:last-child{padding-bottom:2px}
+.deprow .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:6px}
+.deprow .lbl span{font-weight:800;overflow-wrap:anywhere}
+.deprow .lbl b{overflow-wrap:anywhere}
+.deprow .lbl small{color:var(--muted);font-weight:700}
+.dep-track{height:10px;border-radius:6px;background:var(--soft);border:1px solid var(--line);overflow:hidden}
+.dep-fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#4c97ff,#1264d6)}
+.dark .dep-fill{background:linear-gradient(90deg,#2b63c9,#4c97ff)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+.chip b{color:var(--blue)}
+.daystats{display:flex;gap:8px;margin:10px 0 2px}
+.daystat{flex:1;min-width:0;background:var(--soft);border-radius:10px;padding:8px 9px}
+.daystat label{margin-bottom:3px}
+.daystat b{font-size:13.5px;overflow-wrap:anywhere}
+details.det{margin-top:10px;border-top:1px dashed var(--line);padding-top:4px}
+details.det summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:40px;font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.3px}
+details.det summary::-webkit-details-marker{display:none}
+details.det summary::after{content:"\25BE";margin-left:auto;transition:transform .15s}
+details.det[open] summary::after{transform:rotate(180deg)}
+.detrow{margin-top:8px}
+.detrow:last-child{padding-bottom:4px}
+.vitem h3,.aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
+.rec-meta{display:grid;gap:8px}
+.rec-meta b{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){details.det summary::after{transition:none}}
+@media(min-width:700px){
+  .rep-hero{padding:22px 20px 18px}
+  .rh-amount{font-size:40px}
+  #reports .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rec-meta{grid-template-columns:1fr 1fr 1fr}
+}
+
 .empty{text-align:center;color:var(--muted);padding:28px}
 .notice{padding:11px;border-radius:10px;background:#fff5d8;color:#755400;font-size:12px;margin-bottom:10px}
 .dark .notice{background:#2a2410;color:#ffd98a}
@@ -472,20 +533,78 @@ function buildReport(type,ref){
   let methods={Cash:0,'Clearing / BFTN':0,RTGS:0,NPSB:0,'Agent Outlet':0},types={},officerCount={};rs.forEach(r=>{methods.Cash+=num(r.cash);methods['Clearing / BFTN']+=num(r.clearing);methods.RTGS+=num(r.rtgs);methods.NPSB+=num(r.npsb);methods['Agent Outlet']+=num(r.agent);(r.visits||[]).forEach(x=>types[x.type]=(types[x.type]||0)+1);(r.officers||[]).forEach(x=>officerCount[x.name]=(officerCount[x.name]||0)+1)});let best=[...rs].sort((a,b)=>total(b)-total(a))[0],bestV=[...rs].sort((a,b)=>visits(b)-visits(a))[0];
   return {result,rs,dep,v,ac,acDep,days,methods,types,officerCount,best,bestV};
 }
+function periodTitle(type,ref){return reportRange(type,ref).label.split(' \u00b7 ').slice(1).join(' \u00b7 ')||reportRange(type,ref).label}
+function periodShift(type,ref,dir){
+  if(type==='monthly'){const d=new Date(ref.slice(0,7)+'-01T12:00');d.setMonth(d.getMonth()+dir);return d.toISOString().slice(0,10)}
+  const d=new Date(ref+'T12:00');d.setDate(d.getDate()+dir*(type==='weekly'?7:1));return d.toISOString().slice(0,10);
+}
+function periodAtEnd(type,ref){
+  const t=today();
+  if(type==='monthly')return ref.slice(0,7)>=t.slice(0,7);
+  const wk=d=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()-x.getDay());return x.toISOString().slice(0,10)};
+  return type==='weekly'?wk(ref)>=wk(t):ref>=t;
+}
+/* One shared control strip for all three report views: view tabs, period kind
+   and a prev/next period picker. Every choice applies at once \u2014 no Generate
+   button to remember. */
+function repControls(view,type,ref){
+  const isM=type==='monthly';
+  const tabs=[['statement','Statement','marketingPage'],['visits','Visiting','visitingPage'],['accounts','Accounts','accountPage']]
+    .map(([v,l,id])=>`<button type="button" id="${id}" class="${view===v?'on':''}">${l}</button>`).join('');
+  const segs=[['daily','Daily'],['weekly','Weekly'],['monthly','Monthly']]
+    .map(([v,l])=>`<button type="button" data-tp="${v}" class="${type===v?'on':''}">${l}</button>`).join('');
+  return `<div class="rep-tabs">${tabs}</div><div class="rep-seg" id="repSeg">${segs}</div><div class="rep-bar"><button type="button" class="rep-nav" id="repPrev" aria-label="Previous period">\u2039</button><div class="formgroup rep-date"><input id="repDate" type="${isM?'month':'date'}" max="${isM?today().slice(0,7):today()}" value="${isM?ref.slice(0,7):ref}" aria-label="Period"></div><button type="button" class="rep-nav" id="repNext" aria-label="Next period" ${periodAtEnd(type,ref)?'disabled':''}>\u203a</button></div>`;
+}
+function bindRepControls(go,type,ref){
+  $$('#repSeg button').forEach(b=>b.onclick=()=>{const t=b.dataset.tp;go(t,t==='monthly'?ref.slice(0,7)+'-01':ref)});
+  const p=$('#repPrev'),n=$('#repNext'),inp=$('#repDate');
+  if(p)p.onclick=()=>go(type,periodShift(type,ref,-1));
+  if(n)n.onclick=()=>go(type,periodShift(type,ref,1));
+  if(inp)inp.onchange=e=>{const v=e.target.value;if(!v)return;go(type,type==='monthly'?v.slice(0,7)+'-01':v)};
+}
+function dayCard(r){
+  const breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': \u09f3 '+money(x[1])).join(' \u00b7 ')||'No deposit breakdown';
+  const accountInfo=(r.accounts||[]).filter(a=>a.no).map(a=>a.category+' ('+a.no+'): \u09f3 '+money(a.amount)).join(' \u00b7 ')||'No new account';
+  const visitInfo=(r.visits||[]).map(v=>v.type+(v.name?' \u2014 '+esc(v.name):'')).join(' \u00b7 ')||'No detailed visit';
+  const officers=(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' \u00b7 ')||'No officer entered';
+  return `<article class="card daycard"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">\u09f3 ${money(total(r))}</span></div><div class="daystats"><div class="daystat"><label>Places</label><b>${visits(r)}</b></div><div class="daystat"><label>New Accounts</label><b>${accountsCount(r)}</b></div><div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div><details class="det"><summary>Full details</summary><div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div><div class="detrow"><label>Officers</label><div class="small">${officers}</div></div><div class="detrow"><label>Visit Details</label><div class="small">${visitInfo}</div></div><div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></details></article>`;
+}
 function renderReports(type='monthly',ref=today()){
-  let d=buildReport(type,ref),pct=settings.target&&type==='monthly'?Math.min(100,d.dep/settings.target*100):0;
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2><span class="small">${esc(settings.branch)} · ${esc(settings.zone)}</span></div><span class="pill">Report Preview</span></div><div class="actions" style="margin:0 0 12px"><button class="outline" id="marketingPage">Marketing Statement</button><button class="outline" id="visitingPage">Visiting Report</button><button class="outline" id="accountPage">New Account Report</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="reportType"><option value="daily" ${type==='daily'?'selected':''}>Daily Report</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly Report (Sun–Thu)</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly Report</option></select></div><div class="formgroup"><label>Choose Date / Month</label><input id="reportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="showReport">Generate Report</button></div><div class="card" style="margin-top:12px"><div class="sectiontitle">${esc(settings.branch).toUpperCase()}</div><h2 style="margin:2px 0 6px">MARKETING REPORT</h2><div class="small">STATEMENT PERIOD: ${d.result.label}</div><div class="small" style="margin-top:4px">FIRST SECURITY ISLAMI BANK PLC · ${esc(settings.team)} (${esc(settings.zone)} Zone)</div><div class="grid metrics" style="margin-top:12px"><div class="metric accent"><label>Total Deposit</label><strong>৳ ${money(d.dep)}</strong><small>${lac(d.dep)}</small></div><div class="metric green"><label>Total Visits</label><strong>${d.v}</strong></div><div class="metric"><label>New Accounts</label><strong>${d.ac}</strong></div><div class="metric"><label>Account Deposit</label><strong>৳ ${money(d.acDep)}</strong></div><div class="metric"><label>Recorded Days</label><strong>${d.rs.length}</strong></div><div class="metric"><label>Average Deposit</label><strong>৳ ${money(d.dep/d.days)}</strong></div></div>${type==='monthly'?`<div class="sectionhead"><h2>Target Achievement</h2><span class="pill">${pct.toFixed(1)}%</span></div><div class="progress"><i style="width:${pct}%"></i></div><div class="small" style="margin-top:6px">Target: ৳ ${money(settings.target)} · Remaining: ৳ ${money(Math.max(0,num(settings.target)-d.dep))}</div>`:''}</div><div class="sectionhead"><h2>Deposit Breakdown</h2></div><div class="grid metrics">${Object.entries(d.methods).map(([k,x])=>`<div class="card metric"><label>${k}</label><strong>৳ ${money(x)}</strong></div>`).join('')}</div><div class="sectionhead"><h2>Activity Overview</h2></div><div class="card"><div class="row"><div><label>Visit Types</label><b>${Object.entries(d.types).map(x=>x[0]+' ('+x[1]+')').join(' · ')||'No detailed visits'}</b></div></div><hr style="border:0;border-top:1px solid var(--line);margin:12px 0"><label>Officer Activity</label><b>${Object.entries(d.officerCount).map(x=>esc(x[0])+' ('+x[1]+')').join(' · ')||'No officer data'}</b></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="small">প্রতিদিনের সম্পূর্ণ তথ্য</span></div>${d.rs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{let breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': ৳ '+money(x[1])).join(' · ')||'No deposit breakdown';let accountInfo=(r.accounts||[]).filter(a=>a.no).map(a=>a.category+' ('+a.no+'): ৳ '+money(a.amount)).join(' · ')||'No new account';let visitInfo=(r.visits||[]).map(v=>v.type+(v.name?' — '+esc(v.name):'')).join(' · ')||'No detailed visit';return `<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">Total: ৳ ${money(total(r))}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;margin:10px 0"><div><label>Places Visited</label><b>${visits(r)}</b></div><div><label>New Accounts</label><b>${accountsCount(r)} · ৳ ${money(accountsTotal(r))}</b></div></div><label>Deposit Details</label><div class="small">${breakdown}</div><label style="margin-top:9px">Officers</label><div class="small">${(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' · ')||'No officer entered'}</div><label style="margin-top:9px">Visit Details</label><div class="small">${visitInfo}</div><label style="margin-top:9px">Account Details</label><div class="small">${accountInfo}</div></article>`}).join('')||'<div class="empty">এই সময়ের জন্য কোনো saved record পাওয়া যায়নি।</div>'}<div class="actions"><button class="primary" id="downloadPDF">Download PDF</button></div>`;
-  $('#showReport').onclick=()=>renderReports($('#reportType').value,$('#reportDate').value+(($('#reportType').value==='monthly')?'-01':''));$('#reportType').onchange=e=>renderReports(e.target.value,today());$('#downloadPDF').onclick=()=>downloadPDF(d);$('#marketingPage').onclick=()=>renderReports(type,ref);$('#visitingPage').onclick=()=>renderVisitReport(type,ref);$('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  const d=buildReport(type,ref);
+  const isM=type==='monthly';
+  const pct=settings.target&&isM?Math.min(100,d.dep/settings.target*100):0;
+  const rem=Math.max(0,num(settings.target)-d.dep);
+  const calDays=isM?new Date(+ref.slice(0,4),+ref.slice(5,7),0).getDate():(type==='weekly'?5:1);
+  const depTotal=d.dep||0;
+  const depRows=Object.entries(d.methods).map(([k,x])=>{
+    const share=depTotal>0?x/depTotal*100:0;
+    return `<div class="deprow"><div class="lbl"><span>${k}</span><b>\u09f3 ${money(x)}<small> \u00b7 ${share.toFixed(0)}%</small></b></div><div class="dep-track"><i class="dep-fill" style="width:${share.toFixed(1)}%"></i></div></div>`;
+  }).join('');
+  const typeChips=Object.entries(d.types).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No detailed visits</span>';
+  const offChips=Object.entries(d.officerCount).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No officer data</span>';
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2><span class="small">${esc(settings.branch)} \u00b7 ${esc(settings.zone)}</span></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-eyebrow">FIRST SECURITY ISLAMI BANK PLC</div><div class="rh-branch">${esc(settings.branch).toUpperCase()} \u00b7 ${esc(settings.team)} (${esc(settings.zone)} Zone)</div><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>Total Visits</label><strong>${d.v}</strong><small>${(d.v/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div><div class="sectionhead"><h2>Deposit Breakdown</h2><span class="small">share of total</span></div><div class="card">${depRows}</div><div class="sectionhead"><h2>Activity</h2></div><div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div><label style="margin-top:12px">Officer Activity</label><div class="chips">${offChips}</div></div><div class="sectionhead"><h2>Date-wise Daily Details</h2><span class="pill">${d.rs.length} days</span></div>${[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">Download PDF</button></div>`;
+  bindRepControls(renderReports,type,ref);
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>downloadPDF(d));
+  const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function renderVisitReport(type='monthly',ref=today()){
-  let d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(settings.branch)} · ${d.result.label}</span></div><button class="outline" id="backReports">← Reports</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="visitReportType"><option value="daily" ${type==='daily'?'selected':''}>Daily</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly</option></select></div><div class="formgroup"><label>Date / Month</label><input id="visitReportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="loadVisits">Show Visiting Report</button></div><div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map((v,i)=>`<article class="card record"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Place / Institution</label><b>${esc(v.name||'—')}</b></div></div><label style="margin-top:10px">Address</label><div>${esc(v.address||'—')}</div><label style="margin-top:10px">Mobile Number</label><div>${esc(v.mobile||'—')}</div></article>`).join('')||'<div class="empty">এই সময়ের কোনো visit detail পাওয়া যায়নি।</div>'}`;
-  $('#backReports').onclick=()=>renderReports(type,ref);$('#loadVisits').onclick=()=>{let t=$('#visitReportType').value,v=$('#visitReportDate').value;renderVisitReport(t,v+(t==='monthly'?'-01':''))};
+  const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${esc(periodTitle(type,ref))}</span></div></div>${repControls('visits',type,ref)}<div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map(v=>`<article class="card record vitem"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><h3>${esc(v.name||'\u2014')}</h3><div class="rec-meta"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Address</label><b>${esc(v.address||'\u2014')}</b></div><div><label>Mobile Number</label><b>${esc(v.mobile||'\u2014')}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb visit detail \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}`;
+  bindRepControls(renderVisitReport,type,ref);
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function renderAccountReport(type='monthly',ref=today()){
-  let d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${esc(settings.branch)} · ${d.result.label}</span></div><button class="outline" id="backReports">← Reports</button></div><div class="card"><div class="formwide"><div class="formgroup"><label>Report Type</label><select id="accountReportType"><option value="daily" ${type==='daily'?'selected':''}>Daily</option><option value="weekly" ${type==='weekly'?'selected':''}>Weekly</option><option value="monthly" ${type==='monthly'?'selected':''}>Monthly</option></select></div><div class="formgroup"><label>Date / Month</label><input id="accountReportDate" type="${type==='monthly'?'month':'date'}" value="${type==='monthly'?ref.slice(0,7):ref}"></div></div><button class="primary" id="loadAccounts">Show New Account Report</button></div><div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">${items.length} accounts · ৳ ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">৳ ${money(a.amount)}</span></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div><label>Account Type</label><b>${esc(a.category||'—')}</b></div><div><label>Account Number</label><b>${esc(a.no||'—')}</b></div></div><label style="margin-top:10px">Initial / Account Deposit</label><b>৳ ${money(a.amount)}</b></article>`).join('')||'<div class="empty">এই সময়ের কোনো নতুন account পাওয়া যায়নি।</div>'}`;
-  $('#backReports').onclick=()=>renderReports(type,ref);$('#loadAccounts').onclick=()=>{let t=$('#accountReportType').value,v=$('#accountReportDate').value;renderAccountReport(t,v+(t==='monthly'?'-01':''))};
+  const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}`;
+  bindRepControls(renderAccountReport,type,ref);
+  $('#marketingPage').onclick=()=>renderReports(type,ref);
+  $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
+  $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
 function downloadPDF(d){
