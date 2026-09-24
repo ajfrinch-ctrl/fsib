@@ -50,6 +50,13 @@ export const MAX_STATE_BYTES = 5_000_000;
  */
 export const DEVICE_ONLY_SETTING_KEYS = ["pin"];
 
+/**
+ * Switches that used to live in Settings. Sync is always real-time, so these
+ * are not settings anymore: every read and write drops them, and an older blob
+ * cannot turn a device off.
+ */
+export const RETIRED_SYNC_SETTING_KEYS = ["autoSync", "realtime"];
+
 const RECORD_FIELDS = [
   "date",
   "places",
@@ -89,7 +96,7 @@ export function normalizeSettings(input: unknown): Record<string, unknown> {
   let count = 0;
   for (const key of Object.keys(input)) {
     if (count >= 64) break;
-    if (DEVICE_ONLY_SETTING_KEYS.includes(key)) continue;
+    if (DEVICE_ONLY_SETTING_KEYS.includes(key) || RETIRED_SYNC_SETTING_KEYS.includes(key)) continue;
     const value = input[key];
     if (value === undefined || !isStorable(value)) continue;
     out[key] = value;

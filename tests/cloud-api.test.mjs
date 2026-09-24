@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   CloudApiError,
   DEVICE_ONLY_SETTING_KEYS,
+  DEVICE_PREFERENCE_KEYS,
   isAbort,
   isLiveUnavailable,
   loadCloudState,
@@ -80,6 +81,8 @@ test("mergeStates takes newer shared settings but keeps local device preferences
       branch: "Local Branch",
       template: "local template",
       theme: "dark",
+      autoSync: false,
+      realtime: false,
       settingsUpdatedAt: "2026-09-01T08:00:00.000Z",
       pin: "1111"
     },
@@ -97,6 +100,8 @@ test("mergeStates takes newer shared settings but keeps local device preferences
   assert.equal(merged.settings.branch, "Cloud Branch", "shared settings follow the newer edit");
   assert.equal(merged.settings.theme, "dark", "per-device theme stays local");
   assert.equal(merged.settings.pin, undefined);
+  assert.equal(merged.settings.autoSync, undefined);
+  assert.equal(merged.settings.realtime, undefined);
   assert.deepEqual(merged.records.map((r) => r.date), ["2026-09-01", "2026-09-02"]);
 });
 

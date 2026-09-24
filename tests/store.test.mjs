@@ -7,7 +7,8 @@ import {
   emptyState,
   normalizeRecords,
   normalizeSettings,
-  normalizeState
+  normalizeState,
+  RETIRED_SYNC_SETTING_KEYS
 } from "../src/lib/store.ts";
 
 function memoryAdapter(initial = null) {
@@ -149,9 +150,18 @@ test("normalizeRecords drops malformed rows and keeps the newest write per date"
   assert.deepEqual(rows[1].visits, [{ type: "School", name: "X" }]);
 });
 
-test("normalizeSettings keeps device preferences but never the PIN", () => {
-  const out = normalizeSettings({ branch: "Tantar", pin: "9999", theme: "dark", fn: () => 1, undef: undefined });
+test("normalizeSettings keeps device preferences but never the PIN or retired sync switches", () => {
+  const out = normalizeSettings({
+    branch: "Tantar",
+    pin: "9999",
+    theme: "dark",
+    autoSync: false,
+    realtime: false,
+    fn: () => 1,
+    undef: undefined
+  });
   assert.deepEqual(out, { branch: "Tantar", theme: "dark" });
+  assert.deepEqual(RETIRED_SYNC_SETTING_KEYS, ["autoSync", "realtime"]);
 });
 
 test("applyWrite refuses a state over the size limit", () => {

@@ -19,23 +19,22 @@ Two devices now converge in about a second, with nobody tapping **Sync**:
   `/api/sync` and merges. A quiet channel costs one `304` with an empty body per
   hold, and backs off while the app sits idle.
 - **Upload** — an edit saves to IndexedDB/localStorage first, then uploads by
-  itself ~1.5 s after the last keystroke. Every time: there is no daily gate and
-  no budget — as long as **Auto-sync** is on, every change goes up on its own.
-  Turning Auto-sync off holds uploads back until **Sync Now**.
+  itself ~1.5 s after the last keystroke. Every time: there is no daily gate,
+  no budget, and no Auto-sync switch. Every change goes up on its own.
 - **Offline** — nothing changes: edits queue locally, the parked request is
   dropped, and the queue flushes the moment the device is back online.
 
 Long-poll rather than SSE/WebSocket because a Netlify Function is stateless and
 capped at 60 s: a held GET works on every host this repo deploys to, with no
-reconnect choreography and no sticky session. The live download channel can be
-switched off per device in **Settings → Cloud Sync** (uploads keep running
-automatically while Auto-sync is on), and a deploy without `/api/live` is
+reconnect choreography and no sticky session. The live channel is always on. Settings has no Cloud Sync section and no
+switch that can turn it off. A deploy without `/api/live` is
 detected once (404/405) and never retried — downloads then arrive on startup
 and manual refresh while edits still upload by themselves.
 
 The header shows the truth about the channel: `LIVE` (parked and watching),
 `UPDATING` (pulling), `RETRY` (backing off), `NO LIVE` (server has no endpoint)
-or `LIVE OFF`.
+or `LIVE OFF`. There is no sync-status button. A green border along the bottom
+of the top bar means this device is online and synced.
 
 ## API
 
@@ -86,8 +85,9 @@ working either way.
 
 The `pin` setting is device-only (`localStorage["bmr_v1_pin"]`) and is stripped
 server-side, so a lost phone's PIN never reaches a blob every device can read.
-`realtime` is a device preference too: one phone can opt out without changing
-anyone else's.
+Retired sync switches (`autoSync`, `realtime`) are stripped on every read and
+write too. Sync is always real-time. Settings does not contain a sync section,
+and an older blob cannot bring those switches back.
 
 ## Layout
 
@@ -112,7 +112,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 64 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
+npm test           # 68 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline report generate/preview/download
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -140,7 +140,11 @@ latency. `tests/pdf-export.test.mjs` boots the app with every network call
 failing and walks the whole report flow — pick a date, generate, check the
 preview, download — proving all three report PDFs (statement, visiting,
 accounts) are built and saved by the browser alone, and that nothing is
-written to disk unless Download is tapped.
+written to disk unless Download is tapped. Every report PDF — statement,
+visiting, and accounts, for a day, a week, or a month — is the same landscape
+statement: one row per date in that period, and a column for every daily
+entry. A column with no entry is left blank. WhatsApp share text is separate
+and is not this table.
 
 ## Deploy
 
