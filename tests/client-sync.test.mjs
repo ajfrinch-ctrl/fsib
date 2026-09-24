@@ -413,7 +413,10 @@ test("the settings page has no sync section or sync controls", async () => {
   assert.equal(window.document.querySelector("#pullCloud"), null);
   assert.equal(window.document.querySelector("#cloudSyncStatus"), null);
   assert.doesNotMatch(html, /Cloud Sync|Cloud endpoint|Real-time endpoint|Save Sync Settings|Auto-sync|Sync Now|Sync history|sJsonbinKey|sBinId/);
-  assert.equal(window.document.querySelector("#sPublicLink").value, "https://example.test/?view=1");
+  /* The share-link box was retired with the old sync panel, but the read-only
+     cloud link it used to copy still exists. */
+  assert.equal(window.document.querySelector("#sPublicLink"), null);
+  assert.equal(window.publicViewUrl(), "https://example.test/?view=1");
   assert.deepEqual(errors, []);
 });
 

@@ -237,44 +237,38 @@ test("a partial day leaves the missing statement columns empty", async () => {
   assert.equal(lines.find((l) => l.startsWith("03 Sep")).trim(), "03 Sep");
 });
 
-test("the visiting and account reports export offline too", async () => {
+test("the account report exports offline too", async () => {
   const { window, downloads, blobs, fetchCount } = bootOffline({ records: [day("2026-09-21", "1250000")] });
   await new Promise((r) => setTimeout(r, 250));
 
-  window.renderVisitReport("monthly", "2026-09-01");
-  const before = fetchCount();
-  window.document.querySelector(".pdf-dl").click();
-  window.document.querySelector("#pdfDownloadBtn").click();
-  assert.equal(fetchCount(), before, "saving a PDF must not touch the network");
-  assert.equal(downloads.length, 1);
-  assert.match(downloads[0].download, /^BranchVisitingReport_September_2026\.pdf$/);
-  const visitPdf = pdfText(blobs[0]);
-  assert.match(visitPdf, /MONTHLY STATEMENT/);
-  assert.match(visitPdf, /MediaBox \[0 0 842 595\]/);
-  assert.match(visitPdf, /BaseFont \/Courier/);
-  assert.doesNotMatch(visitPdf, /VISITING REPORT/);
-  assert.match(visitPdf, /School/);
-  assert.match(visitPdf, /Tantar High/);
-  assert.match(visitPdf, /01711111111/);
-  assert.match(visitPdf, /Savings 1001 20,000/);
-  const visitText = [...visitPdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
-  const expected = window.statementLines("2026-09-01").filter((s) => s.trim())
-    .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
-  assert.equal(visitText, expected, "the visiting PDF is the same statement table");
+  /* The visiting view was retired, but its stored rows still belong in the
+     statement table: the Accounts tab is the only report view left, and it
+     exports the same landscape statement. */
+  assert.equal(typeof window.renderVisitReport, "undefined", "the visiting view is gone");
+  assert.equal(window.document.querySelector("#visitingPage"), null);
 
   window.renderAccountReport("monthly", "2026-09-01");
+  const before = fetchCount();
   window.document.querySelector(".pdf-dl").click();
   assert.equal(window.document.querySelector("#pdfPreviewTitle").textContent, "Monthly Statement");
   window.document.querySelector("#pdfDownloadBtn").click();
-  assert.equal(downloads.length, 2);
-  assert.match(downloads[1].download, /^BranchAccountReport_September_2026\.pdf$/);
-  const accountPdf = pdfText(blobs[1]);
+  assert.equal(fetchCount(), before, "saving a PDF must not touch the network");
+  assert.equal(downloads.length, 1);
+  assert.match(downloads[0].download, /^BranchAccountReport_September_2026\.pdf$/);
+  const accountPdf = pdfText(blobs[0]);
   assert.match(accountPdf, /MONTHLY STATEMENT/);
+  assert.match(accountPdf, /MediaBox \[0 0 842 595\]/);
+  assert.match(accountPdf, /BaseFont \/Courier/);
   assert.doesNotMatch(accountPdf, /NEW ACCOUNT REPORT/);
+  assert.match(accountPdf, /School/);
+  assert.match(accountPdf, /Tantar High/);
+  assert.match(accountPdf, /01711111111/);
   assert.match(accountPdf, /Savings 1001 20,000/);
   assert.match(accountPdf, /12,50,000/);
   const accountText = [...accountPdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
-  assert.equal(accountText, visitText, "account and visiting PDFs are the same statement");
+  const expected = window.statementLines("2026-09-01").filter((s) => s.trim())
+    .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
+  assert.equal(accountText, expected, "the account PDF is the same statement table");
 });
 
 test("pick a date, generate, preview, then download from the preview", async () => {
@@ -353,13 +347,34 @@ test("WhatsApp share stays the daily message, not the statement table", async ()
   const summary = window.document.querySelector("#summaryPreview").textContent;
   const details = window.document.querySelector("#detailPreview").textContent;
   assert.match(summary, /Daily Report Date : 21 September 2026/);
-  assert.match(summary, /Total Deposit: Tk 12,50,000/);
+  assert.match(summary, /Total Deposit: Tk 12,50,000 \(12\.50 Lac\)/);
   assert.match(summary, /Total Places Visited: 4/);
+  assert.match(summary, /Total Accounts: 1/);
   assert.match(details, /\*DAILY BRANCH ACTIVITY DETAILS\*/);
   assert.match(details, /Harun Or Rashid \| School: Tantar High \| Tantar \| 01711111111/);
-  assert.match(details, /Savings: 1001 — Tk 20,000/);
+  assert.match(details, /\*NUMBER OF ACCOUNTS:\* 1/);
+  assert.match(details, /Savings: Tk 20,000 \(0\.20 Lac\)/);
+  assert.match(details, /\*TOTAL DEPOSIT:\* Tk 12,50,000 \(12\.50 Lac\)/);
+  assert.match(details, /\*ACCOUNT DEPOSIT:\* Tk 20,000 \(0\.20 Lac\)/);
+  /* An account number is a local record detail, not something the branch
+     broadcasts on WhatsApp — the count of accounts opened is what goes out. */
+  assert.doesNotMatch(details, /1001/);
   assert.doesNotMatch(summary, /STATEMENT/);
   assert.doesNotMatch(details, /DAILY STATEMENT|MONTHLY STATEMENT|Clr\/BFTN/);
+});
+
+test("the entry form keeps Total Places Visited and saves it with the day", async () => {
+  const { window } = bootOffline({ records: [] });
+  await new Promise((r) => setTimeout(r, 250));
+  window.renderEntry();
+  const places = window.document.querySelector("#places");
+  assert.ok(places, "the entry form still asks for Total Places Visited");
+  assert.match(window.document.querySelector('label[for="places"]').textContent, /Total Places Visited/);
+  places.value = "6";
+  places.dispatchEvent(new window.Event("input", { bubbles: true }));
+  const form = window.currentForm();
+  assert.equal(form.places, "6", "the typed count is part of the record");
+  assert.equal(window.visits({ date: "2026-09-21", places: form.places, accounts: [] }), 6);
 });
 
 test("closing the preview saves nothing", async () => {
