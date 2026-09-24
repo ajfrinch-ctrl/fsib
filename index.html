@@ -42,7 +42,10 @@ button,a,input,select,textarea,label.outline{touch-action:manipulation}
 /* ---------------- header ---------------- */
 .top{position:sticky;z-index:30;top:0;color:#fff;background:linear-gradient(125deg,#06377d,#1264d6);
   padding:calc(12px + var(--sat)) 14px 12px;display:flex;flex-wrap:wrap;align-items:center;
-  justify-content:space-between;gap:8px 10px;box-shadow:0 4px 12px #0003}
+  justify-content:space-between;gap:8px 10px;box-shadow:0 4px 12px #0003;
+  border-bottom:3px solid transparent}
+/* Online and caught up: the top bar itself is the status, not a button. */
+.top.online-synced{border-bottom-color:#3ee08a}
 .top>div:first-child{min-width:0;flex:1 1 100%}
 .dark .top{background:linear-gradient(125deg,#000,#061d43)}
 .reportname{font-size:15px;font-weight:800;letter-spacing:.4px;color:#fff;overflow-wrap:anywhere}
@@ -262,6 +265,7 @@ details.det[open] summary::after{transform:rotate(180deg)}
 .pdfpage{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px;margin-bottom:10px;box-shadow:var(--shadow)}
 .pdfpage-no{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .pdfpage pre{margin:0;overflow-x:auto;white-space:pre;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.55;-webkit-overflow-scrolling:touch}
+.pdfpage.statement pre{font-size:8.5px;line-height:1.35}
 .dark .pdfpage{background:var(--soft)}
 
 .empty{text-align:center;color:var(--muted);padding:28px}
@@ -270,11 +274,6 @@ details.det[open] summary::after{transform:rotate(180deg)}
 .hidden{display:none!important}
 
 /* ---------------- cloud sync ---------------- */
-.syncbtn{font-size:12px;font-weight:800;padding:0 12px;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis}
-.syncbtn.pending{background:#8a5a00;border-color:#ffffff88}
-.syncbtn.syncing{background:#0a479d;border-color:#ffffff88}
-.syncbtn.offline{opacity:.9}
-.syncbtn.error{background:#a6404e;border-color:#ffffff88}
 .livedot{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;background:#ffffff22;
   border-radius:20px;padding:6px 9px;white-space:nowrap}
 .livedot i{width:7px;height:7px;border-radius:50%;background:#9fd3a8;flex:0 0 auto}
@@ -298,7 +297,6 @@ details.det[open] summary::after{transform:rotate(180deg)}
   .nav button{font-size:9px}
   .nav button span{font-size:17px}
   .head-actions{justify-content:space-between}
-  .syncbtn{max-width:120px;font-size:11px;padding:0 9px}
   .livedot{font-size:9px;padding:5px 7px}
 }
 
@@ -341,7 +339,7 @@ details.det[open] summary::after{transform:rotate(180deg)}
   .modalbox{max-height:96dvh}
 }
 </style></head><body><main class="app">
-<header class="top"><div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><span class="livedot off" id="liveBadge" title="Real-time cloud channel"><i></i><span id="liveBadgeText">LIVE</span></span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
+<header class="top"><div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><span class="livedot off" id="liveBadge" title="Real-time cloud channel"><i></i><span id="liveBadgeText">LIVE</span></span><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
 </main><nav class="nav" aria-label="Main navigation"><div class="navinner"><button class="active" data-page="dashboard" aria-current="page"><span aria-hidden="true">⌂</span><b>Dashboard</b></button><button data-page="entry"><span aria-hidden="true">✚</span><b>Data Entry</b></button><button data-page="history"><span aria-hidden="true">◷</span><b>History</b></button><button data-page="reports"><span aria-hidden="true">▥</span><b>Reports</b></button><button data-page="settings"><span aria-hidden="true">⚙</span><b>Settings</b></button></div></nav><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="pdfModal"><div class="modalbox modal-scroll"><div class="sectionhead"><div><h2 id="pdfPreviewTitle">Report Preview</h2><span class="small" id="pdfPreviewMeta"></span></div><button class="outline" id="closePdfPreview">×</button></div><div id="pdfPreviewBody" class="pdfpreview"></div><div class="actions"><button class="primary" id="pdfDownloadBtn">⬇ Download PDF</button><button class="outline" id="pdfBackBtn">Back</button></div><p class="small">Saved straight to this device — works offline.</p></div></div><div class="modal" id="reportModal"><div class="modalbox modal-scroll"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
@@ -357,7 +355,9 @@ const SYNC_CONFIG={
   MAX_SYNC_LOG:30,
   MAX_STATE_BYTES:4000000,
   /* the PIN unlocks one phone; it must never travel to the shared blob */
-  DEVICE_ONLY_SETTING_KEYS:['pin']
+  DEVICE_ONLY_SETTING_KEYS:['pin'],
+  /* old Settings switches — dropped on the way up, never read */
+  RETIRED_SYNC_SETTING_KEYS:['autoSync','realtime']
 };
 const CLOUD_API=SYNC_CONFIG.API_PATH;
 
@@ -369,8 +369,8 @@ const CLOUD_API=SYNC_CONFIG.API_PATH;
    document shipped — the device only learns "the cloud moved", then pulls.
 
    UPLOAD: every edit debounces LIVE_CONFIG.UPLOAD_DEBOUNCE_MS and goes up by
-   itself — automatically, every time, with no daily gate and no budget. The
-   only cap is the user's own Auto-sync switch in Settings. */
+   itself — automatically, every time, with no daily gate, no budget, and no
+   switch. Sync is not a setting. */
 const LIVE_CONFIG={
   API_PATH:SYNC_CONFIG.LIVE_API_PATH,
   /* how long one request may be parked; the server caps it at 55s */
@@ -396,11 +396,18 @@ const DEFAULT_SETTINGS={branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',tota
    History screen down with an invalid date. */
 let settings=Object.assign({},DEFAULT_SETTINGS,JSON.parse(localStorage.getItem(K+'settings')||'null')||{});
 const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
-if(settings.autoSync===undefined){settings.autoSync=true;}
-/* Real-time is on by default: it is what makes several branch phones show the
-   same report without anyone tapping Sync. It can be switched off per device
-   (Settings → Cloud Sync), and the app keeps working offline either way. */
-if(settings.realtime===undefined){settings.realtime=true;}
+/* Sync is always real-time. Older builds stored autoSync / realtime switches
+   in this object; they are not settings anymore and must not be honoured,
+   shown, or uploaded. */
+const RETIRED_SYNC_SETTING_KEYS=['autoSync','realtime'];
+function scrubRetiredSyncSettings(){
+  let dirty=false;
+  RETIRED_SYNC_SETTING_KEYS.forEach(k=>{
+    if(settings&&Object.prototype.hasOwnProperty.call(settings,k)){delete settings[k];dirty=true;}
+  });
+  return dirty;
+}
+if(scrubRetiredSyncSettings()){try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}}
 
 /* ---------- device-only PIN (localStorage bmr_v1_pin) ----------
    The PIN is a property of this phone, so it lives outside the synced settings
@@ -419,6 +426,7 @@ let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.pars
 const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
 function save(){
   try{settings._seq=(settings._seq||0)+1;}catch(e){}
+  try{scrubRetiredSyncSettings();}catch(e){}
   try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
   persistLocalAsync();
   markDirtyAndSchedule();
@@ -593,7 +601,7 @@ function renderReports(type='monthly',ref=today()){
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
-  $$('.pdf-dl').forEach(b=>b.onclick=()=>previewPDF(marketingLines(d),pdfName('BranchMarketingReport',d.result.label),'Branch Marketing Report'));
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>{if(type==='monthly')previewPDF(statementLines(ref),pdfName('BranchMarketingReport',d.result.label),'Monthly Statement',statementLayout());else previewPDF(marketingLines(d),pdfName('BranchMarketingReport',d.result.label),'Branch Marketing Report')});
   const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function renderVisitReport(type='monthly',ref=today()){
@@ -619,9 +627,12 @@ function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20
    and handed to the OS through a blob URL \u2014 no server, no library, no network.
    The download works in airplane mode; the preview on screen is the exact
    report selection being exported. */
-function savePdf(lines,filename){
-  const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
-  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+function savePdf(lines,filename,layout){
+  const L=Object.assign({font:'Helvetica',size:10,leading:17,width:595,height:842,x:50,top:790,linesPerPage:42},layout||{});
+  const font=L.font==='Courier'?'Courier':'Helvetica';
+  const chunks=[];for(let i=0;i<lines.length;i+=L.linesPerPage)chunks.push(lines.slice(i,i+L.linesPerPage));
+  if(!chunks.length)chunks.push(['']);
+  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 '+L.size+' Tf\n'+L.x+' '+L.top+' Td\n';page.forEach((line,i)=>{content+=(i?'0 -'+L.leading+' Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+L.width+' '+L.height+'] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /'+font+' >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
   const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
   const a=document.createElement('a');
   a.href=url;a.download=filename;
@@ -642,6 +653,147 @@ function marketingLines(d){
     ...(Object.entries(d.officerCount).map(x=>x[0]+': '+x[1])||[]), '', 'DAILY RECORDS',
     ...(d.rs.length?d.rs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>dateText(r.date)+' | Deposit: Tk '+money(total(r))+' | Visits: '+visits(r)+' | Accounts: '+accountsCount(r)):['No saved records'])
   ];
+}
+/* Monthly statement: one row per calendar date, one column per daily entry.
+   A missing entry is a blank column — never 0, a dash, or "no entry". */
+const STATEMENT_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function statementLayout(){return {font:'Courier',size:8,leading:11,width:842,height:595,x:16,top:568,linesPerPage:48}}
+function statementColumns(){
+  return [
+    {key:'date',label:'Date',width:6,align:'left'},
+    {key:'places',label:'Places',width:6,align:'right'},
+    {key:'cash',label:'Cash',width:12,align:'right'},
+    {key:'clearing',label:'Clr/BFTN',width:12,align:'right'},
+    {key:'rtgs',label:'RTGS',width:11,align:'right'},
+    {key:'npsb',label:'NPSB',width:11,align:'right'},
+    {key:'agent',label:'Agent',width:12,align:'right'},
+    {key:'officers',label:'Officers',width:22,align:'left'},
+    {key:'visits',label:'Visits',width:36,align:'left'},
+    {key:'accounts',label:'Accounts',width:28,align:'left'}
+  ];
+}
+function monthDates(ref){
+  const month=String(ref||'').slice(0,7);
+  const y=+month.slice(0,4),m=+month.slice(5,7);
+  if(!y||m<1||m>12)return [];
+  const n=new Date(y,m,0).getDate(),out=[];
+  for(let d=1;d<=n;d++)out.push(month+'-'+String(d).padStart(2,'0'));
+  return out;
+}
+function statementDayLabel(iso){return iso.slice(8,10)+' '+(STATEMENT_MONTHS[(+iso.slice(5,7)||1)-1]||'')}
+function amountCell(v){if(v===undefined||v===null||String(v).trim()==='')return '';const n=num(v);return n?money(n):''}
+function placesCell(r){if(!r||r.places===undefined||r.places===null||String(r.places).trim()==='')return '';const n=num(r.places);return n?String(n):''}
+function officersCell(r){if(!r)return [];return (r.officers||[]).map(o=>[o.name,o.designation].map(x=>String(x||'').trim()).filter(Boolean).join(', ')).filter(Boolean)}
+function visitsCell(r){
+  if(!r)return [];
+  const lines=[];
+  (r.visits||[]).forEach(v=>{
+    if(![v.officer,v.name,v.address,v.mobile].some(x=>String(x||'').trim()))return;
+    const who=[v.officer,v.type].map(x=>String(x||'').trim()).filter(Boolean).join(' | ');
+    const place=String(v.name||'').trim();
+    const where=[v.address,v.mobile].map(x=>String(x||'').trim()).filter(Boolean).join(' | ');
+    [who,place,where].filter(Boolean).forEach(x=>lines.push(x));
+  });
+  return lines;
+}
+function accountsCell(r){if(!r)return [];return (r.accounts||[]).filter(a=>String(a.no||'').trim()||num(a.amount)).map(a=>{const bits=[a.category,a.no].map(x=>String(x||'').trim()).filter(Boolean);if(num(a.amount))bits.push(money(a.amount));return bits.join(' ')}).filter(Boolean)}
+function fitCell(text,width){
+  text=String(text==null?'':text).replace(/\s+/g,' ').trim();
+  if(!text)return [''];
+  const out=[];let rest=text;
+  while(rest.length>width){
+    let cut=rest.lastIndexOf(' ',width);
+    if(cut<=0)cut=width;
+    out.push(rest.slice(0,cut).trimEnd());
+    rest=rest.slice(cut).trimStart();
+    if(!rest)break;
+  }
+  if(rest)out.push(rest);
+  return out.length?out:[''];
+}
+function padCell(text,width,align){text=String(text||'');if(text.length>width)text=text.slice(0,width);const gap=width-text.length;return align==='right'?' '.repeat(gap)+text:text+' '.repeat(gap)}
+function statementLine(cells,cols){return cells.map((c,i)=>padCell(c,cols[i].width,cols[i].align)).join(' ')}
+function statementRowLines(parts,cols){
+  const wrapped=parts.map((lines,i)=>{const src=(lines&&lines.length)?lines:[''];return src.flatMap(line=>fitCell(line,cols[i].width))});
+  const h=Math.max(1,...wrapped.map(w=>w.length)),out=[];
+  for(let r=0;r<h;r++)out.push(statementLine(wrapped.map(w=>w[r]||''),cols));
+  return out;
+}
+function packStatement(header,rowGroups,perPage){
+  const room=perPage-header.length;
+  if(room<1)return header.concat(rowGroups.flat());
+  const pages=[];let cur=[];
+  function flush(){pages.push(header.concat(cur));cur=[]}
+  rowGroups.forEach(group=>{
+    let rest=group.length?group.slice():[''];
+    while(rest.length){
+      const space=room-cur.length;
+      if(space<=0){flush();continue}
+      if(rest.length<=space){cur.push(...rest);rest=[];continue}
+      if(cur.length){flush();continue}
+      cur.push(...rest.slice(0,room));
+      rest=rest.slice(room);
+      flush();
+    }
+  });
+  if(cur.length||!pages.length)flush();
+  if(pages.length===1)return pages[0];
+  return pages.flatMap(p=>{const page=p.slice();while(page.length<perPage)page.push('');return page});
+}
+function statementLines(ref){
+  const cols=statementColumns();
+  const month=String(ref||today()).slice(0,7);
+  const title=new Date(month+'-01T12:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const rule=cols.map(c=>'-'.repeat(c.width)).join(' ');
+  const by={};
+  records.forEach(r=>{if(r&&typeof r.date==='string'&&r.date.startsWith(month))by[r.date]=r});
+  const monthRecords=Object.keys(by).sort().map(d=>by[d]);
+  const dep=monthRecords.reduce((a,r)=>a+total(r),0);
+  const places=monthRecords.reduce((a,r)=>a+num(r.places),0);
+  const ac=monthRecords.reduce((a,r)=>a+accountsCount(r),0);
+  const acDep=monthRecords.reduce((a,r)=>a+accountsTotal(r),0);
+  const header=[
+    'FIRST SECURITY ISLAMI BANK PLC',
+    String(settings.branch||'Tantar Branch').toUpperCase(),
+    'MONTHLY STATEMENT',
+    title,
+    'Zone: '+(settings.zone||'')+' | Team: '+(settings.team||'')+' | Total Branch: '+(settings.totalBranch||''),
+    'Total Deposit: Tk '+money(dep)+' | Places: '+places+' | Accounts: '+ac+' | Account Deposit: Tk '+money(acDep),
+    '',
+    statementLine(cols.map(c=>c.label),cols),
+    rule
+  ];
+  const sums={places:0,cash:0,clearing:0,rtgs:0,npsb:0,agent:0};
+  const groups=[];
+  monthDates(month+'-01').forEach(date=>{
+    const r=by[date];
+    if(r){sums.places+=num(r.places);sums.cash+=num(r.cash);sums.clearing+=num(r.clearing);sums.rtgs+=num(r.rtgs);sums.npsb+=num(r.npsb);sums.agent+=num(r.agent)}
+    groups.push(statementRowLines([
+      [statementDayLabel(date)],
+      [placesCell(r)],
+      [amountCell(r&&r.cash)],
+      [amountCell(r&&r.clearing)],
+      [amountCell(r&&r.rtgs)],
+      [amountCell(r&&r.npsb)],
+      [amountCell(r&&r.agent)],
+      officersCell(r),
+      visitsCell(r),
+      accountsCell(r)
+    ],cols));
+  });
+  groups.push([rule]);
+  groups.push(statementRowLines([
+    ['TOTAL'],
+    [sums.places?String(sums.places):''],
+    [sums.cash?money(sums.cash):''],
+    [sums.clearing?money(sums.clearing):''],
+    [sums.rtgs?money(sums.rtgs):''],
+    [sums.npsb?money(sums.npsb):''],
+    [sums.agent?money(sums.agent):''],
+    [],[],[]
+  ],cols));
+  groups.push([rule]);
+  return packStatement(header,groups,statementLayout().linesPerPage);
 }
 function visitLines(items,label){
   const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
@@ -677,35 +829,24 @@ function downloadVisitPDF(items,label){savePdf(visitLines(items,label),pdfName('
 function downloadAccountPDF(items,label,acDep){savePdf(accountLines(items,label,acDep),pdfName('BranchAccountReport',label))}
 
 /* Generate \u2192 preview \u2192 download. The preview shows the generated report page
-   by page, exactly as the PDF writer will lay it out (42 lines per page), so
-   what is on screen is what lands in the file. Everything here is offline. */
+   by page, exactly as the PDF writer will lay it out, so what is on screen
+   is what lands in the file. Portrait reports are 42 lines; the monthly
+   statement is a landscape table. Everything here is offline. */
 let _pdfPending=null;
-function previewPDF(lines,filename,title){
-  _pdfPending={lines,filename};
-  const pages=[];for(let i=0;i<lines.length;i+=42)pages.push(lines.slice(i,i+42));
+function previewPDF(lines,filename,title,layout){
+  const L=Object.assign({linesPerPage:42},layout||{});
+  _pdfPending={lines,filename,layout:layout||null};
+  const pages=[];for(let i=0;i<lines.length;i+=L.linesPerPage)pages.push(lines.slice(i,i+L.linesPerPage));
   $('#pdfPreviewTitle').textContent=title||'Report Preview';
   $('#pdfPreviewMeta').textContent=filename+' \u00b7 '+pages.length+' page'+(pages.length>1?'s':'')+' \u00b7 '+lines.length+' lines';
-  $('#pdfPreviewBody').innerHTML=pages.map((p,i)=>`<div class="pdfpage"><div class="pdfpage-no">Page ${i+1} of ${pages.length}</div><pre>${esc(p.join('\n'))}</pre></div>`).join('');
+  const wide=L.font==='Courier'?' statement':'';
+  $('#pdfPreviewBody').innerHTML=pages.map((p,i)=>`<div class="pdfpage${wide}"><div class="pdfpage-no">Page ${i+1} of ${pages.length}</div><pre>${esc(p.join('\n'))}</pre></div>`).join('');
   const m=$('#pdfModal');m.classList.add('show');
   const box=m.querySelector('.modal-scroll');if(box)box.scrollTop=0;
 }
 function closePdfPreview(){$('#pdfModal').classList.remove('show');_pdfPending=null}
-function confirmPdfDownload(){if(!_pdfPending)return;const p=_pdfPending;savePdf(p.lines,p.filename);closePdfPreview()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first <b>real-time</b> sync shared by all devices. An edit saves on this device at once, uploads a moment later on its own, and shows up on every other open device within seconds \u2014 automatically, every time, with no daily limit. Manual Sync Now works at any time too.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Real-time endpoint</label><input value="${esc(LIVE_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sRealtime" ${settings.realtime!==false?'checked':''}> Real-time sync \u2014 other devices\u2019 edits arrive here in seconds (\u09b0\u09bf\u09af\u09bc\u09cd\u09af\u09be\u09b2-\u099f\u09be\u0987\u09ae \u09b8\u09bf\u0982\u0995)</label><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 upload every change automatically, right after you type</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
-const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Real-time:</b> '+esc(liveStatusText())+' \u00b7 <b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits or the network drops. Tap <b>\u2601 Sync Now</b> any time.';
-if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{
-  settings.autoSync=!!$('#sAutoSync')?.checked;
-  setRealtimeEnabled(!!$('#sRealtime')?.checked);
-  toast(settings.realtime?(settings.autoSync?'Real-time sync on':'Real-time on \u00b7 auto-upload off'):'Live channel off \u00b7 edits still upload automatically');
-};
-/* The toggle also acts at once — nobody expects a switch to need saving. */
-if($('#sRealtime'))$('#sRealtime').onchange=()=>{
-  const on=!!$('#sRealtime').checked;
-  setRealtimeEnabled(on);
-  toast(on?'Real-time sync on \u2014 watching the cloud':'Real-time sync off \u2014 edits still upload automatically');
-};
-if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
-if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
+function confirmPdfDownload(){if(!_pdfPending)return;const p=_pdfPending;savePdf(p.lines,p.filename,p.layout);closePdfPreview()}
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="formgroup" style="margin-top:8px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
 if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
 function applySettings(){settings.branch=$('#sBranch').value.trim()||'Tantar Branch';settings.zone=$('#sZone').value.trim()||'Cumilla';settings.team=$('#sTeam').value.trim()||'Team-8';settings.totalBranch=num($('#sBranches').value)||21;settings.manager=$('#sManager').value.trim()||'Harun Or Rashid';settings.managerDesignation=$('#sManagerDesignation').value.trim()||'Manager';settings.target=num($('#sTarget').value);settings.autoLock=num($('#sLock').value);settings.template=$('#sTemplate').value||treasuryTemplate;settings.settingsUpdatedAt=new Date().toISOString();queueSettingsChange();save();renderDashboard();toast('Settings saved')};$('#setPin').onclick=()=>setPin();if($('#removePin'))$('#removePin').onclick=()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()});if($('#lockNow'))$('#lockNow').onclick=lock;$('#backup').onclick=backup;$('#restore').onchange=restore;$('#trashBtn').onclick=showTrash;$('#clear').onclick=()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('Data cleared')}});updateSyncUI()}
 function backup(){let data={app:'Branch Marketing Report',created:new Date().toISOString(),records,trash,settings};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='BranchMarketingReport_Backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';a.click();settings.lastBackup=new Date().toLocaleDateString();save();toast('Backup downloaded')}
@@ -724,9 +865,8 @@ function protectedAction(fn){if(!getPin())return fn();askPin(fn)}function setPin
      pulls within seconds. A quiet channel costs one 304 with an empty body
      every LIVE_CONFIG.WAIT_MS, then backs off when the app sits idle.
    - UPLOAD is real-time too: LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last
-     edit, every time, with no daily gate and no budget. Auto-sync in
-     Settings is the only switch; flip it off and uploads wait for the
-     Sync button.
+     edit, every time, with no daily gate and no budget. There is no
+     Auto-sync switch; uploads are not optional.
    - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and always
      works.
    - Offline: everything keeps working, the parked request is dropped, and the
@@ -910,6 +1050,7 @@ function persistLocalAsync(immediate){
   clearTimeout(_persistT);_persistT=setTimeout(()=>{_persistChain=_persistChain.then(persistLocalInner).catch(()=>{});},250);
 }
 async function persistLocalInner(){
+  try{scrubRetiredSyncSettings();}catch(e){}
   await kvPut('records',records);await kvPut('trash',trash);await kvPut('settings',settings);
 }
 
@@ -919,33 +1060,17 @@ function fmtSeconds(ms){
   return (Math.round(sec*10)/10)+'s';
 }
 function autoSyncStatusText(){
-  if(!settings.autoSync)return 'Off';
   return 'real-time \u00b7 uploads '+fmtSeconds(LIVE_CONFIG.UPLOAD_DEBOUNCE_MS)+' after an edit \u00b7 '+pendingCount()+' pending';
 }
-/** Turn the real-time channel on or off. Persisted per device, effective at once. */
-function setRealtimeEnabled(on){
-  settings.realtime=!!on;
-  save();
-  applyRealtimeSetting();
-  return settings.realtime;
+/* Test seam only — never stored, never shown. A test sets this before boot so
+   it can drive syncNow() by hand without racing the automatic upload. */
+function uploadsHeld(){
+  try{return window.__fsibHoldUpload===true;}catch(e){return false;}
 }
 /** How long an edit waits before it uploads by itself. */
 function setAutoUploadDelay(ms){
   LIVE_CONFIG.UPLOAD_DEBOUNCE_MS=Math.max(100,Math.floor(Number(ms)||0));
   return LIVE_CONFIG.UPLOAD_DEBOUNCE_MS;
-}
-/* Switching real-time on or off takes effect at once: open (or drop) the parked
-   request, and re-arm the upload debounce for whichever mode is now active. */
-function applyRealtimeSetting(){
-  if(liveEnabled()){
-    _live.notSupported=false;_live.fails=0;
-    startLiveWatch();
-  }else{
-    liveStop();
-    setLiveState('disabled');
-  }
-  scheduleAutoUpload();
-  updateSyncUI();
 }
 
 /* ---------- dirty state + automatic real-time upload (debounced, never polling) ---------- */
@@ -963,19 +1088,19 @@ function markDirtyAndSchedule(){
    automatically, every time — no daily gate, no budget. Two phones typing at
    once converge in seconds. The edit is already on this device (IndexedDB +
    localStorage) before any of this runs, so a blocked upload never loses data.
-   Auto-sync off in Settings is the only way to hold uploads back. */
+   Uploads are not optional. window.__fsibHoldUpload is a test seam, not a setting. */
 function scheduleAutoUpload(){
   clearTimeout(_debounceT);_debounceT=null;
-  if(!settings.autoSync)return;
+  if(uploadsHeld())return;
   try{if(isPublicView())return;}catch(e){}
   if(!navigator.onLine)return;
   _debounceT=setTimeout(()=>{maybeAutoUpload('edit');},LIVE_CONFIG.UPLOAD_DEBOUNCE_MS);
 }
 function maybeAutoUpload(trigger){
+  if(uploadsHeld())return false;
   if(_syncInProgress)return false;
   if(!navigator.onLine)return false;
   try{if(isPublicView())return false;}catch(e){}
-  if(!settings.autoSync)return false;
   if(pendingCount()<=0)return false;
   try{console.info('FSIB auto sync ('+(trigger||'edit')+') · '+pendingCount()+' pending');}catch(e){}
   syncNow('auto-upload').catch(()=>{});
@@ -1000,7 +1125,7 @@ function noteRequest(){
    POST -> {settings, records, trash, version, force} -> new state, 409 on stale version */
 function emptyCloudState(){return {settings:{},records:[],trash:[],version:0,updatedAt:null}}
 function stripDeviceOnly(s){
-  const skip=SYNC_CONFIG.DEVICE_ONLY_SETTING_KEYS||[];
+  const skip=(SYNC_CONFIG.DEVICE_ONLY_SETTING_KEYS||[]).concat(SYNC_CONFIG.RETIRED_SYNC_SETTING_KEYS||RETIRED_SYNC_SETTING_KEYS||[]);
   const o={};
   Object.keys(s||{}).forEach(k=>{if(skip.indexOf(k)>=0)return;o[k]=s[k]});
   return o;
@@ -1064,8 +1189,8 @@ let _live={
   changesApplied:0
 };
 function liveEnabled(){
-  /* On unless the device explicitly switched it off. */
-  return settings.realtime!==false;
+  /* Always. The per-device real-time switch is gone. */
+  return true;
 }
 function liveStatusText(){
   switch(_live.state){
@@ -1133,7 +1258,6 @@ function liveSchedule(delay){
   _live.timer=setTimeout(()=>{if(token===_live.token)liveWatchLoop(token);},Math.max(0,delay||0));
 }
 function startLiveWatch(){
-  if(!liveEnabled()){setLiveState('disabled');return;}
   /* The server told us it has no channel: stay honest about it instead of
      showing "connecting" forever. Automatic uploads keep working. */
   if(_live.notSupported){setLiveState('disabled');return;}
@@ -1145,7 +1269,6 @@ function startLiveWatch(){
 }
 async function liveWatchLoop(token){
   if(token!==_live.token)return;                 // a newer loop owns the channel
-  if(!liveEnabled()){setLiveState('disabled');return;}
   if(!navigator.onLine){setLiveState('disabled');return;}
   if(_live.notSupported){setLiveState('disabled');return;}
   /* Never park a request while a sync is mid-flight, and never hold one open
@@ -1409,7 +1532,7 @@ async function afterCloudWrite(state,hash,extra){
   try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
   await kvPut('settings',settings);
   /* Park the next watch on the version we now hold, and make sure a channel
-     that was stopped (offline, mid-sync, switched on) is running again. */
+     that was stopped (offline or mid-sync) is running again. */
   if(version>0)_live.version=version;
   startLiveWatch();
 }
@@ -1428,10 +1551,10 @@ async function syncNow(reason,opts){
   const force=opts.force===true;
   try{
     const pending=await getPendingChanges();
-    /* Auto-sync off means ONLY the Sync button may upload. An automatic
-       download (live pull, startup, reconnect) then carries no write at all —
-       the queue stays pending until the user asks for a sync. */
-    const needsUpload=pending.length>0&&(explicit||settings.autoSync);
+    /* Pending edits always go up, including on a live pull or startup.
+       window.__fsibHoldUpload (tests only) keeps an automatic pass from
+       writing; Sync Now and Refresh still upload. */
+    const needsUpload=pending.length>0&&(explicit||!uploadsHeld());
     const localHash=computeLocalHash();
     const lastHash=_meta.lastCloudHash||'';
     /* Skip the cloud GET only when we have actually talked to the cloud before
@@ -1574,6 +1697,10 @@ async function initLocalDB(){
       try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
     }
   }
+  if(scrubRetiredSyncSettings()){
+    try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
+    try{await kvPut('settings',settings);}catch(e){}
+  }
   if(!settings.settingsUpdatedAt)settings.settingsUpdatedAt=new Date().toISOString();
   _meta.requestsUsed=_meta.requestsUsed||0;
   await reconcileQueue();
@@ -1600,7 +1727,6 @@ async function reconcileQueue(){
 /* The header dot is the honest signal: it says whether this device is actually
    parked on the cloud right now, not merely whether a sync button exists. */
 function liveBadgeMeta(){
-  if(!liveEnabled())return {cls:'off',text:'LIVE OFF',title:'Real-time sync is switched off on this device \u00b7 tap to open Cloud Sync'};
   if(!navigator.onLine)return {cls:'off',text:'OFFLINE',title:'Offline \u00b7 edits are safe on this device and upload when you reconnect'};
   if(_live.notSupported)return {cls:'warn',text:'NO LIVE',title:'This server has no /api/live endpoint \u00b7 edits still upload automatically'};
   switch(_live.state){
@@ -1608,7 +1734,7 @@ function liveBadgeMeta(){
     case 'updating':return {cls:'busy',text:'UPDATING',title:'Pulling changes from the cloud right now'};
     case 'starting':return {cls:'busy',text:'CONNECTING',title:'Opening the real-time channel'};
     case 'error':return {cls:'err',text:'RETRY',title:'Real-time channel error: '+(_live.lastError||'unknown')+' \u00b7 retrying automatically'};
-    default:return {cls:'off',text:'LIVE OFF',title:'Real-time channel idle \u00b7 tap Sync for details'};
+    default:return {cls:'off',text:'LIVE OFF',title:'Real-time channel idle'};
   }
 }
 function updateLiveBadge(){
@@ -1636,9 +1762,12 @@ function updateSyncUI(){
   try{updateLiveBadge();}catch(e){}
   try{
     const m=syncStatusMeta();
-    const b=document.getElementById('syncBtn');
-    if(b){b.textContent=m.label;b.className='syncbtn '+m.cls;
-      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Real-time: '+liveStatusText()+' \u00b7 Auto sync: '+autoSyncStatusText()+' \u00b7 Tap for details';}
+    const top=document.querySelector('header.top');
+    if(top){
+      const syncedOnline=m.key==='synced';
+      top.classList.toggle('online-synced',syncedOnline);
+      top.title=syncedOnline?'Online and synced':'';
+    }
     const modal=document.getElementById('syncModal');
     if(modal&&modal.classList.contains('show'))renderSyncDetails();
     const cs=document.getElementById('cloudSyncStatus');
@@ -1657,7 +1786,8 @@ function syncPanelHtml(){
     +(_live.lastChangeAt?('<div>Last cloud change seen: <b>'+esc(fmtSyncTime(_live.lastChangeAt))+'</b> \u00b7 '+_live.changesApplied+' live update(s) this session</div>'):'')
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b></div>'
+    +'<div>Uploads: <b>'+esc(autoSyncStatusText())+'</b></div>'
+    +'<div>Cloud version: <b>'+esc(String(getCloudVersion()||'not synced yet'))+'</b></div>'
     +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
     +rate
     +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')
@@ -1674,7 +1804,8 @@ function renderSyncDetails(){
     +'<div>Real-time: <b>'+esc(liveStatusText())+'</b></div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b></div>'
+    +'<div>Uploads: <b>'+esc(autoSyncStatusText())+'</b></div>'
+    +'<div>Cloud version: <b>'+esc(String(getCloudVersion()||'not synced yet'))+'</b></div>'
     +'<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>'
     +'</div>';
   document.getElementById('syncLogMini').textContent=_syncLog.slice(0,8).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n')||'No sync activity yet.';
@@ -1692,8 +1823,6 @@ function refreshAfterSync(){
   updateSyncUI();
 }
 function wireSyncUI(){
-  const b=document.getElementById('syncBtn');
-  if(b)b.onclick=()=>{renderSyncDetails();document.getElementById('syncModal').classList.add('show');};
   const lb=document.getElementById('liveBadge');
   if(lb)lb.onclick=()=>{renderSyncDetails();document.getElementById('syncModal').classList.add('show');};
   const c=document.getElementById('closeSync');if(c)c.onclick=()=>document.getElementById('syncModal').classList.remove('show');
@@ -1718,6 +1847,7 @@ async function loadPublicView(){
     trash=[];
     if(d.settings&&typeof d.settings==='object'){
       settings={...settings,...d.settings,autoLock:0};
+      scrubRetiredSyncSettings();
       setPinValue('');
     }
     /* A shared link is read-only, so it must not look like it owes the cloud
@@ -1765,9 +1895,6 @@ function network(){
   _live.notSupported=false;_live.fails=0;
   startLiveWatch();
   maybeAutoUpload('online');
-  /* No live channel on this device: nothing else would notice that the cloud
-     moved while it was away, so take a look now. */
-  if(!liveEnabled()&&settings.autoSync)syncNow('online').catch(()=>{});
 }
 addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
 document.addEventListener('visibilitychange',()=>{
@@ -1850,6 +1977,6 @@ _initPromise.then(()=>{
   startLiveWatch();
   /* On open, with nobody tapping Sync: anything queued goes up and whatever
      the cloud has comes down. */
-  if(navigator.onLine&&settings.autoSync)setTimeout(()=>{syncNow('startup').catch(()=>{});},700);
+  if(navigator.onLine&&!uploadsHeld())setTimeout(()=>{syncNow('startup').catch(()=>{});},700);
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>

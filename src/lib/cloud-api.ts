@@ -21,7 +21,7 @@
             200 { reset: true, version }     the cloud went backwards
 ------------------------------------------------------------------ */
 
-import type { CloudState, SyncRecord } from "./store.ts";
+import { RETIRED_SYNC_SETTING_KEYS, type CloudState, type SyncRecord } from "./store.ts";
 
 export type { CloudState, SyncRecord };
 
@@ -29,8 +29,8 @@ export const DEFAULT_API_PATH = "/api/sync";
 /** Never uploaded: the PIN is per-device (localStorage key bmr_v1_pin). */
 export const DEVICE_ONLY_SETTING_KEYS = ["pin"];
 
-/** Per-device preferences that a cloud download must not stomp. */
-export const DEVICE_PREFERENCE_KEYS = ["theme", "autoLock", "lastBackup", "lastSync", "autoSync", "settingsUpdatedAt"];
+/** Per-device preferences that a cloud download must not stomp. Sync itself is not one of them. */
+export const DEVICE_PREFERENCE_KEYS = ["theme", "autoLock", "lastBackup", "lastSync", "settingsUpdatedAt"];
 
 /** Shared across devices; these are what a cloud download is allowed to change. */
 export const SHARED_SETTING_KEYS = [
@@ -62,7 +62,7 @@ export class CloudApiError extends Error {
 function stripDeviceOnly(settings: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const key of Object.keys(settings || {})) {
-    if (DEVICE_ONLY_SETTING_KEYS.includes(key)) continue;
+    if (DEVICE_ONLY_SETTING_KEYS.includes(key) || RETIRED_SYNC_SETTING_KEYS.includes(key)) continue;
     out[key] = settings[key];
   }
   return out;
@@ -166,6 +166,7 @@ export function mergeStates(
     if (key in (local.settings || {})) settings[key] = (local.settings || {})[key];
   }
   delete settings.pin;
+  for (const key of RETIRED_SYNC_SETTING_KEYS) delete settings[key];
 
   return { settings, records: records.rows, trash: trash.rows, conflicts: records.conflicts };
 }

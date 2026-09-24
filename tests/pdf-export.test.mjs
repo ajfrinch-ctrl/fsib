@@ -126,25 +126,115 @@ test("PDF export works with the network completely down", async () => {
   assert.equal(blobs[0].type, "application/pdf");
 });
 
-test("the statement PDF carries the same numbers as the preview", async () => {
+function statementCells(line, cols) {
+  let i = 0;
+  return cols.map((c, idx) => {
+    const text = line.slice(i, i + c.width);
+    i += c.width + (idx < cols.length - 1 ? 1 : 0);
+    return text;
+  });
+}
+
+test("the monthly statement PDF is a date table with blank columns", async () => {
   const { window, downloads, blobs } = bootOffline({
     records: [day("2026-09-21", "1250000"), day("2026-09-23", "880000")]
   });
   await new Promise((r) => setTimeout(r, 250));
+  const doc = window.document;
   window.renderReports("monthly", "2026-09-01");
-  window.document.querySelector("#downloadPDF").click();
-  window.document.querySelector("#pdfDownloadBtn").click();
+  doc.querySelector("#downloadPDF").click();
+  assert.equal(doc.querySelector("#pdfPreviewTitle").textContent, "Monthly Statement");
+  const previewText = [...doc.querySelectorAll(".pdfpage pre")].map((p) => p.textContent).join("\n");
+  doc.querySelector("#pdfDownloadBtn").click();
 
   const pdf = pdfText(blobs[0]);
-  assert.match(pdf, /BRANCH MARKETING REPORT/);
+  assert.match(pdf, /MONTHLY STATEMENT/);
   assert.match(pdf, /TANTAR BRANCH/);
+  assert.match(pdf, /September 2026/);
   assert.match(pdf, /Total Deposit: Tk 21,30,000/);
-  assert.match(pdf, /DEPOSIT BREAKDOWN/);
-  assert.match(pdf, /Cash: Tk 21,30,000/);
-  assert.match(pdf, /DAILY RECORDS/);
-  assert.match(pdf, /21 September 2026 \| Deposit: Tk 12,50,000/);
-  assert.match(pdf, /23 September 2026 \| Deposit: Tk 8,80,000/);
+  assert.match(pdf, /MediaBox \[0 0 842 595\]/);
+  assert.match(pdf, /BaseFont \/Courier/);
+  assert.doesNotMatch(pdf, /DAILY RECORDS/);
+  assert.doesNotMatch(pdf, /21 September 2026 \| Deposit/);
   assert.equal(downloads.length, 1);
+
+  const cols = window.statementColumns();
+  const lines = window.statementLines("2026-09-01");
+  for (let d = 1; d <= 30; d++) {
+    const label = String(d).padStart(2, "0") + " Sep";
+    assert.ok(lines.some((l) => l.startsWith(label)), "missing date " + label);
+  }
+  const empty = lines.find((l) => l.startsWith("01 Sep"));
+  assert.equal(empty.trim(), "01 Sep", "a day with no entry keeps every column blank");
+  assert.equal(statementCells(empty, cols).slice(1).every((c) => c.trim() === ""), true);
+
+  const row21 = lines.find((l) => l.startsWith("21 Sep"));
+  const cells21 = statementCells(row21, cols);
+  assert.equal(cells21[0].trim(), "21 Sep");
+  assert.equal(cells21[1].trim(), "4");
+  assert.equal(cells21[2].trim(), "12,50,000");
+  assert.equal(cells21[3].trim(), "", "clearing column stays blank when there is no clearing entry");
+  assert.equal(cells21[4].trim(), "");
+  assert.equal(cells21[5].trim(), "");
+  assert.equal(cells21[6].trim(), "");
+  const body = lines.join("\n");
+  assert.match(body, /Harun Or Rashid/);
+  assert.match(body, /School/);
+  assert.match(body, /Tantar High/);
+  assert.match(body, /01711111111/);
+  assert.match(body, /Savings 1001 20,000/);
+  const total = lines.find((l) => l.startsWith("TOTAL"));
+  const totalCells = statementCells(total, cols);
+  assert.equal(totalCells[2].trim(), "21,30,000");
+  assert.equal(totalCells[3].trim(), "");
+  assert.equal(totalCells[7].trim(), "");
+  assert.equal(totalCells[8].trim(), "");
+  assert.equal(totalCells[9].trim(), "");
+
+  const feb2024 = window.statementLines("2024-02-01");
+  assert.equal(feb2024.find((l) => l.startsWith("29 Feb")).trim(), "29 Feb");
+  assert.equal(feb2024.some((l) => l.startsWith("30 Feb")), false);
+  const feb2026 = window.statementLines("2026-02-01");
+  assert.equal(feb2026.find((l) => l.startsWith("28 Feb")).trim(), "28 Feb");
+  assert.equal(feb2026.some((l) => l.startsWith("29 Feb")), false);
+
+  const inPdf = [...pdf.matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
+  const inPreview = previewText.split("\n").filter((s) => s.trim())
+    .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
+  assert.equal(inPdf, inPreview, "the preview must show exactly what the PDF contains");
+});
+
+test("a partial day leaves the missing statement columns empty", async () => {
+  const sparse = {
+    date: "2026-09-02",
+    places: "",
+    cash: "5000",
+    clearing: "0",
+    rtgs: "",
+    npsb: "",
+    agent: "",
+    officers: [],
+    visits: [{ officer: "", type: "School", name: "", address: "", mobile: "" }],
+    accounts: [{ category: "Savings", no: "", amount: "" }],
+    created: "2026-09-02T09:00:00.000Z",
+    updated: "2026-09-02T09:00:00.000Z"
+  };
+  const { window } = bootOffline({ records: [sparse] });
+  await new Promise((r) => setTimeout(r, 250));
+  const cols = window.statementColumns();
+  const lines = window.statementLines("2026-09-01");
+  const row = lines.find((l) => l.startsWith("02 Sep"));
+  const cells = statementCells(row, cols);
+  assert.equal(cells[1].trim(), "", "blank places stay blank");
+  assert.equal(cells[2].trim(), "5,000");
+  assert.equal(cells[3].trim(), "", "a zero clearing entry is an empty column");
+  assert.equal(cells[4].trim(), "");
+  assert.equal(cells[5].trim(), "");
+  assert.equal(cells[6].trim(), "");
+  assert.equal(cells[7].trim(), "");
+  assert.equal(cells[8].trim(), "", "a visit with no entered detail does not fill the column");
+  assert.equal(cells[9].trim(), "", "an account row with no number and no amount stays blank");
+  assert.equal(lines.find((l) => l.startsWith("03 Sep")).trim(), "03 Sep");
 });
 
 test("the visiting and account reports export offline too", async () => {

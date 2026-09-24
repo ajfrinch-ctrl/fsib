@@ -128,7 +128,9 @@ function bootApp({
   handler: sharedHandler = null,
   liveHandler: sharedLiveHandler = null,
   backend = null,
-  live = true
+  live = true,
+  /* Hold automatic uploads so a test can drive syncNow() itself. Not a setting. */
+  holdUpload = false
 } = {}) {
   const own = backend || makeBackend(cloud);
   const blob = own.blob;
@@ -153,6 +155,7 @@ function bootApp({
     url: "https://example.test/",
     virtualConsole: vc,
     beforeParse(window) {
+      if (holdUpload) window.__fsibHoldUpload = true;
       fakeIndexedDB(window);
       window.matchMedia = (q) => ({
         media: q, matches: false, onchange: null,
@@ -260,7 +263,7 @@ async function appSettled(window, timeoutMs = 8000) {
 test("first sync uploads the local records and records the cloud version", async () => {
   const { window, blob, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")],
-    settings: { autoSync: false }
+    holdUpload: true
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2), "records were not queued for upload");
   await appSettled(window);
@@ -322,7 +325,7 @@ test("a lost race (409) re-merges and retries without losing either device's day
     records: [day("2026-09-10", "1000", "2026-09-10T09:00:00.000Z"), day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")],
     cloud,
     onFirstPost: otherDeviceWrite,
-    settings: { autoSync: false }
+    holdUpload: true
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2));
   await appSettled(window);
@@ -340,7 +343,7 @@ test("a lost race (409) re-merges and retries without losing either device's day
 test("the PIN stays on the device and never reaches the blob", async () => {
   const { window, blob, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
-    settings: { autoSync: false }
+    holdUpload: true
   });
   assert.ok(await waitUntil(() => typeof window.setPinValue === "function"));
   await appSettled(window);
@@ -368,7 +371,7 @@ test("the dashboard renders the synced numbers", async () => {
   assert.deepEqual(errors, []);
 });
 
-test("the settings page shows the endpoint instead of the removed key fields", async () => {
+test("the settings page has no sync section or sync controls", async () => {
   const { window, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")]
   });
@@ -376,11 +379,33 @@ test("the settings page shows the endpoint instead of the removed key fields", a
   window.nav("settings");
   const panel = window.document.querySelector("#settings");
   const html = panel.innerHTML;
-  assert.match(html, /\/api\/sync/, "cloud endpoint should be visible");
-  assert.match(html, /Cloud version/, "version cursor should be visible");
-  assert.doesNotMatch(html, /sJsonbinKey|sBinId/, "the credential fields are gone");
-  assert.equal(typeof window.document.querySelector("#sAutoSync").checked, "boolean");
+  assert.equal(window.document.querySelector("#sCloudVersion"), null);
+  assert.equal(window.document.querySelector("#sAutoSync"), null);
+  assert.equal(window.document.querySelector("#sRealtime"), null);
+  assert.equal(window.document.querySelector("#saveSyncCode"), null);
+  assert.equal(window.document.querySelector("#pushCloud"), null);
+  assert.equal(window.document.querySelector("#pullCloud"), null);
+  assert.equal(window.document.querySelector("#cloudSyncStatus"), null);
+  assert.doesNotMatch(html, /Cloud Sync|Cloud endpoint|Real-time endpoint|Save Sync Settings|Auto-sync|Sync Now|Sync history|sJsonbinKey|sBinId/);
   assert.equal(window.document.querySelector("#sPublicLink").value, "https://example.test/?view=1");
+  assert.deepEqual(errors, []);
+});
+
+test("there is no sync status button; an online sync paints the top bar green", async () => {
+  const { window, errors } = bootApp({ holdUpload: true });
+  assert.ok(await waitUntil(() => typeof window.updateSyncUI === "function"));
+  assert.equal(window.document.querySelector("#syncBtn"), null);
+  assert.doesNotMatch(window.document.body.innerHTML, /class="syncbtn"/);
+  await appSettled(window);
+  const top = window.document.querySelector("header.top");
+  assert.equal(top.classList.contains("online-synced"), true, "online and caught up should be green");
+  assert.match(window.document.querySelector("style").textContent, /\.top\.online-synced\{[^}]*#3ee08a/);
+  window.eval("_syncStatus='error'");
+  window.updateSyncUI();
+  assert.equal(top.classList.contains("online-synced"), false, "a failed sync must not keep the green border");
+  window.eval("_syncStatus='synced'");
+  window.updateSyncUI();
+  assert.equal(top.classList.contains("online-synced"), true);
   assert.deepEqual(errors, []);
 });
 
@@ -389,7 +414,7 @@ test("two devices on the same blob converge on the same data", async () => {
   const handler = createSyncHandler(blob.adapter);
 
   /* Device A: has 1 September, syncs first. */
-  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler, settings: { autoSync: false } });
+  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler, holdUpload: true });
   assert.ok(await waitUntil(() => typeof a.window.pendingCount === "function" && a.window.pendingCount() >= 1));
   await appSettled(a.window);
   const resA = await a.window.syncNow("manual");
@@ -398,7 +423,7 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual(blob.peek().records.map((r) => r.date), ["2026-09-01"]);
 
   /* Device B: fresh phone, its own 20 September, never seen A's data. */
-  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler, settings: { autoSync: false } });
+  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler, holdUpload: true });
   assert.ok(await waitUntil(() => typeof b.window.pendingCount === "function" && b.window.pendingCount() >= 1));
   await appSettled(b.window);
   const resB = await b.window.syncNow("manual");
@@ -424,38 +449,38 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual([...a.errors, ...b.errors], []);
 });
 
-test("real-time off: the live channel stays quiet, but edits still upload automatically", async () => {
+test("a stored auto-sync or real-time switch is ignored, stripped, and never uploaded", async () => {
   const backend = makeBackend({
-    settings: {},
+    settings: { branch: "Tantar Branch", autoSync: false, realtime: false },
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
     trash: [],
     version: 1,
     updatedAt: "2026-09-01T09:00:00.000Z"
   });
-  // realtime:false = a device that switched the live channel off in Settings
-  const { window, requests } = bootApp({ backend, settings: { realtime: false } });
+  const { window, requests } = bootApp({ backend, settings: { realtime: false, autoSync: false } });
   assert.ok(await waitUntil(() => typeof window.queueSettingsChange === "function"));
   await appSettled(window);
 
-  assert.equal(window.liveInfo().enabled, false, "the channel is switched off on this device");
-  assert.equal(requests.filter((r) => r.live).length, 0, "no /api/live traffic while real-time is off");
+  const stored = JSON.parse(window.localStorage.getItem("bmr_v1_settings") || "{}");
+  assert.equal(stored.autoSync, undefined, "autoSync must not survive on the device");
+  assert.equal(stored.realtime, undefined, "realtime must not survive on the device");
+  assert.equal(window.liveInfo().enabled, true, "the channel is not a setting");
+  assert.ok(requests.some((r) => r.live), "a stored realtime:false must not stop the live channel");
+  assert.match(window.autoSyncStatusText(), /real-time/);
+  assert.equal(window.autoSyncStatusText().indexOf("Off"), -1);
 
-  // Uploads never needed the channel: the edit goes up on its own debounce.
   window.setAutoUploadDelay(150);
   const before = requests.filter((r) => r.method === "POST").length;
   window.queueSettingsChange();
-  assert.ok(await waitUntil(() => window.pendingCount() >= 1));
   assert.ok(
     await waitUntil(() => requests.filter((r) => r.method === "POST").length > before, 8000),
-    "the edit never uploaded by itself, even with the live channel off"
+    "an edit must still upload when an older build had the switches off"
   );
-  assert.match(window.autoSyncStatusText(), /real-time/, "auto uploads are still described as real-time");
-
-  // A manual refresh still pulls the cloud day down.
-  const res = await window.syncNow("refresh");
-  assert.equal(res.error, undefined, JSON.stringify(res.error && res.error.message));
-  assert.deepEqual(localRecords(window).map((r) => r.date), ["2026-09-01"], "pulled the cloud day");
-  assert.equal(requests.filter((r) => r.live).length, 0, "a refresh must not open the live channel");
+  const posted = requests.filter((r) => r.method === "POST").at(-1);
+  assert.equal(posted.body.settings.autoSync, undefined);
+  assert.equal(posted.body.settings.realtime, undefined);
+  assert.equal(backend.blob.peek().settings.autoSync, undefined, "the blob must not keep the switch");
+  assert.equal(backend.blob.peek().settings.realtime, undefined);
 });
 
 test("auto sync is unlimited: every edit uploads by itself, with no daily gate", async () => {
@@ -494,7 +519,7 @@ test("the live channel carries one device's edit to another with nobody tapping 
   const a = bootApp({
     backend,
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
-    settings: { autoSync: false }
+    holdUpload: true
   });
   assert.ok(await waitUntil(() => typeof a.window.syncNow === "function"));
   a.window.setAutoUploadDelay(60000);
@@ -506,9 +531,9 @@ test("the live channel carries one device's edit to another with nobody tapping 
   assert.equal(backend.blob.peek().version, 1);
 
   /* Device B: the manager's phone, opened afterwards, never asked to sync.
-     Auto-upload is off here so the ONLY way this phone can catch up is the
-     live channel — which is exactly what is under test. */
-  const b = bootApp({ backend, settings: { autoSync: false } });
+     Automatic startup upload is held so the ONLY way this phone can catch up
+     is the live channel — which is exactly what is under test. */
+  const b = bootApp({ backend, holdUpload: true });
   assert.ok(await waitUntil(() => typeof b.window.liveInfo === "function"));
   assert.ok(
     await waitUntil(() => b.window.liveInfo().state === "watching", 4000),
@@ -522,8 +547,8 @@ test("the live channel carries one device's edit to another with nobody tapping 
 
   /* A edits. No Sync button is touched on either phone.
      `records` is a script-level binding, so go through the window's own scope. */
+  a.window.__fsibHoldUpload = false;
   a.window.setAutoUploadDelay(120); // now let the reflex back in
-  a.window.eval("settings.autoSync=true");
   const stamp = new Date().toISOString();
   a.window.eval(`(function(){
     const row = ${JSON.stringify(day("2026-09-21", "777000", stamp))};
@@ -584,32 +609,18 @@ test("a server without /api/live: the channel goes quiet, but edits still upload
   assert.deepEqual(errors, []);
 });
 
-test("switching real-time off drops the parked request; switching it back on reopens it", async () => {
+test("writing the old sync switches back does not turn anything off", async () => {
   const backend = makeBackend(null);
-  const { window, requests } = bootApp({ backend });
+  const { window } = bootApp({ backend });
   assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
   assert.ok(await waitUntil(() => window.liveInfo().state === "watching", 4000));
+  assert.equal(typeof window.setRealtimeEnabled, "undefined", "the settings toggle is gone");
 
-  // What the Settings toggle does.
-  window.setRealtimeEnabled(false);
-  assert.equal(window.liveInfo().enabled, false);
-  assert.equal(window.liveInfo().state, "disabled");
-  assert.equal(JSON.parse(window.localStorage.getItem("bmr_v1_settings")).realtime, false, "the choice is per device");
-
-  // Uploads keep running while the channel is off.
-  window.setAutoUploadDelay(150);
-  const before = requests.filter((r) => r.method === "POST").length;
-  window.queueSettingsChange();
-  assert.ok(
-    await waitUntil(() => requests.filter((r) => r.method === "POST").length > before, 8000),
-    "an edit must still upload with the channel off"
-  );
-
-  // Back on again, without a reload.
-  window.setRealtimeEnabled(true);
+  window.eval("settings.autoSync=false;settings.realtime=false;save();");
+  assert.ok(await waitUntil(() => {
+    const stored = JSON.parse(window.localStorage.getItem("bmr_v1_settings") || "{}");
+    return stored.autoSync === undefined && stored.realtime === undefined;
+  }), "save() must strip the retired switches");
   assert.equal(window.liveInfo().enabled, true);
-  assert.ok(
-    await waitUntil(() => window.liveInfo().state === "watching", 4000),
-    "the channel did not reopen: " + JSON.stringify(window.liveInfo())
-  );
+  assert.notEqual(window.liveInfo().state, "disabled");
 });
