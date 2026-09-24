@@ -26,9 +26,6 @@ import type { CloudState, SyncRecord } from "./store.ts";
 export type { CloudState, SyncRecord };
 
 export const DEFAULT_API_PATH = "/api/sync";
-export const CLOUD_VERSION_KEY = "bmr_v1_cloud_version";
-export const PIN_KEY = "bmr_v1_pin";
-
 /** Never uploaded: the PIN is per-device (localStorage key bmr_v1_pin). */
 export const DEVICE_ONLY_SETTING_KEYS = ["pin"];
 
@@ -124,11 +121,6 @@ export async function saveCloudState(
           ? doc.version
           : undefined
   };
-}
-
-export async function clearCloudState(api: string = DEFAULT_API_PATH): Promise<boolean> {
-  const res = await fetch(api, { method: "DELETE" });
-  return res.ok;
 }
 
 /** Newest write wins per date; deletes (trash rows) beat stale edits. */
