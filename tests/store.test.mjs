@@ -156,13 +156,14 @@ test("normalizeRecords drops the retired account number but keeps the rest of th
     {
       date: "2026-09-03",
       accounts: [
-        { category: "Savings", no: "1001", amount: "20000" },
+        { category: "Savings", no: "1001", count: "3", amount: "20000" },
         { category: "MTDR", amount: "45000" }
       ]
     }
   ]);
   assert.deepEqual(rows[0].accounts, [
-    { category: "Savings", amount: "20000" },
+    /* The count of accounts opened is wanted; the account number is not. */
+    { category: "Savings", count: "3", amount: "20000" },
     { category: "MTDR", amount: "45000" }
   ]);
   assert.equal(JSON.stringify(rows).includes("1001"), false);
