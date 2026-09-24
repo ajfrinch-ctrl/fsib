@@ -360,8 +360,21 @@ test("the PIN stays on the device and never reaches the blob", async () => {
 });
 
 test("the dashboard renders the synced numbers", async () => {
+  /* A day that opened accounts, so the deposit column can be checked against the
+     money the new accounts brought in as well as the day's own deposit. */
+  const withAccounts = {
+    ...day("2026-09-16", "100000", "2026-09-16T09:00:00.000Z"),
+    accounts: [
+      { category: "Savings", no: "9001", amount: "25000" },
+      { category: "DPS / Other", no: "9002", amount: "5000" }
+    ]
+  };
   const { window, errors } = bootApp({
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")]
+    records: [
+      day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"),
+      day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z"),
+      withAccounts
+    ]
   });
   assert.ok(await waitUntil(() => typeof window.renderDashboard === "function"));
   window.renderDashboard();
@@ -372,9 +385,9 @@ test("the dashboard renders the synced numbers", async () => {
   const cell = (key, cls) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
   assert.equal(cell("today", "pacct"), "0", "nothing saved today");
   assert.match(cell("today", "pdep"), /৳ 0/, "no deposit today");
-  assert.match(cell("month", "pdep"), /24,05,000/, "this month totals both days");
-  assert.match(cell("30d", "pdep"), /24,05,000/, "the last 30 days include both days");
-  assert.match(cell("month", "pacct"), /^[0-9]+$/);
+  assert.match(cell("month", "pdep"), /25,35,000/, "this month totals every day, new-account deposits included");
+  assert.match(cell("30d", "pdep"), /25,35,000/, "the last 30 days include every day");
+  assert.equal(cell("month", "pacct"), "2", "the two accounts opened this month are counted");
   assert.deepEqual(errors, []);
 });
 

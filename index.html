@@ -467,7 +467,11 @@ function save(){
   try{localStorage.setItem(K+'records',JSON.stringify(records));localStorage.setItem(K+'trash',JSON.stringify(trash));localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
   persistLocalAsync();
   markDirtyAndSchedule();
-}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function dateShort(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
+}function esc(x=''){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function today(){const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}function num(v){return Number(String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''))||0}function money(n){return num(n).toLocaleString('en-IN',{maximumFractionDigits:2})}function lac(n){return (num(n)/100000).toFixed(2)+' Lac'}function toast(t){let e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',2800)}function dateText(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}function dateShort(d){return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}function total(r){return ['cash','clearing','rtgs','npsb','agent'].reduce((a,k)=>a+num(r[k]),0)}function accountsTotal(r){return (r.accounts||[]).reduce((a,x)=>a+num(x.amount),0)}
+/* The dashboard's deposit figure: the day's own deposit plus the money its new
+   accounts brought in. The entry form, the WhatsApp text and the PDFs keep the
+   official Total Deposit (cash/clearing/RTGS/NPSB/agent) exactly as it was. */
+function depositAll(r){return total(r)+accountsTotal(r)}function accountsCount(r){return (r.accounts||[]).filter(x=>x.no).length}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>{const on=x.dataset.page===page;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});window.scrollTo(0,0)}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
 function renderDashboard(){
@@ -477,11 +481,12 @@ function renderDashboard(){
   const week=records.filter(r=>new Date(r.date+'T12:00')>=start);
   const month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7));
   const sum=a=>a.reduce((x,r)=>x+total(r),0);
+  const sumAll=a=>a.reduce((x,r)=>x+depositAll(r),0);
   const best=[...records].sort((a,b)=>total(b)-total(a))[0];
   const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
   const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
   const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
-  const monthDep=sum(month);
+  const monthDep=sumAll(month);
   const monthAc=month.reduce((a,r)=>a+accountsCount(r),0);
   const target=num(settings.target);
   const pct=target>0?Math.min(100,Math.round(monthDep/target*100)):0;
@@ -502,18 +507,18 @@ function renderDashboard(){
   const acDepOf=a=>a.reduce((x,r)=>x+accountsTotal(r),0);
   const visOfList=a=>a.reduce((x,r)=>x+visits(r),0);
   const periods=[
-    {key:'today',en:'Today',bn:'\u0986\u099c\u0995\u09c7\u09b0',rows:now?[now]:[]},
-    {key:'week',en:'This week',bn:'\u098f\u0987 \u09b8\u09be\u09aa\u09cd\u09a4\u09be\u09b9\u09c7\u09b0',rows:inRange(weekStart,weekEnd)},
-    {key:'month',en:'This month',bn:'\u098f\u0987 \u09ae\u09be\u09b8\u09c7\u09b0',rows:month},
-    {key:'30d',en:'Last 30 days',bn:'\u0997\u09a4 \u09e9\u09e6 \u09a6\u09bf\u09a8\u09c7\u09b0',rows:inRange(shift(t,-29),t)}
+    {key:'today',en:'Today',rows:now?[now]:[]},
+    {key:'week',en:'This week',rows:inRange(weekStart,weekEnd)},
+    {key:'month',en:'This month',rows:month},
+    {key:'30d',en:'Last 30 days',rows:inRange(shift(t,-29),t)}
   ];
   const periodRows=periods.map(pd=>{
-    const dep=sum(pd.rows),ac=acOf(pd.rows);
+    const dep=sumAll(pd.rows),ac=acOf(pd.rows);
     const sub=pd.key==='today'
       ?(pd.rows.length?(visOfList(pd.rows)+' visit'+(visOfList(pd.rows)===1?'':'s')):'no entry yet')
       :(pd.rows.length+' day'+(pd.rows.length===1?'':'s')+' \u00b7 '+visOfList(pd.rows)+' visits');
     return '<div class="prow'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
-      +'<span class="pname"><b>'+pd.en+'</b><em>'+pd.bn+'</em></span>'
+      +'<span class="pname"><b>'+pd.en+'</b></span>'
       +'<span class="pacct" data-acct="'+pd.key+'">'+ac+'</span>'
       +'<span class="pdep" data-dep="'+pd.key+'">\u09f3 '+money(dep)+'<small>'+sub+'</small></span>'
       +'</div>';
@@ -522,7 +527,7 @@ function renderDashboard(){
   /* last seven days (today last) as a small bar chart */
   const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
   const recOf=k=>records.find(z=>z.date===k);
-  const depOf=k=>{const r=recOf(k);return r?total(r):0};
+  const depOf=k=>{const r=recOf(k);return r?depositAll(r):0};
   const visOf=k=>{const r=recOf(k);return r?visits(r):0};
   const maxDep=Math.max(1,...dayKeys.map(depOf));
   const bars=dayKeys.map(k=>{
@@ -534,13 +539,13 @@ function renderDashboard(){
   $('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2></div><span class="small">${dateText(t)}</span></div>
   <div class="dash-hero${now?'':' todo'}">
     <div class="dh-top"><span class="dh-eyebrow">Today\u2019s Deposit</span><span class="dh-pill">${now?'Entry saved':'No entry yet'}</span></div>
-    <div class="dh-amount">\u09f3 ${money(now?total(now):0)}</div>
-    <div class="dh-sub">${lac(now?total(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
+    <div class="dh-amount">\u09f3 ${money(now?depositAll(now):0)}</div>
+    <div class="dh-sub">${lac(now?depositAll(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
     <button class="dh-cta" id="dashCta" type="button">${now?'Edit Today\u2019s Entry':'Add Today\u2019s Data'}</button>
   </div>
   <div class="dash-row">
     <div class="card dash-trend">
-      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sum(week))}</span></div>
+      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sumAll(week))}</span></div>
       <div class="tbars">${bars}</div>
     </div>
     <div class="card dash-goal">
@@ -558,11 +563,11 @@ function renderDashboard(){
       <div class="prow phead"><span class="pname">Period</span><span class="pacct">Accounts</span><span class="pdep">Deposit (\u09f3)</span></div>
       ${periodRows}
     </div>
-    <div class="pnote">Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]} (${dateShort(weekStart)} to ${dateShort(weekEnd)}) \u00b7 Last 30 days includes today \u00b7 New-account deposits: \u09f3 ${money(acDepOf(periods[3].rows))} in 30 days</div>
+    <div class="pnote">Deposit = cash, clearing/BFTN, RTGS, NPSB, agent outlet + new-account initial deposits (\u09f3 ${money(acDepOf(periods[3].rows))} of the 30-day figure). Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]}, ${dateShort(weekStart)} to ${dateShort(weekEnd)}. Last 30 days includes today.</div>
   </div>
   <div class="card dash-hi">
     <div class="sectiontitle">Highlights</div>
-    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(total(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
+    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(depositAll(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
     ${bestV?('<div class="hirow"><span class="hilabel">Most visits</span><b>'+visits(bestV)+' visits</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
     ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
     ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}

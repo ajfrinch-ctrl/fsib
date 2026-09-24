@@ -59,12 +59,18 @@ of the top bar means this device is online and synced.
 The top of the dashboard is the four periods the branch reads at a glance, each
 with the accounts opened and the deposit collected in it:
 
-| This period | Accounts | Deposit |
+| Period | Accounts | Deposit |
 | --- | --- | --- |
-| Today | new accounts opened today | today's total deposit |
+| Today | new accounts opened today | today's deposit |
 | This week | accounts in the branch week | deposit in the branch week |
 | This month | accounts this calendar month | deposit this calendar month |
 | Last 30 days | accounts in the rolling 30 days | deposit in the rolling 30 days |
+
+"Deposit" here is one number: the day's cash, clearing/BFTN, RTGS, NPSB and
+agent outlet deposits **plus** the initial deposits the new accounts brought in
+(the card's footer says so and shows how much of the 30-day figure is account
+money). The entry form, the WhatsApp text and the report PDFs keep the official
+Total Deposit untouched — nothing about what the branch files changes.
 
 "This week" follows `weeklyStart`/`weeklyEnd` (Sunday–Thursday by default), the
 same window History groups by and the weekly report is filed against, so the row
