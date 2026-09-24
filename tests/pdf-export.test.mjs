@@ -114,7 +114,8 @@ test("PDF export works with the network completely down", async () => {
   window.renderReports("monthly", "2026-09-01");
 
   const before = fetchCount();
-  window.document.querySelector("#downloadPDF").click();
+  window.document.querySelector("#downloadPDF").click();          // generate the preview
+  window.document.querySelector("#pdfDownloadBtn").click();       // save it from the preview
   assert.equal(fetchCount(), before, "saving a PDF must not touch the network");
 
   assert.equal(downloads.length, 1);
@@ -132,6 +133,7 @@ test("the statement PDF carries the same numbers as the preview", async () => {
   await new Promise((r) => setTimeout(r, 250));
   window.renderReports("monthly", "2026-09-01");
   window.document.querySelector("#downloadPDF").click();
+  window.document.querySelector("#pdfDownloadBtn").click();
 
   const pdf = pdfText(blobs[0]);
   assert.match(pdf, /BRANCH MARKETING REPORT/);
@@ -152,6 +154,7 @@ test("the visiting and account reports export offline too", async () => {
   window.renderVisitReport("monthly", "2026-09-01");
   const before = fetchCount();
   window.document.querySelector(".pdf-dl").click();
+  window.document.querySelector("#pdfDownloadBtn").click();
   assert.equal(fetchCount(), before, "saving a PDF must not touch the network");
   assert.equal(downloads.length, 1);
   assert.match(downloads[0].download, /^BranchVisitingReport_September_2026\.pdf$/);
@@ -164,6 +167,7 @@ test("the visiting and account reports export offline too", async () => {
 
   window.renderAccountReport("monthly", "2026-09-01");
   window.document.querySelector(".pdf-dl").click();
+  window.document.querySelector("#pdfDownloadBtn").click();
   assert.equal(downloads.length, 2);
   assert.match(downloads[1].download, /^BranchAccountReport_September_2026\.pdf$/);
   const accountPdf = pdfText(blobs[1]);
@@ -171,4 +175,63 @@ test("the visiting and account reports export offline too", async () => {
   assert.match(accountPdf, /TOTAL ACCOUNTS: 1/);
   assert.match(accountPdf, /A\/C No: 1001/);
   assert.match(accountPdf, /Initial Deposit: Tk 20,000/);
+});
+
+test("pick a date, generate, preview, then download from the preview", async () => {
+  const { window, downloads, blobs, fetchCount } = bootOffline({
+    records: [day("2026-09-21", "1250000"), day("2026-09-24", "2405000")]
+  });
+  await new Promise((r) => setTimeout(r, 250));
+  const doc = window.document;
+  window.nav("reports");
+
+  // pick one day: Daily segment + the date field
+  doc.querySelector('#repSeg [data-tp="daily"]').onclick();
+  const input = doc.querySelector("#repDate");
+  input.value = "2026-09-21";
+  input.onchange({ target: input });
+  assert.match(doc.querySelector(".rh-period").textContent, /21 September 2026/);
+
+  // generate: the preview opens and nothing has been written yet
+  const before = fetchCount();
+  [...doc.querySelectorAll("#reports .pdf-dl")].pop().click();
+  assert.ok(doc.querySelector("#pdfModal").classList.contains("show"), "preview did not open");
+  assert.equal(blobs.length, 0, "generating a preview must not write a file");
+  assert.equal(doc.querySelectorAll(".pdfpage").length, 1);
+  assert.match(doc.querySelector("#pdfPreviewMeta").textContent, /^BranchMarketingReport_Daily_Report_21_September_2026\.pdf · 1 page · \d+ lines$/);
+
+  // the preview text is exactly what the PDF will contain
+  const previewText = [...doc.querySelectorAll(".pdfpage pre")].map((p) => p.textContent).join("\n");
+  assert.match(previewText, /BRANCH MARKETING REPORT/);
+  assert.match(previewText, /Total Deposit: Tk 12,50,000/);
+  assert.ok(!previewText.includes("24 September 2026"), "the other day must not be in a single-day report");
+
+  // download from inside the preview
+  doc.querySelector("#pdfDownloadBtn").click();
+  assert.equal(fetchCount(), before, "the whole generate→preview→download flow is offline");
+  assert.equal(downloads.length, 1);
+  assert.equal(downloads[0].download, "BranchMarketingReport_Daily_Report_21_September_2026.pdf");
+  assert.ok(!doc.querySelector("#pdfModal").classList.contains("show"), "preview should close after saving");
+
+  const inPdf = [...pdfText(blobs[0]).matchAll(/\((.*?)\) Tj/g)].map((m) => m[1]).filter((s) => s.trim()).join("\n");
+  const inPreview = previewText.split("\n").filter((s) => s.trim())
+    .map((s) => s.replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "?")).join("\n");
+  assert.equal(inPdf, inPreview, "the preview must show exactly what the PDF contains");
+});
+
+test("closing the preview saves nothing", async () => {
+  const { window, downloads, blobs } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  const doc = window.document;
+  window.renderReports("monthly", "2026-09-01");
+
+  doc.querySelector("#downloadPDF").click();
+  assert.ok(doc.querySelector("#pdfModal").classList.contains("show"));
+  doc.querySelector("#pdfBackBtn").click();
+  assert.ok(!doc.querySelector("#pdfModal").classList.contains("show"));
+
+  doc.querySelector("#downloadPDF").click();
+  doc.querySelector("#closePdfPreview").click();
+  assert.equal(blobs.length, 0);
+  assert.equal(downloads.length, 0, "no file may be written unless Download is tapped");
 });
