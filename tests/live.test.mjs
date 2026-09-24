@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   LIVE_DEFAULT_WAIT_MS,
+  LIVE_MAX_WAIT_HEADER,
   LIVE_MAX_WAIT_MS,
   createLiveHandler,
   createLiveHub,
@@ -287,6 +288,85 @@ test("/api/sync exposes the same cursor as an ETag and honours If-None-Match", a
     post({ settings: {}, records: [day("2026-09-02", "7000", "2026-09-02T09:00:00.000Z")], trash: [], version: 3, force: true })
   );
   assert.equal(written.headers.get("etag"), '"4"', "a write hands back the new cursor");
+});
+
+test("every answer advertises the longest hold this deployment will honour", async () => {
+  const { adapter } = memoryAdapter(state(1));
+  const handler = createLiveHandler(adapter, undefined, { defaultWaitMs: 60, maxWaitMs: 30_000, pollIntervalMs: 10 });
+
+  /* A client cannot guess the ceiling, and a hold that outlives the platform's
+     own function timeout is killed as a gateway error instead of answered — which
+     a phone can only read as a broken channel. So the number travels with the
+     answer, including the 304 that ends a quiet hold. */
+  const quiet = await handler(liveRequest("?version=1&wait=1"));
+  assert.equal(quiet.status, 304);
+  assert.equal(quiet.headers.get(LIVE_MAX_WAIT_HEADER), "30000");
+
+  const baseline = await handler(liveRequest("?version=-1"));
+  assert.equal(baseline.headers.get(LIVE_MAX_WAIT_HEADER), "30000");
+
+  const changed = await handler(liveRequest("?wait=0", { "if-none-match": '"0"' }));
+  assert.equal(changed.headers.get(LIVE_MAX_WAIT_HEADER), "30000");
+
+  const bad = await handler(liveRequest(""));
+  assert.equal(bad.status, 400);
+  assert.equal(bad.headers.get(LIVE_MAX_WAIT_HEADER), "30000", "even a 400 tells the client the ceiling");
+
+  /* The library default is the Netlify/Nitro 60s function limit, not a guess. */
+  const dflt = await createLiveHandler(adapter)(liveRequest("?version=-1"));
+  assert.equal(dflt.headers.get(LIVE_MAX_WAIT_HEADER), String(LIVE_MAX_WAIT_MS));
+  assert.equal(LIVE_MAX_WAIT_MS, 55_000);
+  assert.equal(LIVE_DEFAULT_WAIT_MS, 20_000);
+});
+
+test("a write from another instance reaches a parked request even though a hub exists", async () => {
+  /* The production shape: Netlify runs each invocation in its own instance, so
+     the hub can only wake a request for a write THIS instance served. A hold that
+     only listens to the hub would learn about another device's write by timing
+     out — which is what made two phones look out of sync. Both signals must be
+     armed, and the shared poller is the one that finds the remote write. */
+  const blob = memoryAdapter(state(1));
+  const hub = createLiveHub();
+  const adapter = withLiveNotify(blob.adapter, hub);
+  const live = createLiveHandler(adapter, hub.wait, { defaultWaitMs: 3000, maxWaitMs: 3000, pollIntervalMs: 25 });
+
+  const parked = live(liveRequest("?version=1&wait=3"));
+  await new Promise((r) => setTimeout(r, 50));
+  /* straight to the blob: no notify(), exactly like a write served elsewhere */
+  await blob.adapter.set(state(2, [day("2026-09-23", "1500", "2026-09-23T09:00:00.000Z")]));
+
+  const res = await parked;
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.changed, true);
+  assert.equal(body.version, 2);
+  assert.ok(body.waitedMs < 1000, `the poller should find a remote write quickly (${body.waitedMs}ms)`);
+});
+
+test("the long-poll answers a cross-origin preflight and exposes its headers", async () => {
+  /* A shell on GitHub Pages parks its long-poll on the Netlify deployment.
+     That is a CORS request with a header the app reads (X-Live-Max-Wait-Ms),
+     so both the preflight and the exposure have to be right — without them the
+     browser hides the answer and the phone behaves like there is no channel. */
+  const { adapter } = memoryAdapter(state(1));
+  const handler = createLiveHandler(adapter, undefined, fast);
+
+  const preflight = await handler(
+    new Request("https://fsib.netlify.app/api/live?version=1", { method: "OPTIONS", headers: { origin: "https://ajfrinch-ctrl.github.io" } })
+  );
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
+  assert.equal(preflight.headers.get("allow"), "GET, HEAD, OPTIONS");
+  assert.equal(preflight.headers.get(LIVE_MAX_WAIT_HEADER), "400", "the ceiling rides along on the preflight too");
+
+  const answer = await handler(liveRequest("?version=1&wait=0.05", { origin: "https://ajfrinch-ctrl.github.io" }));
+  assert.equal(answer.status, 304);
+  assert.equal(answer.headers.get("access-control-allow-origin"), "*");
+  assert.match(answer.headers.get("access-control-expose-headers"), /x-live-max-wait-ms/);
+
+  const change = await handler(liveRequest("?wait=0", { origin: "https://ajfrinch-ctrl.github.io", "if-none-match": '"0"' }));
+  assert.equal(change.status, 200);
+  assert.equal(change.headers.get("access-control-allow-origin"), "*");
 });
 
 test("the live handler never needs a hub and works with the bare blob adapter", async () => {

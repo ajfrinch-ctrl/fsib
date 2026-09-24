@@ -215,6 +215,59 @@ export function applyWrite(current: CloudState, body: unknown, now?: string): Wr
   return { ok: true, state };
 }
 
+/* ------------------------------------------------------------------
+   CORS — the app shell and the cloud may live on different hosts
+
+   GitHub Pages can serve index.html but it cannot run server code, so an
+   install from there has to talk to this API on the Netlify deployment. That
+   makes every call cross-origin, including the POST preflight, so both
+   endpoints answer OPTIONS and mark their answers readable.
+
+   The API has never had a credential (a public GET/POST is by design — see
+   README), so the default is `*`. Set FSIB_ALLOWED_ORIGINS to a comma-separated
+   list to restrict it, e.g. "https://ajfrinch-ctrl.github.io,https://fsib.netlify.app".
+------------------------------------------------------------------ */
+
+export const ALLOWED_ORIGINS_ENV = "FSIB_ALLOWED_ORIGINS";
+
+/** Configured origins, or ["*"] — read per request so a test can set it. */
+export function allowedOrigins(): string[] {
+  const raw = typeof process !== "undefined" && process.env ? process.env[ALLOWED_ORIGINS_ENV] : "";
+  const list = String(raw || "")
+    .split(",")
+    .map((s) => s.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  return list.length ? list : ["*"];
+}
+
+/** The CORS half of every answer on /api/sync and /api/live. */
+export function corsHeaders(req: Request): Record<string, string> {
+  const origin = (req.headers.get("origin") || "").replace(/\/+$/, "");
+  const allow = allowedOrigins();
+  const any = allow.includes("*");
+  const headers: Record<string, string> = {
+    "access-control-allow-methods": "GET, HEAD, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-headers": "content-type, accept, if-none-match",
+    /* The app reads both of these off the response, so they must be exposed. */
+    "access-control-expose-headers": "etag, x-live-max-wait-ms",
+    "access-control-max-age": "600",
+    vary: "origin"
+  };
+  if (any) headers["access-control-allow-origin"] = "*";
+  else if (origin && allow.includes(origin)) headers["access-control-allow-origin"] = origin;
+  return headers;
+}
+
+/** Mark an existing answer as cross-origin-readable without rebuilding it. */
+export function withCors(req: Request, res: Response): Response {
+  const headers = new Headers(res.headers);
+  const extra = corsHeaders(req);
+  Object.keys(extra).forEach((k) => {
+    if (!headers.has(k)) headers.set(k, extra[k]);
+  });
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
 export function jsonResponse(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -230,7 +283,7 @@ export function stateEtag(version: number): string {
 
 /** The whole /api/sync contract, expressed against an injected blob adapter. */
 export function createSyncHandler(adapter: BlobAdapter) {
-  return async function handleSyncRequest(req: Request): Promise<Response> {
+  const handle = async function handleSyncRequest(req: Request): Promise<Response> {
     const method = (req.method || "GET").toUpperCase();
     try {
       if (method === "GET") {
@@ -278,7 +331,12 @@ export function createSyncHandler(adapter: BlobAdapter) {
       }
 
       if (method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: { allow: "GET, POST, PUT, DELETE, OPTIONS" } });
+        /* Preflight: the browser sends this before a cross-origin POST/GET with
+           headers we read (content-type, if-none-match). */
+        return new Response(null, {
+          status: 204,
+          headers: { ...corsHeaders(req), allow: "GET, HEAD, POST, PUT, DELETE, OPTIONS" }
+        });
       }
 
       return jsonResponse(405, {
@@ -291,5 +349,10 @@ export function createSyncHandler(adapter: BlobAdapter) {
       const message = err instanceof Error ? err.message : String(err);
       return jsonResponse(500, { ok: false, error: "internal", message: message.slice(0, 200) });
     }
+  };
+  /* Every answer — the 304 and the OPTIONS preflight included — is marked
+     cross-origin-readable, so a shell served from a static host can use it. */
+  return async function handleSyncRequest(req: Request): Promise<Response> {
+    return withCors(req, await handle(req));
   };
 }

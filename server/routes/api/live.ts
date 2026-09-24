@@ -33,8 +33,23 @@ const adapter: BlobAdapter = {
   }
 };
 
+/* A Netlify-hosted route is a synchronous Function too, so it inherits the same
+   platform ceiling: a hold that outlives the site's function timeout is killed
+   as a gateway error, which a phone can only read as a broken channel. Hold for
+   8 s by default (under the 10 s default timeout) and advertise that ceiling in
+   X-Live-Max-Wait-Ms so the app parks for exactly that long. Raise it with
+   FSIB_LIVE_MAX_WAIT_MS once the site's function timeout is higher. */
+function envMs(name: string, fallback: number, min: number, max: number): number {
+  const raw = Number(process.env[name]);
+  if (!Number.isFinite(raw) || raw <= 0) return fallback;
+  return Math.min(max, Math.max(min, Math.floor(raw)));
+}
+
 const hub = createLiveHub();
-const handler = createLiveHandler(withLiveNotify(adapter, hub), hub.wait);
+const handler = createLiveHandler(withLiveNotify(adapter, hub), hub.wait, {
+  maxWaitMs: envMs("FSIB_LIVE_MAX_WAIT_MS", 8_000, 1_000, 55_000),
+  pollIntervalMs: envMs("FSIB_LIVE_POLL_MS", 2_000, 250, 30_000)
+});
 
 export default defineEventHandler(async (event) => {
   const response = await handler(toWebRequest(event));

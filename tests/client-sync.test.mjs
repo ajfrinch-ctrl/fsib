@@ -130,7 +130,11 @@ function bootApp({
   backend = null,
   live = true,
   /* Hold automatic uploads so a test can drive syncNow() itself. Not a setting. */
-  holdUpload = false
+  holdUpload = false,
+  /* Where the app shell is served from (default: a host that has the API). */
+  url = "https://example.test/",
+  /* Extra localStorage keys to seed before the app boots. */
+  storage = null
 } = {}) {
   const own = backend || makeBackend(cloud);
   const blob = own.blob;
@@ -152,7 +156,7 @@ function bootApp({
   const dom = new JSDOM(HTML, {
     runScripts: "dangerously",
     pretendToBeVisual: true,
-    url: "https://example.test/",
+    url,
     virtualConsole: vc,
     beforeParse(window) {
       if (holdUpload) window.__fsibHoldUpload = true;
@@ -181,6 +185,7 @@ function bootApp({
         );
       }
       if (metaOverride) window.localStorage.setItem("bmr_v1_syncMeta", JSON.stringify(metaOverride));
+      for (const [key, value] of Object.entries(storage || {})) window.localStorage.setItem(key, value);
 
       /* Delays stay real, so a test can tell "uploaded by itself in real time"
          from "waiting for the Sync button". The parked long-poll and
@@ -193,7 +198,8 @@ function bootApp({
           // a deploy without /api/live: the app must notice and fall back
           return new Response(JSON.stringify({ ok: false, error: "not-found" }), { status: 404 });
         }
-        // the app calls the relative "/api/sync"; Node's Request needs an absolute URL
+        // the app calls "/api/sync" relative, or an absolute URL when the shell
+        // is served from a static host; Node's Request needs it absolute either way
         const absolute = /^https?:/.test(url) ? url : "https://example.test" + url;
         const req = new Request(absolute, init || {});
         const body = init && typeof init.body === "string" ? JSON.parse(init.body) : null;
@@ -360,14 +366,34 @@ test("the PIN stays on the device and never reaches the blob", async () => {
 });
 
 test("the dashboard renders the synced numbers", async () => {
+  /* A day that opened accounts, so the deposit column can be checked against the
+     money the new accounts brought in as well as the day's own deposit. */
+  const withAccounts = {
+    ...day("2026-09-16", "100000", "2026-09-16T09:00:00.000Z"),
+    accounts: [
+      { category: "Savings", no: "9001", amount: "25000" },
+      { category: "DPS / Other", no: "9002", amount: "5000" }
+    ]
+  };
   const { window, errors } = bootApp({
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")]
+    records: [
+      day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"),
+      day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z"),
+      withAccounts
+    ]
   });
   assert.ok(await waitUntil(() => typeof window.renderDashboard === "function"));
   window.renderDashboard();
-  const cards = [...window.document.querySelectorAll("#dashboard .metric")].map((c) => c.textContent.replace(/\s+/g, " ").trim());
-  assert.equal(cards.length, 6);
-  assert.match(cards[3], /24,05,000/, "monthly deposit should total both days");
+  /* The dashboard is the four periods the branch reads at a glance, each with
+     the accounts opened and the deposit collected in it. */
+  const periods = [...window.document.querySelectorAll("#dashboard .prow[data-period]")].map((r) => r.dataset.period);
+  assert.deepEqual(periods, ["today", "week", "month", "30d"]);
+  const cell = (key, cls) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
+  assert.equal(cell("today", "pacct"), "0", "nothing saved today");
+  assert.match(cell("today", "pdep"), /৳ 0/, "no deposit today");
+  assert.match(cell("month", "pdep"), /25,35,000/, "this month totals every day, new-account deposits included");
+  assert.match(cell("30d", "pdep"), /25,35,000/, "the last 30 days include every day");
+  assert.equal(cell("month", "pacct"), "2", "the two accounts opened this month are counted");
   assert.deepEqual(errors, []);
 });
 
@@ -443,7 +469,7 @@ test("two devices on the same blob converge on the same data", async () => {
   /* And both dashboards show the same monthly total. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => [...w.document.querySelectorAll("#dashboard .metric")][3].textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.match(monthlyOf(a.window), /13,888/);
   assert.deepEqual([...a.errors, ...b.errors], []);
@@ -572,9 +598,159 @@ test("the live channel carries one device's edit to another with nobody tapping 
   /* Both dashboards now tell the same story. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => [...w.document.querySelectorAll("#dashboard .metric")][3].textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.deepEqual([...a.errors, ...b.errors], []);
+});
+
+test("an edit is flushed before the phone goes back in a pocket", async () => {
+  /* Background tabs throttle timers, so the 1.5s upload debounce can stretch to
+     a minute once the app is hidden. Device A's entry must be in the cloud before
+     the officer puts the phone away, or device B shows nothing for minutes. */
+  const { window, blob, requests, errors } = bootApp({});
+  assert.ok(await waitUntil(() => typeof window.setAutoUploadDelay === "function"));
+  await appSettled(window);
+  window.setAutoUploadDelay(60000);
+
+  const posts = () => requests.filter((r) => !r.live && r.method === "POST").length;
+  const before = posts();
+  window.eval(`(function(){
+    const row = ${JSON.stringify(day("2026-09-21", "123000", "2026-09-21T09:00:00.000Z"))};
+    records.push(row);
+    queueRecordChange(row.date, "CREATE", row);
+    save();
+  })()`);
+  assert.equal(posts(), before, "the long debounce already uploaded");
+
+  Object.defineProperty(window.document, "hidden", { configurable: true, get: () => true });
+  window.document.dispatchEvent(new window.Event("visibilitychange"));
+
+  assert.ok(await waitUntil(() => posts() > before, 4000), "going hidden did not flush the edit");
+  assert.ok(
+    await waitUntil(() => (blob.peek().records || []).some((r) => r.date === "2026-09-21"), 4000),
+    "the edit never reached the cloud"
+  );
+  assert.deepEqual(errors, []);
+});
+
+test("a shell on GitHub Pages talks to the cloud on Netlify, not to itself", async () => {
+  /* GitHub Pages serves static files only: /api/sync there is a 404, so an
+     install from that link would save on the phone and nowhere else — the
+     "device A saved, device B never shows it" bug. The shell must point its
+     API calls at the host that actually runs them. */
+  const { window, requests, errors } = bootApp({ url: "https://ajfrinch-ctrl.github.io/fsib/" });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => requests.length > 0, 5000), "the app never called the cloud");
+
+  const targets = [...new Set(requests.map((r) => r.url.split("?")[0]))];
+  assert.deepEqual(
+    targets.sort(),
+    ["https://fsib.netlify.app/api/live", "https://fsib.netlify.app/api/sync"],
+    "a static-host install must use the Netlify API: " + JSON.stringify(targets)
+  );
+  assert.deepEqual(errors, []);
+});
+
+test("?api=<origin> moves the cloud, and the choice is remembered", async () => {
+  const { window, requests } = bootApp({ url: "https://ajfrinch-ctrl.github.io/fsib/?api=https://cloud.example" });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => requests.length > 0, 5000));
+  for (const r of requests) assert.match(r.url, /^https:\/\/cloud\.example\/api\//);
+  assert.equal(window.localStorage.getItem("bmr_v1_apiOrigin"), "https://cloud.example");
+
+  /* And it sticks for the next launch on this device. */
+  const second = bootApp({ storage: { bmr_v1_apiOrigin: "https://cloud.example" } });
+  assert.ok(await waitUntil(() => typeof second.window.liveInfo === "function"));
+  assert.equal(second.window.eval("CLOUD_ORIGIN"), "https://cloud.example");
+  assert.deepEqual(second.errors, []);
+});
+
+test("the app parks for the hold the server advertises", async () => {
+  /* A client cannot guess how long a host will hold a request. The server says so
+     in X-Live-Max-Wait-Ms, and the app must ask for no more than that — asking for
+     more is the request the platform kills, and a killed hold looks like a dead
+     channel. */
+  const blob = memoryBlob(null);
+  const hub = createLiveHub();
+  const adapter = withLiveNotify(blob.adapter, hub);
+  const { window, errors } = bootApp({
+    handler: createSyncHandler(adapter),
+    liveHandler: createLiveHandler(adapter, hub.wait, { defaultWaitMs: 5000, maxWaitMs: 5000, pollIntervalMs: 20 })
+  });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+
+  assert.ok(
+    await waitUntil(() => window.liveInfo().serverMaxWaitMs === 5000, 5000),
+    "the advertised ceiling was not read: " + JSON.stringify(window.liveInfo())
+  );
+  const info = window.liveInfo();
+  assert.ok(info.waitMs <= 5000, `asking for ${info.waitMs}ms on a server that holds 5000ms`);
+  assert.ok(info.waitMs < 20000, "the app kept asking for the default hold and ignored the server");
+  assert.notEqual(info.state, "error");
+  assert.deepEqual(errors, []);
+});
+
+test("a gateway that kills the long-poll is not treated as a broken channel", async () => {
+  /* What a Netlify Function timeout looks like from the browser: the hold dies
+     (a 504, or a closed connection) after a few hundred milliseconds. The old
+     client called that an error and backed off exponentially, so device B sat
+     for two minutes showing data from before A's entry. It must instead learn
+     the ceiling, keep the channel green, and re-park immediately. */
+  const blob = memoryBlob(null);
+  const sync = createSyncHandler(blob.adapter);
+  let cuts = 0;
+  const liveCuts = (req) => {
+    cuts++;
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(new Response("", { status: 504 })), 250);
+    });
+  };
+
+  const { window, errors } = bootApp({ handler: sync, liveHandler: liveCuts });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => window.liveInfo().holdCuts >= 1, 6000), "the cut was never noticed");
+  const info = window.liveInfo();
+  assert.notEqual(info.state, "error", "a killed hold must not look like a dead channel");
+  assert.equal(info.fails, 0, "fails drove the exponential backoff that hid A's entry");
+  assert.ok(info.waitMs < 20000, "the app kept asking for a hold the host cannot give");
+  assert.ok(await waitUntil(() => cuts >= 2, 4000), "the app did not re-park after the hold was cut");
+  assert.ok(window.liveInfo().waitMs <= 20000);
+  assert.deepEqual(errors, []);
+});
+
+test("with no live endpoint a safety net still brings the other device's day", async () => {
+  /* An older deploy (or a gateway that never lets a long-poll through) must not
+     mean "device B never updates". The safety net looks for changes on a timer
+     whenever the channel is not parked. */
+  const blob = memoryBlob(null);
+  const backend = { blob };
+  const handler = createSyncHandler(blob.adapter);
+
+  // a cloud with one day already in it
+  await handler(new Request("https://example.test/api/sync", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ settings: { branch: "Tantar Branch" }, records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], trash: [], version: 0 })
+  }));
+
+  const { window, errors } = bootApp({ handler, live: false });
+  assert.ok(await waitUntil(() => typeof window.setFallbackPollDelay === "function"));
+  assert.ok(await waitUntil(() => window.eval("pendingCount()") === 0, 5000), "the app never settled");
+  window.setFallbackPollDelay(250);
+
+  // another device saves a day; nobody can signal this device at all
+  const write = await handler(new Request("https://example.test/api/sync", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ settings: { branch: "Tantar Branch" }, records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-19", "640000", "2026-09-19T09:00:00.000Z")], trash: [], version: blob.peek().version })
+  }));
+  assert.equal(write.status, 201);
+
+  assert.ok(
+    await waitUntil(() => localRecords(window).some((r) => r.date === "2026-09-19"), 6000),
+    "the safety net never refreshed: " + JSON.stringify(localRecords(window).map((r) => r.date))
+  );
+  assert.deepEqual(errors, []);
 });
 
 test("a server without /api/live: the channel goes quiet, but edits still upload automatically", async () => {

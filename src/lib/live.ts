@@ -23,6 +23,13 @@
    deploys to (Netlify Functions, the Nitro server route, dev-server.mjs)
    with no reconnect choreography and no sticky sessions.
 
+   Every answer also carries X-Live-Max-Wait-Ms: the longest hold this
+   deployment will actually honour. A client cannot guess it, and a hold
+   that outlives the platform's own function timeout is killed as a
+   gateway error instead of answered — which a phone can only read as a
+   broken channel. (Netlify's default is 10 s per synchronous invocation,
+   hence the 8 s hold netlify/functions/live.ts asks for.)
+
    Cost is bounded twice over: the wait is capped (LIVE_MAX_WAIT_MS),
    and a held request costs one function invocation + one blob read
    per LIVE_POLL_INTERVAL_MS only while nothing has changed.
@@ -31,7 +38,7 @@
    and the "wake me when something changed" signal are both injected.
 ------------------------------------------------------------------ */
 
-import { normalizeState, type BlobAdapter, type CloudState } from "./store.ts";
+import { corsHeaders, normalizeState, withCors, type BlobAdapter, type CloudState } from "./store.ts";
 
 export type LiveRevision = { version: number; updatedAt: string | null };
 
@@ -45,6 +52,15 @@ export type LiveAdapter = BlobAdapter;
 export type LiveWait = (deadlineMs: number) => Promise<void>;
 
 export const LIVE_PATH = "/api/live";
+
+/**
+ * Advertises the longest this deployment will hold a request, in ms. A client
+ * cannot guess the ceiling — a Netlify Function kills a synchronous invocation
+ * at its platform timeout (10 s on the default plan), and a killed hold looks
+ * like a network failure to the phone, not like "the cloud is quiet". So every
+ * answer carries the real clamp and the app parks for exactly that long.
+ */
+export const LIVE_MAX_WAIT_HEADER = "x-live-max-wait-ms";
 
 /** Longest a single request may be held. Netlify kills a function at 60 s. */
 export const LIVE_MAX_WAIT_MS = 55_000;
@@ -122,11 +138,21 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
     pollIntervalMs: options?.pollIntervalMs ?? LIVE_POLL_INTERVAL_MS
   };
 
-  return async function handleLiveRequest(req: Request): Promise<Response> {
+  const handle = async function handleLiveRequest(req: Request): Promise<Response> {
     const method = (req.method || "GET").toUpperCase();
+    /* Every answer — including a 304 — carries the real hold ceiling. */
+    const answer = (status: number, payload: unknown) => jsonResponse(status, payload, opts);
     try {
+      if (method === "OPTIONS") {
+        /* Cross-origin preflight: the app shell may be served from a static host
+           (GitHub Pages) while the cloud lives on the Netlify deployment. */
+        return new Response(null, {
+          status: 204,
+          headers: { ...corsHeaders(req), ...jsonHeaders(opts, undefined), allow: "GET, HEAD, OPTIONS" }
+        });
+      }
       if (method !== "GET" && method !== "HEAD") {
-        return jsonResponse(405, {
+        return answer(405, {
           ok: false,
           error: "method-not-allowed",
           message: `${method} is not supported on ${LIVE_PATH}. It is a read-only change feed.`,
@@ -139,7 +165,7 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
          proxy/cache can revalidate on our behalf. */
       const provided = parseVersion(url.searchParams.get("version")) ?? parseVersion(etagFromHeader(req.headers.get("if-none-match")));
       if (provided === null || Number.isNaN(provided)) {
-        return jsonResponse(400, {
+        return answer(400, {
           ok: false,
           error: "version-required",
           message: `Send the cloud version you hold, e.g. ${LIVE_PATH}?version=12&wait=20.`
@@ -151,7 +177,7 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
       /* version=-1 is "I hold nothing, just tell me where the cloud is".
          Answered at once, without holding the request. */
       if (provided < 0) {
-        return jsonResponse(200, {
+        return answer(200, {
           ok: true,
           changed: false,
           baseline: true,
@@ -171,7 +197,7 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
       /* Our cursor is ahead of the cloud: the blob was cleared (DELETE) or an
          older backup was restored. Tell the device to re-baseline, not to spin. */
       if (revision.version < provided) {
-        return jsonResponse(200, {
+        return answer(200, {
           ok: true,
           changed: false,
           reset: true,
@@ -183,7 +209,7 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
       }
 
       if (revision.version !== provided) {
-        return jsonResponse(200, {
+        return answer(200, {
           ok: true,
           changed: true,
           version: revision.version,
@@ -193,25 +219,24 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
         });
       }
 
-      /* Nothing has moved yet — hold the request until it does or time runs out. */
+      /* Nothing has moved yet — hold the request until it does or time runs out.
+         Both signals are always armed: the hub resolves the instant a write in
+         THIS process lands, and the shared poller finds a write made by any other
+         instance. A Netlify Function instance has no memory of the instance that
+         served the write, so a hub-only hold (the old behaviour) could only ever
+         learn about a remote write by timing out. */
       const tracker = trackerFor(adapter, opts.pollIntervalMs);
+      const lookup = (deadlineMs: number) => tracker.next(provided, deadlineMs);
       while (Date.now() < deadline) {
         const budget = deadline - Date.now();
         if (budget <= 0) break;
-        if (wait) {
-          /* Event-driven: resolves the moment a write in this process lands. */
-          await wait(deadline);
-        } else {
-          /* Serverless: no instance can tell us, so look — but look once for
-             every request parked here, not once per request. */
-          await tracker.next(provided, deadline);
-        }
+        await (wait ? Promise.race([wait(deadline), lookup(deadline)]) : lookup(deadline));
         revision = await currentRevision(adapter);
         /* Backwards first: a cloud that was cleared (DELETE) or rolled back to an
            older backup is a reset, not a change to pull. Checking `!==` first
            would swallow it, since 0 !== 4 is also true. */
         if (revision.version < provided) {
-          return jsonResponse(200, {
+          return answer(200, {
             ok: true,
             changed: false,
             reset: true,
@@ -222,7 +247,7 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
           });
         }
         if (revision.version !== provided) {
-          return jsonResponse(200, {
+          return answer(200, {
             ok: true,
             changed: true,
             version: revision.version,
@@ -235,11 +260,15 @@ export function createLiveHandler(adapter: LiveAdapter, wait?: LiveWait, options
 
       /* Held for the full `wait` and the version never moved. 304 with no body:
          the cheapest possible "still nothing" a device can receive. */
-      return new Response(null, { status: 304, headers: jsonHeaders(liveEtag(revision.version)) });
+      return new Response(null, { status: 304, headers: jsonHeaders(opts, liveEtag(revision.version)) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return jsonResponse(500, { ok: false, error: "internal", message: message.slice(0, 200) });
+      return answer(500, { ok: false, error: "internal", message: message.slice(0, 200) });
     }
+  };
+  /* A shell on another host must be able to read a 200, a 304 and a 400 alike. */
+  return async function handleLiveRequest(req: Request): Promise<Response> {
+    return withCors(req, await handle(req));
   };
 }
 
@@ -251,16 +280,22 @@ const LIVE_HEADERS: Record<string, string> = {
   "x-accel-buffering": "no"
 };
 
-function jsonHeaders(etag?: string): HeadersInit {
-  const headers: Record<string, string> = { ...LIVE_HEADERS };
+function jsonHeaders(opts: { maxWaitMs: number }, etag?: string): HeadersInit {
+  const headers: Record<string, string> = {
+    ...LIVE_HEADERS,
+    [LIVE_MAX_WAIT_HEADER]: String(Math.max(0, Math.round(opts.maxWaitMs)))
+  };
   if (etag !== undefined) headers.etag = `"${etag}"`;
   return headers;
 }
 
-function jsonResponse(status: number, body: unknown): Response {
+function jsonResponse(status: number, body: unknown, opts: { maxWaitMs: number }): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", ...LIVE_HEADERS }
+    headers: {
+      ...jsonHeaders(opts),
+      "content-type": "application/json; charset=utf-8"
+    }
   });
 }
 
