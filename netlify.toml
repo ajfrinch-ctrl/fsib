@@ -17,6 +17,15 @@
   [headers.values]
     Cache-Control = "no-store"
 
+# /api/live is a long-poll: a cached or buffered answer would defeat the point.
+# (The Function also sets these on the Response itself, because netlify.toml
+# headers only apply to static CDN responses.)
+[[headers]]
+  for = "/api/live"
+  [headers.values]
+    Cache-Control = "no-store, no-transform"
+    X-Accel-Buffering = "no"
+
 [[headers]]
   for = "/service-worker.js"
   [headers.values]

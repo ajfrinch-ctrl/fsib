@@ -8,10 +8,17 @@
    build would import.
 
    Contract (server: server/routes/api/sync.ts + src/lib/store.ts):
-     GET    /api/sync  -> { settings, records, trash, version, updatedAt }
+     GET    /api/sync  -> { settings, records, trash, version, updatedAt }  (ETag = version)
      POST   /api/sync  -> same shape, body { settings, records, trash, version, force }
      PUT    /api/sync  -> same as POST
      DELETE /api/sync  -> { ok: true, cleared: true }
+
+   Real-time contract (server: netlify/functions/live.ts + src/lib/live.ts):
+     GET    /api/live?version=N&wait=S
+            200 { changed: true, version }   another device saved -> pull /api/sync
+            304 (empty)                      nothing moved while parked
+            200 { baseline: true, version }  answered at once for version=-1
+            200 { reset: true, version }     the cloud went backwards
 ------------------------------------------------------------------ */
 
 import type { CloudState, SyncRecord } from "./store.ts";
@@ -169,4 +176,88 @@ export function mergeStates(
   delete settings.pin;
 
   return { settings, records: records.rows, trash: trash.rows, conflicts: records.conflicts };
+}
+
+/* ------------------------------------------------------------------
+   Real-time channel — browser side of GET /api/live
+
+   Mirrors the inline copy in index.html (search there for
+   "real-time channel: /api/live long-poll"); keep the two in step.
+
+   One request is parked on the server carrying the cloud version this
+   device holds. It answers the moment another device saves, so the
+   caller learns "the cloud moved" in seconds instead of at the next
+   scheduled sync. It never carries the document: pull /api/sync after
+   a `changed` answer.
+------------------------------------------------------------------ */
+
+export const DEFAULT_LIVE_PATH = "/api/live";
+
+/** Seconds. The server clamps it to its own platform limit. */
+export const DEFAULT_LIVE_WAIT_SECONDS = 20;
+
+export type LiveAnswer =
+  /** Another device saved: pull /api/sync now. */
+  | { kind: "changed"; version: number; updatedAt: string | null; waitedMs: number }
+  /** Nothing moved while the request was parked. Re-park immediately. */
+  | { kind: "quiet"; version: number }
+  /** "Here is where the cloud is" — answered at once for version=-1. */
+  | { kind: "baseline"; version: number; updatedAt: string | null }
+  /** The cloud went backwards (cleared, or an older backup restored). */
+  | { kind: "reset"; version: number; updatedAt: string | null };
+
+/**
+ * Park one long-poll on /api/live.
+ *
+ * Resolves with the answer, or throws on a network/HTTP failure so the caller
+ * can back off. Pass an AbortSignal to drop the request when the tab hides,
+ * the device goes offline, or a sync starts — an aborted call rejects with an
+ * AbortError, which is not a failure and must not count towards backoff.
+ */
+export async function watchCloud(
+  version: number,
+  options: { waitSeconds?: number; api?: string; signal?: AbortSignal } = {}
+): Promise<LiveAnswer> {
+  const api = options.api || DEFAULT_LIVE_PATH;
+  const wait = Math.max(0, Math.floor(options.waitSeconds ?? DEFAULT_LIVE_WAIT_SECONDS));
+  const url = `${api}?version=${Math.floor(version)}&wait=${wait}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { accept: "application/json" },
+    cache: "no-store",
+    signal: options.signal
+  });
+
+  if (res.status === 304) {
+    /* The ETag is the cloud version, so even a quiet answer can teach a device
+       that has never synced where to start from. */
+    const etag = res.headers.get("etag");
+    const fromEtag = etag ? Number(etag.replace(/"/g, "")) : NaN;
+    return { kind: "quiet", version: Number.isFinite(fromEtag) ? fromEtag : Math.max(0, Math.floor(version)) };
+  }
+  if (!res.ok) throw new CloudApiError(`GET ${api} ${res.status}`, res.status);
+
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  const cloudVersion = Number(data.version);
+  const safeVersion = Number.isFinite(cloudVersion) && cloudVersion >= 0 ? Math.floor(cloudVersion) : Math.max(0, Math.floor(version));
+  const updatedAt = typeof data.updatedAt === "string" ? data.updatedAt : null;
+
+  if (data.baseline === true) return { kind: "baseline", version: safeVersion, updatedAt };
+  /* A reset is checked before a change: version 0 after a DELETE is both
+     "different" and "behind us", and only the first reading is useful. */
+  if (data.reset === true) return { kind: "reset", version: safeVersion, updatedAt };
+  if (data.changed === true) {
+    return { kind: "changed", version: safeVersion, updatedAt, waitedMs: Number(data.waitedMs) || 0 };
+  }
+  return { kind: "quiet", version: safeVersion };
+}
+
+/** Is this a server that has no real-time channel? Then stop asking it. */
+export function isLiveUnavailable(err: unknown): boolean {
+  return err instanceof CloudApiError && (err.status === 404 || err.status === 405 || err.status === 501);
+}
+
+/** Did we drop this request ourselves? Not a failure — no backoff, no error UI. */
+export function isAbort(err: unknown): boolean {
+  return !!err && (err as { name?: string }).name === "AbortError";
 }

@@ -17,5 +17,5 @@ test("no JSONBin credential or endpoint is left in the shipped app shell", () =>
   assert.doesNotMatch(shell, /api\.jsonbin\.io/);
   assert.doesNotMatch(shell, /X-Master-Key|X-Access-Key/);
   assert.doesNotMatch(shell, /\$2a\$10\$/, "a bcrypt-style key must not ship in the page");
-  assert.match(SW, /fsib-branch-marketing-v5/);
+  assert.match(SW, /fsib-branch-marketing-v6/);
 });

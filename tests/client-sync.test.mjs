@@ -1,13 +1,29 @@
 /* Integration test: boots the real index.html in jsdom and points its fetch at the
-   real /api/sync handler from src/lib/store.ts. No HTTP, no re-implemented logic —
-   the app's own syncNow() talks to the same code Netlify runs. */
-import test from "node:test";
+   real /api/sync handler from src/lib/store.ts and the real /api/live long-poll
+   handler from src/lib/live.ts. No HTTP, no re-implemented logic — the app's own
+   syncNow() and its real-time channel talk to the same code Netlify runs. */
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { createSyncHandler } from "../src/lib/store.ts";
+import { createLiveHandler, createLiveHub, withLiveNotify } from "../src/lib/live.ts";
 
 const HTML = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+
+/* Every booted app parks a real-time long-poll and arms backoff timers. Closing
+   the jsdom windows at the end of the file drops them, so `node --test` exits
+   instead of waiting on an app that is (correctly) still watching the cloud. */
+const bootedWindows = [];
+after(() => {
+  for (const window of bootedWindows) {
+    try {
+      window.close();
+    } catch {
+      /* already gone */
+    }
+  }
+});
 
 const day = (date, cash, updated) => ({
   date,
@@ -85,10 +101,40 @@ function fakeIndexedDB(window) {
   };
 }
 
-function bootApp({ records = [], cloud = null, onFirstPost = null, handler: sharedHandler = null } = {}) {
+/**
+ * A whole fake backend on one in-memory blob: /api/sync for the document and
+ * /api/live for the real-time channel, wired through one hub so a write on
+ * either path wakes every parked long-poll exactly like dev-server.mjs does.
+ */
+function makeBackend(cloud = null) {
   const blob = memoryBlob(cloud);
-  // pass a shared handler to put two "devices" on the same blob
-  const handler = sharedHandler || createSyncHandler(blob.adapter);
+  const hub = createLiveHub();
+  const adapter = withLiveNotify(blob.adapter, hub);
+  return {
+    blob,
+    hub,
+    handler: createSyncHandler(adapter),
+    // short hold so a test never parks a request for the production 20 s
+    liveHandler: createLiveHandler(adapter, hub.wait, { defaultWaitMs: 150, maxWaitMs: 400, pollIntervalMs: 20 })
+  };
+}
+
+function bootApp({
+  records = [],
+  cloud = null,
+  settings: settingsOverride = null,
+  meta: metaOverride = null,
+  onFirstPost = null,
+  handler: sharedHandler = null,
+  liveHandler: sharedLiveHandler = null,
+  backend = null,
+  live = true
+} = {}) {
+  const own = backend || makeBackend(cloud);
+  const blob = own.blob;
+  // pass shared handlers to put two "devices" on the same blob
+  const handler = sharedHandler || own.handler;
+  const liveHandler = sharedLiveHandler || (live && !sharedHandler ? own.liveHandler : null);
   const errors = [];
   const requests = [];
   let raced = false;
@@ -125,27 +171,59 @@ function bootApp({ records = [], cloud = null, onFirstPost = null, handler: shar
       window.prompt = () => null;
 
       if (records.length) window.localStorage.setItem("bmr_v1_records", JSON.stringify(records));
+      if (settingsOverride) {
+        window.localStorage.setItem(
+          "bmr_v1_settings",
+          JSON.stringify({ branch: "Tantar Branch", zone: "Cumilla", team: "Team-8", totalBranch: 21, target: 0, ...settingsOverride })
+        );
+      }
+      if (metaOverride) window.localStorage.setItem("bmr_v1_syncMeta", JSON.stringify(metaOverride));
 
+      /* Delays stay real, so a test can tell "uploaded by itself in real time"
+         from "uploaded by the legacy 45 s debounce". The parked long-poll and
+         every backoff timer die with the window in after(). */
       window.fetch = async (input, init) => {
         const url = typeof input === "string" ? input : (input && input.url) || "";
-        if (url.indexOf("/api/sync") === -1) throw new Error("unexpected network call: " + url);
+        const isLive = url.indexOf("/api/live") !== -1;
+        if (!isLive && url.indexOf("/api/sync") === -1) throw new Error("unexpected network call: " + url);
+        if (isLive && !liveHandler) {
+          // a deploy without /api/live: the app must notice and fall back
+          return new Response(JSON.stringify({ ok: false, error: "not-found" }), { status: 404 });
+        }
         // the app calls the relative "/api/sync"; Node's Request needs an absolute URL
         const absolute = /^https?:/.test(url) ? url : "https://example.test" + url;
         const req = new Request(absolute, init || {});
         const body = init && typeof init.body === "string" ? JSON.parse(init.body) : null;
-        requests.push({ method: req.method, body });
+        requests.push({ method: req.method, body, live: isLive, url });
 
         // Simulate a competing device winning the race before this write lands.
         if (req.method === "POST" && onFirstPost && !raced) {
           raced = true;
           await onFirstPost(handler);
         }
-        return await handler(req);
+        return await (isLive ? liveHandler(req) : handler(req));
       };
     }
   });
 
-  return { window: dom.window, blob, requests, errors };
+  bootedWindows.push(dom.window);
+  return {
+    window: dom.window,
+    dom,
+    blob,
+    requests,
+    errors,
+    hub: own.hub,
+    backend: own,
+    liveRequests: () => requests.filter((r) => r.live),
+    close: () => {
+      try {
+        dom.window.close();
+      } catch {
+        /* already gone */
+      }
+    }
+  };
 }
 
 async function waitUntil(fn, timeoutMs = 5000) {
@@ -159,11 +237,33 @@ async function waitUntil(fn, timeoutMs = 5000) {
 
 const localRecords = (window) => JSON.parse(window.localStorage.getItem("bmr_v1_records") || "[]");
 
+/**
+ * Wait until the app has finished its own start-up business: the live channel
+ * has baselined (and pulled, if this device had never seen the cloud) and no
+ * sync is in flight. Tests that then drive syncNow() by hand need this, because
+ * a real-time app is already talking to the cloud before anyone taps anything.
+ */
+async function appSettled(window, timeoutMs = 8000) {
+  if (typeof window.liveInfo !== "function") return false;
+  const quiet = () => {
+    const info = window.liveInfo();
+    const state = info.state;
+    const settled = state === "watching" || state === "disabled";
+    return settled && !window.eval("_syncInProgress");
+  };
+  const ok = await waitUntil(quiet, timeoutMs);
+  // let any trailing state write land before the test starts asserting
+  await new Promise((r) => setTimeout(r, 120));
+  return ok;
+}
+
 test("first sync uploads the local records and records the cloud version", async () => {
   const { window, blob, errors } = bootApp({
-    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")]
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"), day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z")],
+    settings: { realtime: false }
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2), "records were not queued for upload");
+  await appSettled(window);
 
   const result = await window.syncNow("manual");
   assert.equal(result.error, undefined, JSON.stringify(result.error && result.error.message));
@@ -221,9 +321,11 @@ test("a lost race (409) re-merges and retries without losing either device's day
   const { window, blob, requests, errors } = bootApp({
     records: [day("2026-09-10", "1000", "2026-09-10T09:00:00.000Z"), day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")],
     cloud,
-    onFirstPost: otherDeviceWrite
+    onFirstPost: otherDeviceWrite,
+    settings: { realtime: false }
   });
   assert.ok(await waitUntil(() => typeof window.pendingCount === "function" && window.pendingCount() >= 2));
+  await appSettled(window);
 
   const result = await window.syncNow("manual");
   assert.equal(result.error, undefined, JSON.stringify(result.error && result.error.message));
@@ -240,6 +342,7 @@ test("the PIN stays on the device and never reaches the blob", async () => {
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")]
   });
   assert.ok(await waitUntil(() => typeof window.setPinValue === "function"));
+  await appSettled(window);
   window.setPinValue("4321");
   window.queueSettingsChange();
   await waitUntil(() => window.pendingCount() >= 2);
@@ -287,6 +390,7 @@ test("two devices on the same blob converge on the same data", async () => {
   /* Device A: has 1 September, syncs first. */
   const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler });
   assert.ok(await waitUntil(() => typeof a.window.pendingCount === "function" && a.window.pendingCount() >= 1));
+  await appSettled(a.window);
   const resA = await a.window.syncNow("manual");
   assert.equal(resA.error, undefined);
   assert.equal(blob.peek().version, 1);
@@ -295,6 +399,7 @@ test("two devices on the same blob converge on the same data", async () => {
   /* Device B: fresh phone, its own 20 September, never seen A's data. */
   const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler });
   assert.ok(await waitUntil(() => typeof b.window.pendingCount === "function" && b.window.pendingCount() >= 1));
+  await appSettled(b.window);
   const resB = await b.window.syncNow("manual");
   assert.equal(resB.error, undefined);
 
@@ -318,7 +423,7 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual([...a.errors, ...b.errors], []);
 });
 
-test("auto-refresh rules: pull on first open, then only when there is something to send", async () => {
+test("real-time off: the old scheduled rules still hold (pull on first open, then only when there is work)", async () => {
   const blob = memoryBlob({
     settings: {},
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
@@ -326,7 +431,8 @@ test("auto-refresh rules: pull on first open, then only when there is something 
     version: 1,
     updatedAt: "2026-09-01T09:00:00.000Z"
   });
-  const { window } = bootApp({ handler: createSyncHandler(blob.adapter) });
+  // realtime:false = a device that switched the live channel off in Settings
+  const { window, requests } = bootApp({ handler: createSyncHandler(blob.adapter), settings: { realtime: false } });
   assert.ok(await waitUntil(() => typeof window.dailyAutoSyncDue === "function"));
   await new Promise((r) => setTimeout(r, 300));
 
@@ -334,6 +440,7 @@ test("auto-refresh rules: pull on first open, then only when there is something 
   // so it pulls on first open without the user doing anything.
   assert.equal(window.daysSinceCloudContact() > 3, true, "no cloud contact yet");
   assert.equal(window.dailyAutoSyncDue(), true, "first open should auto-pull");
+  assert.equal(window.liveInfo().enabled, false, "the channel is switched off on this device");
 
   const res = await window.syncNow("refresh");
   assert.equal(res.error, undefined);
@@ -347,4 +454,207 @@ test("auto-refresh rules: pull on first open, then only when there is something 
   assert.ok(await waitUntil(() => window.pendingCount() >= 1));
   assert.equal(window.dailyAutoTarget(), "daily-upload");
   assert.equal(window.dailyAutoSyncDue(), true);
+  assert.equal(requests.filter((r) => r.live).length, 0, "no /api/live traffic while real-time is off");
+});
+
+test("real-time on: the once-a-day gate stands down while the live channel has budget", async () => {
+  const backend = makeBackend({
+    settings: {},
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],
+    trash: [],
+    version: 1,
+    updatedAt: "2026-09-01T09:00:00.000Z"
+  });
+  const { window } = bootApp({ backend });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  await new Promise((r) => setTimeout(r, 300));
+
+  assert.equal(window.liveInfo().enabled, true);
+  assert.equal(window.realtimeUploadAllowed(), true, "a fresh device has its whole budget");
+  // The scheduled sync must not race the live channel for the same edit.
+  assert.equal(window.dailyAutoSyncDue(), false, "real-time owns uploads while it has budget");
+
+  window.queueSettingsChange();
+  assert.ok(await waitUntil(() => window.pendingCount() >= 1));
+  assert.equal(window.dailyAutoSyncDue(), false, "still real-time's job, not the daily gate's");
+  assert.match(window.autoSyncStatusText(), /real-time/, "the settings copy says real-time");
+});
+
+test("the live channel carries one device's edit to another with nobody tapping Sync", async () => {
+  const backend = makeBackend(null);
+
+  /* Device A: the branch phone that types the report.
+     The app is real-time, so it would upload this day by itself within a second
+     and a half — which is the behaviour under test further down, not here. Park
+     that reflex while the test sets its starting position by hand. */
+  const a = bootApp({
+    backend,
+    records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")]
+  });
+  assert.ok(await waitUntil(() => typeof a.window.syncNow === "function"));
+  a.window.setAutoUploadDelay(60000);
+  assert.ok(await waitUntil(() => a.window.pendingCount() >= 1, 5000), "A's record was not queued for upload");
+  await appSettled(a.window);
+  const first = await a.window.syncNow("manual");
+  assert.equal(first.error, undefined, JSON.stringify(first.error && first.error.message));
+  assert.ok(backend.blob.peek(), "nothing was written to the cloud");
+  assert.equal(backend.blob.peek().version, 1);
+
+  /* Device B: the manager's phone, opened afterwards, never asked to sync. */
+  const b = bootApp({ backend });
+  assert.ok(await waitUntil(() => typeof b.window.liveInfo === "function"));
+  assert.ok(
+    await waitUntil(() => b.window.liveInfo().state === "watching", 4000),
+    "B never parked a long-poll: " + JSON.stringify(b.window.liveInfo())
+  );
+  // B pulled A's day on the way in, through the live channel's own sync.
+  assert.ok(
+    await waitUntil(() => localRecords(b.window).some((r) => r.date === "2026-09-01"), 6000),
+    "B did not receive the existing cloud day"
+  );
+
+  /* A edits. No Sync button is touched on either phone.
+     `records` is a script-level binding, so go through the window's own scope. */
+  a.window.setAutoUploadDelay(120); // now let the reflex back in
+  const stamp = new Date().toISOString();
+  a.window.eval(`(function(){
+    const row = ${JSON.stringify(day("2026-09-21", "777000", stamp))};
+    records.push(row);
+    queueRecordChange(row.date, "CREATE", row);
+    save();
+  })()`);
+
+  // A uploads on its own debounce, B is woken by the hub and pulls.
+  assert.ok(
+    await waitUntil(() => (backend.blob.peek().records || []).some((r) => r.date === "2026-09-21"), 15000),
+    "A's edit never reached the cloud on its own"
+  );
+  assert.ok(
+    await waitUntil(() => localRecords(b.window).some((r) => r.date === "2026-09-21"), 15000),
+    "B did not receive A's edit in real time: " + JSON.stringify(localRecords(b.window).map((r) => r.date))
+  );
+  assert.ok(b.window.liveInfo().changesApplied >= 1, "the live pull was not counted");
+  assert.equal(b.window.getCloudVersion(), backend.blob.peek().version, "B's cursor follows the cloud");
+
+  /* Both dashboards now tell the same story. */
+  a.window.renderDashboard();
+  b.window.renderDashboard();
+  const monthlyOf = (w) => [...w.document.querySelectorAll("#dashboard .metric")][3].textContent.replace(/\s+/g, " ").trim();
+  assert.equal(monthlyOf(a.window), monthlyOf(b.window));
+  assert.deepEqual([...a.errors, ...b.errors], []);
+});
+
+test("the real-time budget is the safety net: uploads stop, the live channel does not", async () => {
+  const backend = makeBackend(null);
+  const { window, requests } = bootApp({ backend, settings: { branch: "Tantar Branch" } });
+  assert.ok(await waitUntil(() => typeof window.realtimeLeftToday === "function"));
+  await appSettled(window);
+  const posts = () => requests.filter((r) => r.method === "POST").length;
+
+  // While there is budget, an edit uploads on its own and does NOT spend the
+  // once-a-day slot — that slot is the fallback's, not real-time's.
+  assert.equal(window.realtimeUploadAllowed(), true);
+  const baselinePosts = posts();
+  const baselineUsed = window.realtimeUsedToday();
+  window.queueSettingsChange();
+  assert.ok(await waitUntil(() => posts() > baselinePosts, 8000), "the edit never uploaded by itself");
+  assert.equal(window.realtimeUsedToday(), baselineUsed + 1, "the write was charged to the real-time budget");
+  assert.equal(window.syncDayUsedToday(), false, "a real-time upload must not spend the daily slot");
+
+  // Now spend the rest of the budget: a runaway queue must not write forever.
+  window.setRealtimeMaxPerDay(window.realtimeUsedToday());
+  assert.equal(window.realtimeLeftToday(), 0, "budget spent");
+  assert.equal(window.realtimeUploadAllowed(), false);
+  await appSettled(window);
+  const capped = posts();
+  const skipped = await window.syncNow("realtime-upload");
+  assert.equal(skipped.skipped, "realtime-budget");
+  assert.equal(posts(), capped, "a real-time upload happened while the budget was spent");
+
+  // The scheduled once-a-day sync takes over: exactly one more automatic write.
+  window.setLegacySyncDelay(150);
+  const before = posts();
+  window.queueSettingsChange();
+  assert.equal(window.dailyAutoSyncDue(), true, "the fallback should be armed for the queued edit");
+  assert.ok(await waitUntil(() => posts() > before, 8000), "the scheduled fallback never ran");
+  assert.equal(window.syncDayUsedToday(), true, "the fallback spends the day's single scheduled sync");
+  assert.equal(window.dailyAutoSyncDue(), false, "and then stays quiet until tomorrow");
+
+  // Nothing automatic happens any more today, however much is edited.
+  // (The edit is queued first and only then given time, so the assertion is
+  // about the cap rather than about winning a race with the fallback timer.)
+  window.setLegacySyncDelay(60000);
+  window.queueSettingsChange();
+  assert.ok(window.pendingCount() >= 1, "the capped edit stays queued on the device, not lost");
+  const settled = posts();
+  await new Promise((r) => setTimeout(r, 900));
+  assert.equal(posts(), settled, "more than the one scheduled sync got through the cap");
+
+  // A manual sync is the user's own decision: never budgeted, never blocked.
+  const manual = await window.syncNow("manual");
+  assert.equal(manual.error, undefined, JSON.stringify(manual.error && manual.error.message));
+  assert.equal(window.pendingCount(), 0, "manual sync sent it");
+
+  // Downloads keep flowing: the channel is a parked request, not a write.
+  assert.ok(requests.filter((r) => r.live).length > 0, "the live channel stopped with the budget");
+  assert.equal(window.liveInfo().supported, true);
+});
+
+test("a server without /api/live degrades to the scheduled sync instead of retrying forever", async () => {
+  const blob = memoryBlob(null);
+  // shared /api/sync handler and no live handler == an older deploy
+  const { window, requests, errors } = bootApp({ handler: createSyncHandler(blob.adapter) });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(
+    await waitUntil(() => window.liveInfo().supported === false, 4000),
+    "the app never noticed the missing endpoint: " + JSON.stringify(window.liveInfo())
+  );
+  const liveCalls = requests.filter((r) => r.live).length;
+  await new Promise((r) => setTimeout(r, 900));
+  assert.equal(requests.filter((r) => r.live).length, liveCalls, "it kept hammering a 404 endpoint");
+
+  // The badge must not pretend to be connecting.
+  assert.equal(window.liveInfo().state, "disabled");
+  assert.match(window.liveStatusText(), /unavailable/i);
+  assert.equal(window.realtimeUploadAllowed(), false, "no channel means no real-time uploads");
+
+  // The scheduled sync takes over the moment the app learns there is no channel:
+  // a fresh device's first-open pull has usually already spent today's slot, so
+  // release it here and check that a queued edit goes up on the legacy path.
+  assert.equal(window.dailyAutoTarget() !== "" || window.syncDayUsedToday(), true, "no fallback armed");
+  window.releaseSyncDay();
+  window.setLegacySyncDelay(150);
+  const before = requests.filter((r) => !r.live && r.method === "POST").length;
+  window.queueSettingsChange();
+  assert.ok(
+    await waitUntil(() => requests.filter((r) => !r.live && r.method === "POST").length > before, 8000),
+    "the scheduled sync never took over"
+  );
+  assert.equal(window.syncDayUsedToday(), true, "the fallback spends the day's single scheduled sync");
+
+  // The app still works end to end.
+  const res = await window.syncNow("manual");
+  assert.equal(res.error, undefined);
+  assert.deepEqual(errors, []);
+});
+
+test("switching real-time off drops the parked request and re-arms the scheduled sync", async () => {
+  const backend = makeBackend(null);
+  const { window } = bootApp({ backend });
+  assert.ok(await waitUntil(() => typeof window.liveInfo === "function"));
+  assert.ok(await waitUntil(() => window.liveInfo().state === "watching", 4000));
+
+  // What the Settings toggle does.
+  window.setRealtimeEnabled(false);
+  assert.equal(window.liveInfo().enabled, false);
+  assert.equal(window.liveInfo().state, "disabled");
+  assert.equal(JSON.parse(window.localStorage.getItem("bmr_v1_settings")).realtime, false, "the choice is per device");
+
+  // Back on again, without a reload.
+  window.setRealtimeEnabled(true);
+  assert.equal(window.liveInfo().enabled, true);
+  assert.ok(
+    await waitUntil(() => window.liveInfo().state === "watching", 4000),
+    "the channel did not reopen: " + JSON.stringify(window.liveInfo())
+  );
 });

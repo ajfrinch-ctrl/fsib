@@ -214,11 +214,17 @@ export function unwrapState(payload: unknown): CloudState {
   return normalizeState(payload);
 }
 
-export function jsonResponse(status: number, body: unknown): Response {
+export function jsonResponse(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers }
   });
+}
+
+/** `"12"` — the cloud version as an HTTP validator, so a plain GET on /api/sync
+    can be revalidated cheaply and /api/live has a token to compare. */
+export function stateEtag(version: number): string {
+  return `"${Number(version) || 0}"`;
 }
 
 /** The whole /api/sync contract, expressed against an injected blob adapter. */
@@ -228,13 +234,27 @@ export function createSyncHandler(adapter: BlobAdapter) {
     try {
       if (method === "GET") {
         const state = normalizeState(await adapter.get());
+        const etag = stateEtag(state.version);
+        /* Conditional GET: a device that already holds this exact version gets a
+           304 with no body, which is all the real-time channel needs to know. */
+        const inm = req.headers.get("if-none-match");
+        if (inm && inm.split(",").some((tag) => tag.trim().replace(/^W\//i, "") === etag)) {
+          return new Response(null, {
+            status: 304,
+            headers: { etag, "cache-control": "no-store" }
+          });
+        }
         /* The deployed /api/sync wraps the document in { ok, empty, state }; keep
            that envelope so this Function is a drop-in replacement for it. */
-        return jsonResponse(200, {
-          ok: true,
-          empty: state.version === 0 && state.records.length === 0 && state.trash.length === 0,
-          state
-        });
+        return jsonResponse(
+          200,
+          {
+            ok: true,
+            empty: state.version === 0 && state.records.length === 0 && state.trash.length === 0,
+            state
+          },
+          { etag }
+        );
       }
 
       if (method === "POST" || method === "PUT") {
@@ -248,7 +268,7 @@ export function createSyncHandler(adapter: BlobAdapter) {
         const outcome = applyWrite(current, body);
         if (!outcome.ok) return jsonResponse(outcome.status, { ok: false, ...outcome.body });
         await adapter.set(outcome.state);
-        return jsonResponse(method === "POST" ? 201 : 200, { ok: true, state: outcome.state });
+        return jsonResponse(method === "POST" ? 201 : 200, { ok: true, state: outcome.state }, { etag: stateEtag(outcome.state.version) });
       }
 
       if (method === "DELETE") {

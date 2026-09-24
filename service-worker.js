@@ -1,4 +1,4 @@
-const CACHE_NAME = "fsib-branch-marketing-v5";
+const CACHE_NAME = "fsib-branch-marketing-v6";
 
 const APP_SHELL = [
   "./",
@@ -35,8 +35,10 @@ self.addEventListener("fetch", event => {
 
   const url = event.request.url;
 
-  /* Never cache the sync API. A cached GET would hand a device yesterday's
-     cloud state — and a stale `version` makes every following write fail. */
+  /* Never touch the API. A cached GET would hand a device yesterday's cloud
+     state — and a stale `version` makes every following write fail.
+     /api/live matters even more: a cached answer (or one served from a dying
+     cache) would silently stop the real-time channel. */
   if (url.indexOf("/api/") !== -1) return;
 
   event.respondWith(

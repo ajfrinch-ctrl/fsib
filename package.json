@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Offline-first daily branch marketing report PWA (First Security Islami Bank PLC, Tantar Branch) with Netlify Blobs cloud sync via /api/sync.",
+  "description": "Offline-first daily branch marketing report PWA (First Security Islami Bank PLC, Tantar Branch) with real-time Netlify Blobs cloud sync via /api/sync and the /api/live long-poll channel.",
   "scripts": {
     "build": "node build.mjs",
     "dev": "node dev-server.mjs",
