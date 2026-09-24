@@ -592,24 +592,40 @@ function renderReports(type='monthly',ref=today()){
 }
 function renderVisitReport(type='monthly',ref=today()){
   const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.visits||[]).map(v=>({date:r.date,...v}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${esc(periodTitle(type,ref))}</span></div></div>${repControls('visits',type,ref)}<div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map(v=>`<article class="card record vitem"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><h3>${esc(v.name||'\u2014')}</h3><div class="rec-meta"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Address</label><b>${esc(v.address||'\u2014')}</b></div><div><label>Mobile Number</label><b>${esc(v.mobile||'\u2014')}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb visit detail \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}`;
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Visiting Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${esc(periodTitle(type,ref))}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('visits',type,ref)}<div class="sectionhead"><h2>Date-wise Visit Details</h2><span class="pill">${items.length} visits</span></div>${items.map(v=>`<article class="card record vitem"><div class="recordtop"><span>${dateText(v.date)}</span><span class="pill">${esc(v.type||'Visit')}</span></div><h3>${esc(v.name||'\u2014')}</h3><div class="rec-meta"><div><label>Officer Name</label><b>${esc(v.officer||'Not selected')}</b></div><div><label>Address</label><b>${esc(v.address||'\u2014')}</b></div><div><label>Mobile Number</label><b>${esc(v.mobile||'\u2014')}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb visit detail \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">Download PDF</button></div>`;
   bindRepControls(renderVisitReport,type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>downloadVisitPDF(items,periodTitle(type,ref)));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function renderAccountReport(type='monthly',ref=today()){
   const d=buildReport(type,ref), items=d.rs.flatMap(r=>(r.accounts||[]).filter(a=>a.no).map(a=>({date:r.date,...a}))).sort((a,b)=>b.date.localeCompare(a.date));
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}`;
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2><span class="small">${esc(settings.branch)} \u00b7 ${items.length} accounts \u00b7 \u09f3 ${money(d.acDep)}</span></div><button class="outline pdf-dl" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}<div class="sectionhead"><h2>Date-wise Account Details</h2><span class="pill">\u09f3 ${money(d.acDep)}</span></div>${items.map(a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Account Number</label><b>${esc(a.no||'\u2014')}</b></div><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div></div></article>`).join('')||'<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964</div>'}<div class="actions" style="margin-top:14px"><button class="primary pdf-dl">Download PDF</button></div>`;
   bindRepControls(renderAccountReport,type,ref);
+  $$('.pdf-dl').forEach(b=>b.onclick=()=>downloadAccountPDF(items,periodTitle(type,ref),d.acDep));
   $('#marketingPage').onclick=()=>renderReports(type,ref);
   $('#visitingPage').onclick=()=>renderVisitReport(type,ref);
   $('#accountPage').onclick=()=>renderAccountReport(type,ref);
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
+/* Offline PDF export: the file bytes are assembled right here in the browser
+   and handed to the OS through a blob URL \u2014 no server, no library, no network.
+   The download works in airplane mode; the preview on screen is the exact
+   report selection being exported. */
+function savePdf(lines,filename){
+  const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
+  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  /* Appending before the click makes it a real save on picky mobile browsers. */
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},20000);
+  toast('PDF downloaded');
+}
 function downloadPDF(d){
-  // Lightweight, offline PDF builder. The preview above is the exact report selection being exported.
-  const lines=[
+  savePdf([
     'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'BRANCH MARKETING REPORT', '', d.result.label,
     'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
     'SUMMARY', 'Total Deposit: Tk '+money(d.dep)+' ('+lac(d.dep)+')', 'Total Places Visited: '+d.v,
@@ -619,9 +635,36 @@ function downloadPDF(d){
     ...(Object.entries(d.types).map(x=>x[0]+': '+x[1])||[]), '', 'OFFICER ACTIVITY',
     ...(Object.entries(d.officerCount).map(x=>x[0]+': '+x[1])||[]), '', 'DAILY RECORDS',
     ...(d.rs.length?d.rs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>dateText(r.date)+' | Deposit: Tk '+money(total(r))+' | Visits: '+visits(r)+' | Accounts: '+accountsCount(r)):['No saved records'])
-  ];
-  const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
-  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
+  ],'BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf');
+}
+function downloadVisitPDF(items,label){
+  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
+  savePdf([
+    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'VISITING REPORT', '', label,
+    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
+    'TOTAL VISITS: '+sorted.length, '', 'DATE-WISE VISIT DETAILS',
+    ...(sorted.length?sorted.flatMap(v=>[
+      dateText(v.date)+' | '+(v.type||'Visit'),
+      '   Place: '+(v.name||'-'),
+      '   Officer: '+(v.officer||'Not selected'),
+      '   Address: '+(v.address||'-'),
+      '   Mobile: '+(v.mobile||'-')
+    ]):['No visit details'])
+  ],'BranchVisitingReport_'+label.replace(/[^a-z0-9]+/gi,'_')+'.pdf');
+}
+function downloadAccountPDF(items,label,acDep){
+  const sorted=[...items].sort((a,b)=>a.date.localeCompare(b.date));
+  savePdf([
+    'FIRST SECURITY ISLAMI BANK PLC', settings.branch.toUpperCase(), 'NEW ACCOUNT REPORT', '', label,
+    'Zone: '+settings.zone+' | Team: '+settings.team+' | Total Branch: '+settings.totalBranch, '',
+    'TOTAL ACCOUNTS: '+sorted.length, 'Account Deposit: Tk '+money(acDep), '', 'DATE-WISE ACCOUNT DETAILS',
+    ...(sorted.length?sorted.flatMap(a=>[
+      dateText(a.date)+' | '+(a.category||'-'),
+      '   A/C No: '+(a.no||'-'),
+      '   Initial Deposit: Tk '+money(a.amount)
+    ]):['No account details'])
+  ],'BranchAccountReport_'+label.replace(/[^a-z0-9]+/gi,'_')+'.pdf');
+}
 function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first <b>real-time</b> sync shared by all devices. An edit saves on this device at once, uploads a moment later on its own, and shows up on every other open device within seconds \u2014 automatically, every time, with no daily limit. Manual Sync Now works at any time too.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Real-time endpoint</label><input value="${esc(LIVE_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sRealtime" ${settings.realtime!==false?'checked':''}> Real-time sync \u2014 other devices\u2019 edits arrive here in seconds (\u09b0\u09bf\u09af\u09bc\u09cd\u09af\u09be\u09b2-\u099f\u09be\u0987\u09ae \u09b8\u09bf\u0982\u0995)</label><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 upload every change automatically, right after you type</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
 const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Real-time:</b> '+esc(liveStatusText())+' \u00b7 <b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits or the network drops. Tap <b>\u2601 Sync Now</b> any time.';
 if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{

@@ -112,7 +112,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 59 tests: store, live channel, client merge, app↔API, two devices over real HTTP
+npm test           # 62 tests: store, live channel, client merge, app↔API, two devices over real HTTP, offline PDF export
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -136,7 +136,9 @@ uploads with no daily gate, and a server with no `/api/live` whose edits still
 upload by themselves. `tests/live-e2e.test.mjs` goes one
 step further: it spawns `dev-server.mjs` on a free port and runs two devices
 against it over real sockets, and reports the observed keystroke-to-other-screen
-latency.
+latency. `tests/pdf-export.test.mjs` boots the app with every network call
+failing and proves that all three report PDFs (statement, visiting, accounts)
+still save from the browser alone.
 
 ## Deploy
 
