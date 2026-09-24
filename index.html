@@ -170,6 +170,16 @@ input[type=date],input[type=month]{min-height:46px}
 .syncbtn.syncing{background:#0a479d;border-color:#ffffff88}
 .syncbtn.offline{opacity:.9}
 .syncbtn.error{background:#a6404e;border-color:#ffffff88}
+.livedot{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;background:#ffffff22;
+  border-radius:20px;padding:6px 9px;white-space:nowrap}
+.livedot i{width:7px;height:7px;border-radius:50%;background:#9fd3a8;flex:0 0 auto}
+.livedot.live i{background:#4be08a;animation:livepulse 2.4s ease-in-out infinite}
+.livedot.busy i{background:#7fb2ff}
+.livedot.off i{background:#cfd6e4}
+.livedot.warn i{background:#ffcf6b}
+.livedot.err i{background:#ff9aa6}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+@media(prefers-reduced-motion:reduce){.livedot.live i{animation:none}}
 .syncmeta{font-size:12px;line-height:1.9;overflow-wrap:anywhere}
 .syncmeta b{color:var(--blue)}
 .synclog{font-size:11px;color:var(--muted);max-height:150px;overflow:auto;-webkit-overflow-scrolling:touch;
@@ -184,6 +194,7 @@ input[type=date],input[type=month]{min-height:46px}
   .nav button span{font-size:17px}
   .head-actions{justify-content:space-between}
   .syncbtn{max-width:120px;font-size:11px;padding:0 9px}
+  .livedot{font-size:9px;padding:5px 7px}
 }
 
 /* ---------------- tablet / desktop ---------------- */
@@ -225,7 +236,7 @@ input[type=date],input[type=month]{min-height:46px}
   .modalbox{max-height:96dvh}
 }
 </style></head><body><main class="app">
-<header class="top"><div><div class="bank">FIRST SECURITY ISLAMI BANK PLC</div><div class="branch" id="headerBranch">TANTAR BRANCH</div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
+<header class="top"><div><div class="bank">FIRST SECURITY ISLAMI BANK PLC</div><div class="branch" id="headerBranch">TANTAR BRANCH</div><div class="reportname">DAILY BRANCH MARKETING REPORT</div></div><div class="head-actions"><span class="status" id="netStatus">ONLINE</span><span class="livedot off" id="liveBadge" title="Real-time cloud channel"><i></i><span id="liveBadgeText">LIVE</span></span><button id="syncBtn" class="syncbtn" title="Cloud sync">☁ Sync</button><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
 </main><nav class="nav" aria-label="Main navigation"><div class="navinner"><button class="active" data-page="dashboard" aria-current="page"><span aria-hidden="true">⌂</span><b>Dashboard</b></button><button data-page="entry"><span aria-hidden="true">✚</span><b>Data Entry</b></button><button data-page="history"><span aria-hidden="true">◷</span><b>History</b></button><button data-page="reports"><span aria-hidden="true">▥</span><b>Reports</b></button><button data-page="settings"><span aria-hidden="true">⚙</span><b>Settings</b></button></div></nav><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="syncModal"><div class="modalbox"><div class="sectionhead"><h2>☁ Cloud Sync</h2><button class="outline" id="closeSync">×</button></div><div id="syncDetails"></div><div class="actions"><button class="primary" id="syncNowBtn">Sync Now</button><button class="outline" id="syncRefreshBtn">Refresh from Cloud</button></div><div class="actions"><button class="outline" id="syncBackupBtn">Export Backup</button></div><div class="synclog" id="syncLogMini"></div></div></div><div class="modal" id="pinModal"><div class="modalbox"><h3 id="pinTitle">Enter PIN</h3><p class="small" id="pinText">Enter your 4-digit app PIN to continue.</p><input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"><div class="actions"><button class="primary" id="pinConfirm">Confirm</button></div></div></div><div class="modal" id="reportModal"><div class="modalbox modal-scroll"><div class="sectionhead"><h2>WhatsApp Share Preview</h2><button class="outline" id="closeShare">×</button></div><div class="sectiontitle">Current Daily Report</div><div class="preview" id="summaryPreview"></div><div class="actions"><button class="outline" id="copySummary">Copy Summary</button><button class="secondary" id="sendSummary">Send Summary</button></div><div class="sectiontitle" style="margin-top:18px">Detailed Daily Activity</div><div class="preview" id="detailPreview"></div><div class="actions"><button class="outline" id="copyDetail">Copy Details</button><button class="secondary" id="sendDetail">Send Details</button></div></div></div>
@@ -237,6 +248,7 @@ input[type=date],input[type=month]{min-height:46px}
    view-source reveals nothing — unlike the JSONBin access key this replaced. */
 const SYNC_CONFIG={
   API_PATH:'/api/sync',
+  LIVE_API_PATH:'/api/live',
   SCHEMA_VERSION:3,
   AUTO_SYNC_MAX_PER_DAY:1,
   AUTO_SYNC_DEBOUNCE_MS:45000,
@@ -245,9 +257,42 @@ const SYNC_CONFIG={
   MAX_STATE_BYTES:4000000,
   /* the PIN unlocks one phone; it must never travel to the shared blob */
   DEVICE_ONLY_SETTING_KEYS:['pin'],
-  DEVICE_PREFERENCE_KEYS:['theme','autoLock','lastBackup','lastSync','autoSync','settingsUpdatedAt']
+  DEVICE_PREFERENCE_KEYS:['theme','autoLock','lastBackup','lastSync','autoSync','realtime','settingsUpdatedAt']
 };
 const CLOUD_API=SYNC_CONFIG.API_PATH;
+
+/* Real-time config — the /api/live long-poll channel plus instant uploads.
+
+   DOWNLOAD: one request is parked on GET /api/live?version=<ours>&wait=<secs>.
+   It answers the moment another device saves (200 changed:true) or when the
+   wait expires with nothing to report (304, empty body). No polling loop, no
+   document shipped — the device only learns "the cloud moved", then pulls.
+
+   UPLOAD: an edit debounces LIVE_UPLOAD_DEBOUNCE_MS and goes up immediately,
+   instead of waiting for the day's single automatic sync. A per-device daily
+   budget (LIVE_SYNC_MAX_PER_DAY) is the safety net: a stuck loop or a runaway
+   queue can burn that budget and then falls back to the old once-a-day gate,
+   never to unlimited traffic. The live channel itself keeps running, so
+   downloads stay real-time even while uploads are capped. */
+const LIVE_CONFIG={
+  API_PATH:SYNC_CONFIG.LIVE_API_PATH,
+  /* how long one request may be parked; the server caps it at 55s */
+  WAIT_MS:20000,
+  /* client-side abort, a beat longer than the server's own hold */
+  TIMEOUT_MS:25000,
+  /* idle backoff: after LIVE_IDLE_BACKOFF_AFTER quiet holds, wait this long
+     before parking again — a device left open overnight must not hammer */
+  IDLE_BACKOFF_AFTER:15,
+  IDLE_BACKOFF_MS:120000,
+  /* retry backoff when the channel errors or the server does not know /api/live */
+  RETRY_BASE_MS:5000,
+  RETRY_MAX_MS:120000,
+  /* edit -> upload */
+  UPLOAD_DEBOUNCE_MS:1500,
+  /* per-device safety net on automatic syncs per day (0 = fall back to 1/day) */
+  MAX_PER_DAY:500
+};
+const LIVE_API=LIVE_CONFIG.API_PATH;
 
 const K='bmr_v1_', $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let settings=JSON.parse(localStorage.getItem(K+'settings')||'null')||{branch:'Tantar Branch',zone:'Cumilla',team:'Team-8',totalBranch:21,target:0,theme:'system',weeklyStart:0,weeklyEnd:4,manager:'Harun Or Rashid',managerDesignation:'Manager',template:'Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}',autoLock:0,lastBackup:''};
@@ -255,6 +300,10 @@ const legacyTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n
 const treasuryTemplate='Attn : Head of Treasury.\n\nDaily Report Date : {{date}}\n\n{{team}} ({{zone}} Zone)\n\nTotal Branch: {{branches}}\nReported Branch: {{branch}}\n\nTotal Places Visited: {{visits}}\n\nTotal Deposit: Tk {{deposit}}\n\nRegd.\n\n{{manager}}\n{{managerDesignation}}\n{{branch}}';
 if(settings.template===legacyTemplate) settings.template=treasuryTemplate;
 if(settings.autoSync===undefined){settings.autoSync=true;}
+/* Real-time is on by default: it is what makes several branch phones show the
+   same report without anyone tapping Sync. It can be switched off per device
+   (Settings → Cloud Sync), and the app keeps working offline either way. */
+if(settings.realtime===undefined){settings.realtime=true;}
 
 /* ---------- device-only PIN (localStorage bmr_v1_pin) ----------
    The PIN is a property of this phone, so it lives outside the synced settings
@@ -356,9 +405,19 @@ function downloadPDF(d){
   const chunks=[];for(let i=0;i<lines.length;i+=42)chunks.push(lines.slice(i,i+42));
   let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 10 Tf\n50 790 Td\n';page.forEach((line,i)=>{content+=(i?'0 -17 Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));a.download='BranchMarketingReport_'+d.result.label.replace(/[^a-z0-9]+/gi,'_')+'.pdf';a.click();toast('PDF downloaded');}
 function exportReportCSV(d){let csv='Date,Branch,Zone,Visits,Deposit,Account Count,Account Deposit,Officers\n'+d.rs.map(r=>[r.date,settings.branch,settings.zone,visits(r),total(r),accountsCount(r),accountsTotal(r),'"'+(r.officers||[]).map(o=>o.name).join('; ')+'"'].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='BranchMarketingReport_'+today()+'.csv';a.click()}
-function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first sync shared by all devices. Edits save instantly on this device and upload as one batch when you sync. <b>Auto-sync runs at most once a day</b> \u2014 it only spends that one sync when there is something to upload (or a refresh is due), so cloud requests are not wasted. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day max (day\u0993 \u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a 1\u099f\u09bf cloud sync)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
-const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits. Tap <b>\u2601 Sync Now</b> for an immediate sync any time.';
-if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{settings.autoSync=!!$('#sAutoSync')?.checked;save();toast(settings.autoSync?'Auto-sync on':'Auto-sync off')}
+function renderSettings(){let tr=trash.length;$('#settings').innerHTML=`<div class="sectionhead"><h2>Settings & Backup</h2></div><div class="card"><div class="sectiontitle">Branch information</div><div class="formwide"><div class="formgroup"><label>Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div><div class="formgroup"><label>Zone</label><input id="sZone" value="${esc(settings.zone)}"></div><div class="formgroup"><label>Team</label><input id="sTeam" value="${esc(settings.team)}"></div><div class="formgroup"><label>Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div><div class="formgroup"><label>Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div><div class="formgroup"><label>Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div><div class="formgroup"><label>Monthly Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}"></div><div class="formgroup"><label>Auto lock after minutes (0 = off)</label><input id="sLock" inputmode="numeric" value="${settings.autoLock||0}"></div></div><button type="button" class="primary" id="saveSettings">Save Settings</button></div><div class="sectionhead"><h2>Security</h2></div><div class="card"><p class="small">PIN lock is optional and protects this app on the current device.</p><div class="actions"><button class="outline" id="setPin">${getPin()?'Change PIN':'Enable PIN Lock'}</button>${getPin()?'<button class="danger" id="removePin">Disable PIN</button><button class="secondary" id="lockNow">Lock App</button>':''}</div></div><div class="sectionhead"><h2>Cloud Sync</h2></div><div class="card"><p class="small">Offline-first <b>real-time</b> sync shared by all devices. An edit saves on this device at once, uploads a moment later on its own, and shows up on every other open device within seconds. Automatic syncs are budgeted (${realtimeMaxPerDay()}\u00d7/day per device) so a stuck queue can never become unlimited traffic; once the budget is spent the app falls back to the scheduled ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day sync. Manual Sync Now is always unlimited.</p><div id="cloudSyncStatus"></div><div class="formgroup"><label>Cloud endpoint</label><input value="${esc(CLOUD_API)}" readonly></div><div class="formgroup"><label>Real-time endpoint</label><input value="${esc(LIVE_API)}" readonly></div><div class="formgroup"><label>Cloud version</label><input id="sCloudVersion" value="${getCloudVersion()||'not synced yet'}" readonly></div><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sRealtime" ${settings.realtime!==false?'checked':''}> Real-time sync \u2014 other devices\u2019 edits arrive here in seconds (\u09b0\u09bf\u09af\u09bc\u09cd\u09af\u09be\u09b2-\u099f\u09be\u0987\u09ae \u09b8\u09bf\u0982\u0995)</label><label class="small" style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="sAutoSync" ${settings.autoSync?'checked':''}> Auto-sync \u2014 upload without tapping (${realtimeMaxPerDay()}\u00d7/day real-time, fallback ${SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY||1}\u00d7/day scheduled)</label><div class="small" id="autoSyncState" style="margin:-4px 0 10px"></div><div class="actions"><button class="primary" id="saveSyncCode">Save Sync Settings</button><button class="secondary" id="pushCloud">☁ Sync Now</button><button class="outline" id="pullCloud">↻ Refresh from Cloud</button></div><div class="formgroup" style="margin-top:12px"><label>Sync history (this device)</label><div class="synclog" id="syncLogFull"></div></div><div class="formgroup" style="margin-top:12px"><label>Public share link (anyone can view)</label><input id="sPublicLink" readonly value="${esc(publicViewUrl())}" placeholder="Read-only cloud link"><button type="button" class="outline" id="copyPublicLink" style="margin-top:8px;width:100%">Copy Public Link</button></div><p class="small">The link opens the cloud report read-only. Anyone with it can see the data, so do not share it outside the branch.</p></div><div class="sectionhead"><h2>Backup & Recovery</h2></div><div class="card"><p class="small">${records.length} records · ${tr} recently deleted · Last backup: ${settings.lastBackup||'Never'}</p><div class="actions"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted (${tr})</button></div><div class="actions"><button class="danger" id="clear">Clear All Data</button></div></div><div class="sectionhead"><h2>WhatsApp Template</h2></div><div class="card"><textarea id="sTemplate" rows="9">${esc(settings.template)}</textarea><p class="small">Use: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{manager}}, {{managerDesignation}}, {{officers}}</p></div>`;$('#saveSettings').onclick=applySettings;
+const _asEl=$('#autoSyncState');if(_asEl)_asEl.innerHTML='<b>Real-time:</b> '+esc(liveStatusText())+' \u00b7 <b>Auto sync:</b> '+esc(autoSyncStatusText())+' \u00b7 '+esc(realtimeBudgetText())+' \u00b7 Edits are always saved on this device first, so nothing is lost if a sync waits or the network drops. Tap <b>\u2601 Sync Now</b> any time.';
+if($('#saveSyncCode'))$('#saveSyncCode').onclick=()=>{
+  settings.autoSync=!!$('#sAutoSync')?.checked;
+  setRealtimeEnabled(!!$('#sRealtime')?.checked);
+  toast(settings.realtime?(settings.autoSync?'Real-time sync on':'Real-time on \u00b7 auto-upload off'):'Real-time off \u00b7 scheduled sync only');
+};
+/* The toggle also acts at once — nobody expects a switch to need saving. */
+if($('#sRealtime'))$('#sRealtime').onchange=()=>{
+  const on=!!$('#sRealtime').checked;
+  setRealtimeEnabled(on);
+  toast(on?'Real-time sync on \u2014 watching the cloud':'Real-time sync off \u2014 scheduled sync only');
+};
 if($('#pushCloud'))$('#pushCloud').onclick=()=>pushCloud();
 if($('#pullCloud'))$('#pullCloud').onclick=()=>pullCloud();
 if($('#copyPublicLink'))$('#copyPublicLink').onclick=()=>{const v=$('#sPublicLink')?.value?.trim();if(!v){toast('Push to Cloud first');return}if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Public link copied')).catch(()=>toast('Copy failed'));else{toast(v)}};
@@ -370,16 +429,23 @@ function protectedAction(fn){if(!getPin())return fn();askPin(fn)}function setPin
 
 
 /* ============================================================
-   JSONBIN FREE EFFICIENT CLOUD SYNC ENGINE
-   Offline-First + IndexedDB + Batch Cloud Sync.
-   - Local edits NEVER touch the network; they are queued locally.
-   - One Sync = at most 1 GET + 1 PUT (PUT only when pendingChanges > 0).
-   - No polling. Hard cap: ONE automatic sync per DAY per device
-     (AUTO_SYNC_MAX_PER_DAY). The day's single sync is spent only when there
-     is real work: pending edits to upload, or a cloud refresh that is due
-     after AUTO_REFRESH_DAYS without any cloud contact.
-   - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and unlimited;
-     a manual sync also counts for that day so no second sync follows.
+   REAL-TIME CLOUD SYNC ENGINE  (offline-first, IndexedDB-backed)
+   - Local edits NEVER wait on the network: they land in IndexedDB and
+     localStorage first, then queue for upload.
+   - One Sync = at most 1 GET + 1 POST (POST only when pendingChanges > 0).
+   - DOWNLOAD is real-time: one request is parked on GET /api/live?version=N
+     (long-poll). It returns the moment another device saves, so this device
+     pulls within seconds. A quiet channel costs one 304 with an empty body
+     every LIVE_CONFIG.WAIT_MS, then backs off when the app sits idle.
+   - UPLOAD is real-time too: LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last
+     edit, budgeted at LIVE_CONFIG.MAX_PER_DAY automatic syncs per device per
+     day. That budget is the safety net the old once-a-day cap used to be;
+     when it runs out, uploads fall back to ONE scheduled sync per day
+     (AUTO_SYNC_MAX_PER_DAY) and the live channel keeps pulling.
+   - Manual "Sync Now" / "Refresh from Cloud" is user-initiated and unlimited,
+     and never touches the real-time budget.
+   - Offline: everything keeps working, the parked request is dropped, and the
+     queue flushes automatically the moment the device is back online.
    ============================================================ */
 
 /* ---------- deterministic serialization + hash (change detection) ---------- */
@@ -603,6 +669,50 @@ function daysSinceCloudContact(){
   return (Date.now()-t)/86400000;
 }
 function isDailyAutoReason(r){return r==='daily-upload'||r==='daily-refresh';}
+/* Real-time reasons bypass the once-a-day gate entirely — they are the product.
+   They are budgeted instead (realtimeLeftToday), so a runaway queue still cannot
+   turn into unlimited traffic. */
+function isRealtimeReason(r){return r==='live'||r==='realtime'||r==='realtime-upload';}
+
+/* ---------- real-time budget: automatic syncs per day, per device ----------
+   The safety net the once-a-day cap used to be. Real-time uploads count against
+   LIVE_CONFIG.MAX_PER_DAY; when it runs out the device falls back to the old
+   daily gate and says so, and the live channel keeps pulling other devices'
+   changes because a download is one parked request, not a write. */
+function realtimeUsedToday(){
+  const b=_meta.realtimeBudget;
+  if(!b||b.day!==dayKeyOf())return 0;
+  return Number(b.used)||0;
+}
+/** Per-device ceiling on automatic (real-time) syncs in a day. 0 disables them. */
+function realtimeMaxPerDay(){return Number((LIVE_CONFIG&&LIVE_CONFIG.MAX_PER_DAY)||0)||0;}
+function realtimeLeftToday(){
+  const max=realtimeMaxPerDay();
+  if(!(max>0))return 0;
+  return Math.max(0,max-realtimeUsedToday());
+}
+function markRealtimeSyncUsed(){
+  const day=dayKeyOf();
+  const used=realtimeUsedToday()+1;
+  _meta.realtimeBudget={day:day,used:used,max:realtimeMaxPerDay()};
+  metaPut('realtimeBudget',_meta.realtimeBudget);
+  return used;
+}
+function liveSupported(){return !_live.notSupported;}
+function realtimeUploadAllowed(){
+  if(!settings.autoSync)return false;
+  if(!liveEnabled())return false;
+  /* A deploy without /api/live has no way to learn that another device moved,
+     so instant uploads would be guesswork. Hand over to the scheduled sync. */
+  if(!liveSupported())return false;
+  return realtimeLeftToday()>0;
+}
+function realtimeBudgetText(){
+  const max=realtimeMaxPerDay();
+  if(!(max>0))return 'real-time budget disabled';
+  const used=realtimeUsedToday();
+  return used+' of '+max+' automatic syncs used today';
+}
 function dailyAutoTarget(){
   if(pendingCount()>0)return 'daily-upload';
   if(daysSinceCloudContact()>=(SYNC_CONFIG.AUTO_REFRESH_DAYS||3))return 'daily-refresh';
@@ -613,6 +723,10 @@ function dailyAutoSyncDue(){
   try{if(isPublicView())return false;}catch(e){}
   if(!navigator.onLine)return false;
   if(syncDayUsedToday())return false;
+  /* Real-time handles both uploads and refreshes while it has budget, so the
+     once-a-day sync stays as the fallback it is now — not a second timer that
+     spends the day's slot before the real-time upload lands. */
+  if(realtimeUploadAllowed())return false;
   return !!dailyAutoTarget();
 }
 function maybeDailyAutoSync(trigger){
@@ -624,11 +738,60 @@ function maybeDailyAutoSync(trigger){
   syncNow(reason).catch(()=>{});
   return true;
 }
+/** 1500 -> "1.5s", 45000 -> "45s" — the copy must match the actual debounce. */
+function fmtSeconds(ms){
+  const sec=(Number(ms)||0)/1000;
+  return (Math.round(sec*10)/10)+'s';
+}
+/** The "(max 1/day)" suffix only tells the truth when real-time is not carrying the uploads. */
+function autoSyncLimitNote(){
+  if(realtimeUploadAllowed())return ' <span class="small">(real-time \u00b7 fallback '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span>';
+  return ' <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span>';
+}
 function autoSyncStatusText(){
   if(!settings.autoSync)return 'Off';
+  if(realtimeUploadAllowed())return 'real-time \u00b7 uploads '+fmtSeconds(LIVE_CONFIG.UPLOAD_DEBOUNCE_MS)+' after an edit \u00b7 '+pendingCount()+' pending';
+  if(liveEnabled()&&realtimeLeftToday()<=0)return 'real-time budget spent today \u00b7 scheduled sync only';
   if(syncDayUsedToday())return 'used today \u00b7 next auto sync tomorrow';
   const due=!!dailyAutoTarget();
   return (due?'due now':'idle')+' \u00b7 '+pendingCount()+' pending \u00b7 limit 1/day';
+}
+/** Turn the real-time channel on or off. Persisted per device, effective at once. */
+function setRealtimeEnabled(on){
+  settings.realtime=!!on;
+  save();
+  applyRealtimeSetting();
+  return settings.realtime;
+}
+/** How long an edit waits before it uploads by itself. */
+function setAutoUploadDelay(ms){
+  LIVE_CONFIG.UPLOAD_DEBOUNCE_MS=Math.max(100,Math.floor(Number(ms)||0));
+  return LIVE_CONFIG.UPLOAD_DEBOUNCE_MS;
+}
+/** How long the scheduled (fallback) auto-sync waits. Only used when real-time is off or out of budget. */
+function setLegacySyncDelay(ms){
+  SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS=Math.max(100,Math.floor(Number(ms)||0));
+  return SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS;
+}
+/** Raise or lower this device's automatic-sync budget (0 = scheduled sync only). */
+function setRealtimeMaxPerDay(n){
+  LIVE_CONFIG.MAX_PER_DAY=Math.max(0,Math.floor(Number(n)||0));
+  scheduleAutoUpload();
+  updateSyncUI();
+  return LIVE_CONFIG.MAX_PER_DAY;
+}
+/* Switching real-time on or off takes effect at once: open (or drop) the parked
+   request, and re-arm the upload debounce for whichever mode is now active. */
+function applyRealtimeSetting(){
+  if(liveEnabled()){
+    _live.notSupported=false;_live.fails=0;
+    startLiveWatch();
+  }else{
+    liveStop();
+    setLiveState('disabled');
+  }
+  scheduleAutoUpload();
+  updateSyncUI();
 }
 
 /* ---------- dirty state + conservative auto-sync (debounced, never polling) ---------- */
@@ -639,16 +802,45 @@ function markDirtyAndSchedule(){
   else if(!_syncInProgress)_syncStatus=n>0?'pending':(_syncStatus==='error'?'error':'synced');
   metaPut('pendingChanges',n);metaPut('syncStatus',_syncStatus);
   updateSyncUI();
-  scheduleDebouncedSync();
+  scheduleAutoUpload();
 }
-function scheduleDebouncedSync(){
+/* ---------- when an edit goes to the cloud ----------
+   Real-time ON  : upload LIVE_CONFIG.UPLOAD_DEBOUNCE_MS after the last keystroke,
+                   budgeted per day. Two phones typing at once converge in seconds.
+   Real-time OFF : the old behaviour — one debounced automatic sync per day.
+   Either way the edit is already on this device (IndexedDB + localStorage)
+   before any of this runs, so a blocked upload never loses data. */
+function scheduleAutoUpload(){
   clearTimeout(_debounceT);_debounceT=null;
   if(!settings.autoSync)return;
   try{if(isPublicView())return;}catch(e){}
   if(!navigator.onLine)return;
+  /* Real-time ON and inside the budget: the edit is in the cloud a moment after
+     the last keystroke. */
+  if(liveEnabled()&&realtimeUploadAllowed()){
+    _debounceT=setTimeout(()=>{maybeRealtimeUpload('edit');},LIVE_CONFIG.UPLOAD_DEBOUNCE_MS);
+    return;
+  }
+  /* Real-time OFF, or today's budget spent: exactly the old behaviour — one
+     automatic sync per day, debounced. */
   if(syncDayUsedToday())return;
   _debounceT=setTimeout(()=>{maybeDailyAutoSync('edit');},SYNC_CONFIG.AUTO_SYNC_DEBOUNCE_MS);
 }
+function maybeRealtimeUpload(trigger){
+  if(_syncInProgress)return false;
+  if(!navigator.onLine)return false;
+  try{if(isPublicView())return false;}catch(e){}
+  if(!settings.autoSync)return false;
+  if(!liveEnabled())return false;
+  if(!realtimeUploadAllowed())return false;
+  if(pendingCount()<=0)return false;
+  /* Budget is only spent inside syncNow, and only once a request is really
+     going out — so a no-op never burns a slot. */
+  try{console.info('FSIB real-time upload ('+(trigger||'edit')+') · '+realtimeBudgetText());}catch(e){}
+  syncNow('realtime-upload').catch(()=>{});
+  return true;
+}
+function scheduleDebouncedSync(){return scheduleAutoUpload();}
 function setSyncStatus(s,err){
   _syncStatus=s;_meta.syncStatus=s;
   _lastSyncError=(s==='error')?((err&&err.message)||err||'sync failed'):'';
@@ -726,6 +918,270 @@ async function cloudClear(){
   const r=await fetch(CLOUD_API,{method:'DELETE'});
   noteRequest();
   return r.ok;
+}
+
+/* ---------- real-time channel: /api/live long-poll ----------
+   One request at a time is parked on the server holding our cloud version.
+   It returns the instant another device saves, so this device pulls within a
+   second or two instead of at the next daily sync. A 304 means "still quiet"
+   and costs nothing but the hold itself.
+
+   The channel is pure signalling: it never carries data, so a lost connection
+   can never lose an edit. If /api/live is missing (an older deploy) the loop
+   backs off and the app behaves exactly as it did before. */
+let _live={
+  state:'off',          // off | starting | watching | updating | error | disabled
+  version:-1,           // cloud version we hold; -1 = unknown, ask for a baseline
+  abort:null,
+  timer:null,
+  token:0,              // generation guard: only the newest loop may keep going
+  fails:0,
+  quietHolds:0,
+  lastChangeAt:'',
+  lastErrorAt:'',
+  lastError:'',
+  notSupported:false,
+  changesApplied:0
+};
+function liveEnabled(){
+  /* On unless the device explicitly switched it off. */
+  return settings.realtime!==false;
+}
+function liveStatusText(){
+  switch(_live.state){
+    case 'watching':return _live.version>=0?('Live · watching cloud v'+_live.version):'Live · watching';
+    case 'updating':return 'Live · pulling changes…';
+    case 'starting':return 'Live · connecting…';
+    case 'error':return 'Live · retrying ('+(_live.lastError||'error')+')';
+    case 'disabled':return _live.notSupported?'Live unavailable on this server':'Live off';
+    default:return 'Live off';
+  }
+}
+/* Snapshot of the channel, for the sync panel and for console debugging:
+     liveInfo()  -> {state, version, enabled, supported, fails, quietHolds, ...} */
+function liveInfo(){
+  return {
+    state:_live.state,
+    enabled:liveEnabled(),
+    supported:!_live.notSupported,
+    version:_live.version,
+    knownCloudVersion:Number(_meta.lastCloudVersion||0)||getCloudVersion()||0,
+    fails:_live.fails,
+    quietHolds:_live.quietHolds,
+    changesApplied:_live.changesApplied,
+    lastChangeAt:_live.lastChangeAt||'',
+    lastError:_live.lastError||'',
+    label:liveStatusText(),
+    budget:{used:realtimeUsedToday(),max:realtimeMaxPerDay(),left:realtimeLeftToday()},
+    pending:pendingCount()
+  };
+}
+function setLiveState(s,err){
+  _live.state=s;
+  if(err!==undefined)_live.lastError=String(err||'').slice(0,120);
+  if(s==='error')_live.lastErrorAt=new Date().toISOString();
+  metaPut('liveState',s);
+  updateSyncUI();
+}
+/**
+ * Drop the parked request and stop the loop. Bumping the token is what makes it
+ * stick: an in-flight liveWatchLoop that comes back later finds its generation
+ * superseded and returns without re-arming.
+ */
+function liveStop(reason){
+  _live.token++;
+  clearTimeout(_live.timer);_live.timer=null;
+  if(_live.abort){try{_live.abort.abort();}catch(e){}_live.abort=null;}
+  if(reason==='offline')setLiveState('disabled','offline');
+  else if(_live.state!=='error')setLiveState('off','');
+}
+/* Where the loop should start from: our own cursor, else whatever the last sync
+   recorded, else -1 so the server hands us a baseline without holding. */
+function liveCursor(){
+  if(_live.version>=0)return _live.version;
+  const known=Number(_meta.lastCloudVersion||0)||getCloudVersion()||0;
+  if(known>0){_live.version=known;return known;}
+  return -1;
+}
+function liveNextDelay(){
+  if(_live.fails>0)return Math.min(LIVE_CONFIG.RETRY_MAX_MS,LIVE_CONFIG.RETRY_BASE_MS*Math.pow(2,_live.fails-1));
+  if(_live.quietHolds>=LIVE_CONFIG.IDLE_BACKOFF_AFTER)return LIVE_CONFIG.IDLE_BACKOFF_MS;
+  return 250;
+}
+function liveSchedule(delay){
+  const token=_live.token;
+  clearTimeout(_live.timer);
+  _live.timer=setTimeout(()=>{if(token===_live.token)liveWatchLoop(token);},Math.max(0,delay||0));
+}
+function startLiveWatch(){
+  if(!liveEnabled()){setLiveState('disabled');return;}
+  /* The server told us it has no channel: stay honest about it instead of
+     showing "connecting" forever. Scheduled sync is carrying the app. */
+  if(_live.notSupported){setLiveState('disabled');return;}
+  if(_live.state==='watching'||_live.state==='starting'||_live.state==='updating')return;
+  if(!navigator.onLine){setLiveState('disabled');return;}
+  _live.token++;_live.fails=0;_live.quietHolds=0;
+  setLiveState('starting');
+  liveWatchLoop(_live.token);
+}
+async function liveWatchLoop(token){
+  if(token!==_live.token)return;                 // a newer loop owns the channel
+  if(!liveEnabled()){setLiveState('disabled');return;}
+  if(!navigator.onLine){setLiveState('disabled');return;}
+  if(_live.notSupported){setLiveState('disabled');return;}
+  /* Never park a request while a sync is mid-flight, and never hold one open
+     while the user is typing: the edit debounce is the thing that decides when
+     to talk to the cloud. */
+  if(_syncInProgress||document.hidden){liveSchedule(1200);return;}
+
+  const version=liveCursor();
+  const ctrl=(typeof AbortController==='function')?new AbortController():null;
+  _live.abort=ctrl;
+  /* The server answers within `wait` seconds. This second timer is for the case
+     where it cannot — a proxy that buffers, a network that black-holes — so a
+     parked request can never wedge the channel. */
+  let timedOut=false,timer=null;
+  if(ctrl)timer=setTimeout(()=>{timedOut=true;try{ctrl.abort();}catch(e){}},LIVE_CONFIG.TIMEOUT_MS);
+  setLiveState('watching');
+  let res=null;
+  try{
+    const wait=Math.round(Math.min(LIVE_CONFIG.WAIT_MS,55000)/1000);
+    res=await fetch(LIVE_API+'?version='+version+'&wait='+wait,{
+      method:'GET',
+      headers:{accept:'application/json'},
+      cache:'no-store',
+      signal:ctrl?ctrl.signal:undefined
+    });
+  }catch(e){
+    clearTimeout(timer);_live.abort=null;
+    if(token!==_live.token)return;
+    /* Our own abort (offline / a sync started / the page hid) is not a failure.
+       Our own watchdog timing out IS: back off and try again. */
+    if(e&&e.name==='AbortError'&&!timedOut){liveSchedule(600);return;}
+    _live.fails++;
+    setLiveState('error',timedOut?'no answer from '+LIVE_API:((e&&e.message)||'network'));
+    liveSchedule(liveNextDelay());
+    return;
+  }
+  clearTimeout(timer);
+  _live.abort=null;
+  if(token!==_live.token)return;
+  noteRequest();noteRateHeaders(res.headers);
+
+  if(res.status===404||res.status===405||res.status===501){
+    /* An older deploy without /api/live. Stop asking; the daily gate still runs. */
+    _live.notSupported=true;
+    setLiveState('disabled','endpoint-missing');
+    addSyncLog('Real-time unavailable','This server has no '+LIVE_API+' endpoint ('+res.status+'). Falling back to scheduled sync.').catch(()=>{});
+    return;
+  }
+  if(res.status===304){
+    _live.fails=0;_live.quietHolds++;
+    const etag=res.headers.get('etag');
+    if(etag){const n=parseInt(String(etag).replace(/"/g,''),10);if(Number.isFinite(n)&&n>=0&&_live.version<0)_live.version=n;}
+    liveSchedule(liveNextDelay());
+    return;
+  }
+  if(!res.ok){
+    _live.fails++;
+    setLiveState('error','HTTP '+res.status);
+    liveSchedule(liveNextDelay());
+    return;
+  }
+
+  let data={};
+  try{data=(await res.json())||{};}catch(e){data={};}
+  _live.fails=0;_live.quietHolds=0;
+  const offered=Number(data.version);
+  const haveOffered=Number.isFinite(offered)&&offered>=0;
+
+  if(data.baseline===true){
+    /* "Here is where the cloud is." If this device has never held that state —
+       a fresh phone, a reinstall, or an app that was closed while the branch
+       kept typing — take a copy now instead of waiting for the next edit. */
+    if(haveOffered)_live.version=offered;
+    const known=Number(_meta.lastCloudVersion||0)||0;
+    if(!_meta.lastCloudHash||known!==_live.version){
+      await livePullChange(_live.version);
+      return;
+    }
+    await metaPut('lastCloudVersion',_live.version>=0?_live.version:known);
+    setLiveState('watching');
+    liveSchedule(250);
+    return;
+  }
+  if(data.reset===true){
+    /* The cloud moved backwards (cleared, or an older backup restored). */
+    if(haveOffered)_live.version=offered;
+    await addSyncLog('Cloud reset','Cloud version is '+_live.version+' but this device held a newer one. Re-baselining.');
+    liveSchedule(250);
+    return;
+  }
+  if(data.changed!==true){liveSchedule(250);return;}
+
+  /* The cursor is NOT advanced here on purpose: it moves only when the change
+     has actually been pulled. If the pull has to wait (a manual sync is running)
+     the next watch still sees a newer cloud and tries again. */
+  _live.lastChangeAt=new Date().toISOString();
+  await metaPut('lastLiveChangeAt',_live.lastChangeAt);
+  await livePullChange(haveOffered?offered:_live.version);
+}
+
+/* Real-time feedback. A toast while someone is mid-entry steals the screen, so
+   live updates announce themselves only on pages where a change is visible, and
+   always leave a line in the sync log. */
+function liveToast(msg){
+  try{
+    const active=(document.querySelector('.page.active')||{}).id||'dashboard';
+    if(active==='entry'||active==='reports')return;
+    toast('\u2601 '+msg);
+  }catch(e){}
+}
+
+/* The channel said "another device saved" — go and get it. */
+async function livePullChange(cloudVersion){
+  setLiveState('updating');
+  try{
+    if(isPublicView()){await refreshPublicLive();liveSchedule(250);return;}
+    const res=await syncNow('live');
+    if(res&&res.skipped==='busy'){
+      /* A manual sync owns the moment. Do not advance the cursor: the next watch
+         still sees a newer cloud and pulls it as soon as that sync finishes. */
+      setLiveState('watching');
+      liveSchedule(1500);
+      return;
+    }
+    if(res&&res.error){
+      _live.fails++;
+      setLiveState('error',(res.error&&res.error.message)||'sync-failed');
+      liveSchedule(liveNextDelay());
+      return;
+    }
+    _live.changesApplied++;
+    /* syncNow/afterCloudWrite moved the cursor to the version we now hold. */
+    setLiveState('watching');
+    liveSchedule(250);
+  }catch(e){
+    _live.fails++;
+    setLiveState('error',(e&&e.message)||'live-pull-failed');
+    liveSchedule(liveNextDelay());
+  }
+}
+
+/* The read-only share view has no queue and never uploads; it just re-reads. */
+async function refreshPublicLive(){
+  const g=await cloudGet();
+  const d=g.state||emptyCloudState();
+  records=Array.isArray(d.records)?d.records:[];
+  if(d.settings&&typeof d.settings==='object'){
+    SHARED_SETTING_KEYS.forEach(k=>{if(d.settings[k]!==undefined)settings[k]=d.settings[k];});
+  }
+  setCloudVersion(d.version);
+  _live.version=Number(d.version)||0;
+  _live.changesApplied++;
+  try{renderDashboard();}catch(e){}
+  setLiveState('watching');
+  toast('☁ Live update — report refreshed');
 }
 
 /* ---------- whole-state merge (multi-device, newest write wins, deletes beat stale edits) ----------
@@ -852,12 +1308,17 @@ function sizeGuard(payload){
 /* ---------- the sync algorithm: one document, optimistic concurrency ---------- */
 async function afterCloudWrite(state,hash,extra){
   if(hash)await metaPut('lastCloudHash',hash);
-  await metaPut('lastCloudVersion',Number((state&&state.version)||0));
+  const version=Number((state&&state.version)||0);
+  await metaPut('lastCloudVersion',version);
   await metaPut('lastCloudUpdatedAt',(state&&state.updatedAt)||new Date().toISOString());
   settings.lastSync=new Date().toISOString();
   await metaPut('lastSyncAt',settings.lastSync);
   try{localStorage.setItem(K+'settings',JSON.stringify(settings));}catch(e){}
   await kvPut('settings',settings);
+  /* Park the next watch on the version we now hold, and make sure a channel
+     that was stopped (offline, mid-sync, switched on) is running again. */
+  if(version>0)_live.version=version;
+  startLiveWatch();
 }
 async function syncNow(reason,opts){
   reason=reason||'manual';
@@ -865,10 +1326,13 @@ async function syncNow(reason,opts){
   /* Never sync against a half-loaded local store. */
   if(_initPromise){try{await _initPromise}catch(e){}}
   const dailyAuto=isDailyAutoReason(reason);
+  const realtime=isRealtimeReason(reason);
   try{if(isPublicView())return {skipped:'public-view'};}catch(e){}
   if(_syncInProgress)return {skipped:'busy'};
-  if(!navigator.onLine){setSyncStatus('offline');if(!dailyAuto)toast('Offline \u2014 changes saved locally');return {offline:true};}
+  if(!navigator.onLine){setSyncStatus('offline');if(!dailyAuto&&!realtime)toast('Offline \u2014 changes saved locally');return {offline:true};}
   if(dailyAuto&&syncDayUsedToday())return {skipped:'daily-limit'};
+  /* Real-time syncs are not capped at one a day; they spend a budget instead. */
+  if(realtime&&!realtimeUploadAllowed())return {skipped:'realtime-budget'};
   /* spend the day's single automatic sync BEFORE the first possible network call */
   if(dailyAuto)markAutoSyncFired();
   _syncInProgress=true;setSyncStatus('syncing');
@@ -879,26 +1343,38 @@ async function syncNow(reason,opts){
     const needsUpload=pending.length>0;
     const localHash=computeLocalHash();
     const lastHash=_meta.lastCloudHash||'';
-    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry'||dailyAuto);
+    const wantsCloudCheck=(reason==='startup'||reason==='online'||explicit||needsUpload||reason==='retry'||dailyAuto||realtime);
     if(!needsUpload&&!wantsCloudCheck){setSyncStatus(pendingCount()>0?'pending':'synced');return {noop:true};}
-    if(!needsUpload&&localHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!dailyAuto){setSyncStatus('synced');return {noop:true};}
+    /* Skip the cloud GET only when we have actually talked to the cloud before
+       (lastHash is set) and nothing has changed since. A device that has never
+       synced has an empty hash too, and an empty local state hashes the same as
+       an empty lastHash — without the lastHash check a brand-new phone would
+       "sync" to nothing forever and never see the branch's data. */
+    if(!needsUpload&&lastHash&&localHash===lastHash&&!explicit&&reason!=='startup'&&reason!=='online'&&!dailyAuto&&!realtime){setSyncStatus('synced');return {noop:true};}
 
     const g=await cloudGet();
     const cloud=g.state;
     const cloudHash=cloudContentHash(cloud);
     const cloudChanged=(cloudHash!==(lastHash||'__none__'));
     setCloudVersion(cloud.version);
+    /* Keep the live cursor on the cloud's version so the channel does not
+       re-trigger for a change this sync has just read. */
+    _live.version=Number(cloud.version)||_live.version;
+    /* Spend the real-time budget only on a write. A live download is one parked
+       request and must keep working even after the upload budget runs out. */
+    if(realtime&&needsUpload)markRealtimeSyncUsed();
 
     /* Nothing to upload — just take the cloud copy if it moved. */
     if(!needsUpload){
       if(g.found&&!cloudChanged){setSyncStatus('synced');return {noop:true,version:cloud.version};}
       const applied=applyCloudToLocal(cloud);
       await afterCloudWrite(cloud,cloudHash);
-      await addSyncLog('Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
+      await addSyncLog(realtime?'Real-time update':'Sync successful','Downloaded cloud state (version '+cloud.version+'). New: '+applied.added+', updated: '+applied.updated,{downloaded:applied.added+applied.updated});
       setSyncStatus('synced');refreshAfterSync();
       if(explicit||reason==='startup')toast('Synced from cloud ('+records.length+' records)');
+      else if(realtime&&(applied.added+applied.updated)>0)liveToast('Live update \u2014 '+(applied.added+applied.updated)+' change(s) from another device');
       else if(dailyAuto)toast((applied.added+applied.updated)>0?('Daily auto sync done \u2014 '+(applied.added+applied.updated)+' cloud change(s) downloaded'):'Daily auto sync done \u2014 next automatic sync tomorrow');
-      return {downloaded:applied,version:cloud.version};
+      return {downloaded:applied,downloadApplied:applied.added+applied.updated,version:cloud.version};
     }
 
     /* Upload: merge local + cloud, then POST carrying the version we just read. */
@@ -931,10 +1407,11 @@ async function syncNow(reason,opts){
       await metaPut('conflicts',merged.conflicts.concat(prev).slice(0,20));
       await addSyncLog('Conflicts resolved',merged.conflicts.length+' day(s) changed on two devices \u2014 newest kept: '+merged.conflicts.map(c=>c.recordId).join(', '));
     }
-    await addSyncLog('Sync successful','Uploaded to cloud (version '+newVersion+'). Records uploaded: '+pending.length+(cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
+    await addSyncLog(realtime?'Real-time upload':'Sync successful','Uploaded to cloud (version '+newVersion+'). Records uploaded: '+pending.length+(cloudChanged?' \u00b7 Cloud changes merged':''),{uploaded:pending.length});
     setSyncStatus(pendingCount()>0?'pending':'synced');
     refreshAfterSync();
     if(explicit||reason==='startup')toast('Synced ('+pending.length+' uploaded, version '+newVersion+')');
+    else if(realtime)liveToast('Uploaded live \u2014 '+pending.length+' change(s), cloud v'+newVersion);
     else if(dailyAuto)toast('Daily auto sync done \u2014 '+pending.length+' uploaded, next automatic sync tomorrow');
     return {uploaded:pending.length,version:newVersion,downloaded:cloudChanged};
   }catch(err){
@@ -942,10 +1419,20 @@ async function syncNow(reason,opts){
     setSyncStatus('error',(err&&err.message)||'error');
     await addSyncLog('Sync failed',String((err&&err.message)||err).slice(0,180)+' \u2014 local data is safe, '+pendingCount()+' change(s) waiting.');
     if(reason==='manual'||reason==='refresh'||reason==='retry')toast('Sync failed. Your local data is safe. '+pendingCount()+' change(s) waiting to sync.');
+    else if(realtime){
+      /* No toast storm while someone is typing: the button already shows the
+         error, and the retry lands on the next live tick. */
+      setLiveState('error',(err&&err.message)||'sync-failed');
+      clearTimeout(_debounceT);
+      _debounceT=setTimeout(()=>{maybeRealtimeUpload('retry');},LIVE_CONFIG.RETRY_BASE_MS);
+    }
     else if(dailyAuto)toast('Auto sync failed \u2014 today\u2019s automatic sync is used up. Data is safe locally; tap \u2601 Sync Now to retry.');
     return {error:err};
   }finally{
     _syncInProgress=false;updateSyncUI();
+    /* Something was edited while this sync was in flight: send it now instead
+       of waiting for the next live tick. */
+    if(pendingCount()>0)scheduleAutoUpload();
   }
 }
 
@@ -1031,6 +1518,29 @@ async function reconcileQueue(){
 }
 
 /* ---------- sync UI ---------- */
+/* The header dot is the honest signal: it says whether this device is actually
+   parked on the cloud right now, not merely whether a sync button exists. */
+function liveBadgeMeta(){
+  if(!liveEnabled())return {cls:'off',text:'LIVE OFF',title:'Real-time sync is switched off on this device \u00b7 tap to open Cloud Sync'};
+  if(!navigator.onLine)return {cls:'off',text:'OFFLINE',title:'Offline \u00b7 edits are safe on this device and upload when you reconnect'};
+  if(_live.notSupported)return {cls:'warn',text:'NO LIVE',title:'This server has no /api/live endpoint \u00b7 scheduled sync still works'};
+  switch(_live.state){
+    case 'watching':return {cls:'live',text:'LIVE',title:liveStatusText()+' \u00b7 another device\u2019s edit appears here within seconds'};
+    case 'updating':return {cls:'busy',text:'UPDATING',title:'Pulling changes from the cloud right now'};
+    case 'starting':return {cls:'busy',text:'CONNECTING',title:'Opening the real-time channel'};
+    case 'error':return {cls:'err',text:'RETRY',title:'Real-time channel error: '+(_live.lastError||'unknown')+' \u00b7 retrying automatically'};
+    default:return {cls:'off',text:'LIVE OFF',title:'Real-time channel idle \u00b7 tap Sync for details'};
+  }
+}
+function updateLiveBadge(){
+  const el=document.getElementById('liveBadge');
+  if(!el)return;
+  const m=liveBadgeMeta();
+  el.className='livedot '+m.cls;
+  el.title=m.title;
+  const t=document.getElementById('liveBadgeText');
+  if(t)t.textContent=m.text;
+}
 function fmtSyncTime(iso){
   if(!iso)return 'Never';
   try{return new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});}catch(e){return String(iso);}
@@ -1044,11 +1554,12 @@ function syncStatusMeta(){
   return {key:'synced',label:'\u2601 Synced',cls:''};
 }
 function updateSyncUI(){
+  try{updateLiveBadge();}catch(e){}
   try{
     const m=syncStatusMeta();
     const b=document.getElementById('syncBtn');
     if(b){b.textContent=m.label;b.className='syncbtn '+m.cls;
-      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Auto sync: '+autoSyncStatusText()+' \u00b7 Tap for details';}
+      b.title='Cloud: '+m.label+' \u00b7 Last Sync: '+fmtSyncTime(_meta.lastSyncAt||settings.lastSync)+' \u00b7 Real-time: '+liveStatusText()+' \u00b7 Auto sync: '+autoSyncStatusText()+' \u00b7 Tap for details';}
     const modal=document.getElementById('syncModal');
     if(modal&&modal.classList.contains('show'))renderSyncDetails();
     const cs=document.getElementById('cloudSyncStatus');
@@ -1070,10 +1581,12 @@ function syncPanelHtml(){
   const conf=Array.isArray(_meta.conflicts)?_meta.conflicts:[];
   return '<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
+    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b>'+(realtimeLeftToday()>0?(' <span class="small">('+esc(realtimeBudgetText())+')</span>'):' <span class="small">(budget spent \u00b7 scheduled sync only)</span>')+'</div>'
+    +(_live.lastChangeAt?('<div>Last cloud change seen: <b>'+esc(fmtSyncTime(_live.lastChangeAt))+'</b> \u00b7 '+_live.changesApplied+' live update(s) this session</div>'):'')
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b> <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span></div>'
-    +((pendingCount()>0&&syncDayUsedToday())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b>'+autoSyncLimitNote()+'</div>'
+    +((pendingCount()>0&&syncDayUsedToday()&&!realtimeUploadAllowed())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
     +'<div>This device: <span class="small">'+esc(_meta.deviceId||'\u2014')+'</span></div>'
     +rate
     +(conf.length?'<div>Conflicts (newest kept): '+esc(conf.slice(0,5).map(c=>c.recordId).join(', '))+(conf.length>5?'\u2026':'')+'</div>':'')
@@ -1087,10 +1600,11 @@ function renderSyncDetails(){
   const m=syncStatusMeta();
   document.getElementById('syncDetails').innerHTML='<div class="syncmeta">'
     +'<div>Status: <b>'+esc(m.label)+'</b></div>'
+    +'<div>Real-time: <b>'+esc(liveStatusText())+'</b> <span class="small">('+esc(realtimeBudgetText())+')</span></div>'
     +'<div>Last Sync: <b>'+esc(fmtSyncTime(_meta.lastSyncAt||settings.lastSync))+'</b></div>'
     +'<div>Pending Changes: <b>'+pendingCount()+'</b></div>'
-    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b> <span class="small">(max '+SYNC_CONFIG.AUTO_SYNC_MAX_PER_DAY+'/day)</span></div>'
-    +((pendingCount()>0&&syncDayUsedToday())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
+    +'<div>Auto sync: <b>'+esc(autoSyncStatusText())+'</b>'+autoSyncLimitNote()+'</div>'
+    +((pendingCount()>0&&syncDayUsedToday()&&!realtimeUploadAllowed())?'<div>\u26a0 Today\u2019s automatic sync is already used \u2014 tap <b>Sync Now</b> to send '+pendingCount()+' change(s) now.</div>':'')
     +'<div>Cloud Requests Used (this device): <b>'+(_meta.requestsUsed||0)+'</b></div>'
     +'</div>';
   document.getElementById('syncLogMini').textContent=_syncLog.slice(0,8).map(e=>fmtSyncTime(e.at)+' \u2014 '+e.event+(e.detail?(' \u00b7 '+e.detail):'')).join('\n')||'No sync activity yet.';
@@ -1111,6 +1625,8 @@ function refreshAfterSync(){
 function wireSyncUI(){
   const b=document.getElementById('syncBtn');
   if(b)b.onclick=()=>{renderSyncDetails();document.getElementById('syncModal').classList.add('show');};
+  const lb=document.getElementById('liveBadge');
+  if(lb)lb.onclick=()=>{renderSyncDetails();document.getElementById('syncModal').classList.add('show');};
   const c=document.getElementById('closeSync');if(c)c.onclick=()=>document.getElementById('syncModal').classList.remove('show');
   const s=document.getElementById('syncNowBtn');if(s)s.onclick=()=>{document.getElementById('syncModal').classList.remove('show');syncNow('manual').catch(()=>{});};
   const r=document.getElementById('syncRefreshBtn');if(r)r.onclick=()=>{document.getElementById('syncModal').classList.remove('show');syncNow('refresh').catch(()=>{});};
@@ -1137,6 +1653,15 @@ async function loadPublicView(){
       settings={...settings,...d.settings,autoLock:0};
       setPinValue('');
     }
+    /* A shared link is read-only, so it must not look like it owes the cloud
+       anything. The migration in initLocalDB queues whatever `records` holds on
+       first run — and loadPublicView has already filled it with the cloud's own
+       rows, which would sit there as "pending" forever (and upload them back to
+       itself if this browser ever opened the app normally). */
+    _queue=[];tombstones=[];
+    await persistQueueNow();
+    _meta.pendingChanges=0;
+    await metaPut('pendingChanges',0);
     document.body.classList.add('public-view');
     const ban=document.createElement('div');
     ban.id='publicBanner';
@@ -1144,8 +1669,14 @@ async function loadPublicView(){
     ban.textContent='Public view \u2014 read only \u00b7 FSIB Branch Marketing Report';
     document.body.insertBefore(ban,document.body.firstChild);
     const ib=document.getElementById('installBtn');if(ib)ib.classList.add('hidden');
+    setCloudVersion(d.version);
+    _live.version=Number(d.version)||0;
     renderDashboard();
+    updateSyncUI();
     toast('Public report loaded ('+records.length+' days)');
+    /* A shared link left open on a wall screen should follow the branch's
+       latest report without anyone refreshing it. */
+    startLiveWatch();
   }catch(e){console.error(e);toast('Public load failed')}
 }
 
@@ -1155,18 +1686,43 @@ function network(){
   let on=navigator.onLine;
   $('#netStatus').textContent=on?'ONLINE':'OFFLINE MODE';
   $('#netStatus').classList.toggle('offline',!on);
-  if(!on){if(_syncStatus!=='offline'){_syncStatus='offline';updateSyncUI();}}
-  else{if(_syncStatus==='offline'){_syncStatus=pendingCount()>0?'pending':'synced';updateSyncUI();maybeSyncOnReconnect();}}
+  if(!on){
+    /* Drop the parked request instead of letting it time out and count as a
+       failure; the edits are already safe on this device. */
+    if(_live.state!=='disabled')liveStop('offline');
+    if(_syncStatus!=='offline'){_syncStatus='offline';updateSyncUI();}
+    return;
+  }
+  if(_syncStatus==='offline'){_syncStatus=pendingCount()>0?'pending':'synced';updateSyncUI();}
+  /* Coming back online: re-open the live channel and flush what queued up. */
+  _live.notSupported=false;_live.fails=0;
+  startLiveWatch();
+  maybeRealtimeUpload('online');
+  maybeSyncOnReconnect();
 }
 function maybeSyncOnReconnect(){
   if(!settings.autoSync)return;
   try{if(isPublicView())return;}catch(e){}
+  /* The real-time path already flushed the queue in network(); the once-a-day
+     sync is only the fallback for when real-time is off or out of budget. */
+  if(realtimeUploadAllowed())return;
   if(syncDayUsedToday())return;
   clearTimeout(window._onlineSyncT);
   window._onlineSyncT=setTimeout(()=>{maybeDailyAutoSync('online');},1200);
 }
 addEventListener('online',network);addEventListener('offline',network);let deferredPrompt=null;
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeDailyAutoSync('visible');});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    /* Background tabs must not hold a parked request: browsers throttle timers
+       and kill sockets, which would only produce retries nobody can see. */
+    liveStop();
+    return;
+  }
+  _live.notSupported=false;
+  startLiveWatch();
+  maybeRealtimeUpload('visible');
+  maybeDailyAutoSync('visible');
+});
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredPrompt=event;
@@ -1228,6 +1784,11 @@ _initPromise.then(()=>{
   refreshAfterSync();
   updateSyncUI();
   if(isPublicView()){loadPublicView();return;}
+  /* Open the real-time channel first: it is what makes the rest of the app
+     converge without anyone tapping Sync. */
+  startLiveWatch();
+  /* Anything queued while this device was offline goes up right away. */
+  if(navigator.onLine&&pendingCount()>0)setTimeout(()=>{maybeRealtimeUpload('startup');},700);
   if(navigator.onLine&&dailyAutoSyncDue()){setTimeout(()=>{maybeDailyAutoSync('startup');},900);}
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
 </script></body></html>

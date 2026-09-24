@@ -1,11 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  CloudApiError,
   DEVICE_ONLY_SETTING_KEYS,
+  isAbort,
+  isLiveUnavailable,
   loadCloudState,
   mergeRecords,
   mergeStates,
-  saveCloudState
+  saveCloudState,
+  watchCloud
 } from "../src/lib/cloud-api.ts";
 
 function fakeFetch(handler) {
@@ -139,4 +143,66 @@ test("an enveloped 409 still reports the server's version", async () => {
   const out = await saveCloudState({ settings: {}, records: [], trash: [] }, { version: 0 });
   assert.equal(out.ok, false);
   assert.equal(out.currentVersion, 16);
+});
+
+/* ---------------- real-time channel: watchCloud() ---------------- */
+
+test("watchCloud parks on /api/live with the cursor and the wait in seconds", async () => {
+  const calls = fakeFetch(() => new Response(null, { status: 304, headers: { etag: '"9"' } }));
+  const out = await watchCloud(9, { waitSeconds: 20 });
+  assert.equal(calls[0].url, "/api/live?version=9&wait=20");
+  assert.equal(calls[0].init.cache, "no-store");
+  assert.deepEqual(out, { kind: "quiet", version: 9 });
+});
+
+test("watchCloud decodes a change, a baseline and a reset", async () => {
+  fakeFetch(() => json(200, { ok: true, changed: true, version: 12, updatedAt: "2026-09-21T09:00:00.000Z", waitedMs: 4321 }));
+  assert.deepEqual(await watchCloud(11), {
+    kind: "changed",
+    version: 12,
+    updatedAt: "2026-09-21T09:00:00.000Z",
+    waitedMs: 4321
+  });
+
+  fakeFetch(() => json(200, { ok: true, changed: false, baseline: true, version: 12, updatedAt: "2026-09-21T09:00:00.000Z" }));
+  assert.deepEqual(await watchCloud(-1), { kind: "baseline", version: 12, updatedAt: "2026-09-21T09:00:00.000Z" });
+
+  /* A cleared cloud reports version 0, which is both "different" and "behind":
+     reset must win, or a device would pull an empty state as if it were news. */
+  fakeFetch(() => json(200, { ok: true, changed: false, reset: true, version: 0, updatedAt: null }));
+  assert.deepEqual(await watchCloud(6), { kind: "reset", version: 0, updatedAt: null });
+});
+
+test("a quiet 304 with no ETag keeps the cursor the caller already had", async () => {
+  fakeFetch(() => new Response(null, { status: 304 }));
+  assert.deepEqual(await watchCloud(4), { kind: "quiet", version: 4 });
+});
+
+test("watchCloud throws a CloudApiError the caller can classify", async () => {
+  fakeFetch(() => json(404, { ok: false, error: "not-found" }));
+  await assert.rejects(() => watchCloud(1), (err) => {
+    assert.equal(err instanceof CloudApiError, true);
+    assert.equal(err.status, 404);
+    assert.equal(isLiveUnavailable(err), true, "an old deploy must be recognised, not retried forever");
+    return true;
+  });
+
+  fakeFetch(() => json(400, { ok: false, error: "version-required" }));
+  await assert.rejects(() => watchCloud(1), (err) => {
+    assert.equal(isLiveUnavailable(err), false, "a 400 is our bug, not a missing endpoint");
+    return true;
+  });
+});
+
+test("isAbort separates our own cancel from a real failure", async () => {
+  const err = Object.assign(new Error("aborted"), { name: "AbortError" });
+  assert.equal(isAbort(err), true);
+  assert.equal(isAbort(new Error("network")), false);
+});
+
+test("watchCloud forwards the caller's AbortSignal so a hidden tab can drop it", async () => {
+  const calls = fakeFetch(() => new Response(null, { status: 304 }));
+  const controller = new AbortController();
+  await watchCloud(3, { signal: controller.signal });
+  assert.equal(calls[0].init.signal, controller.signal);
 });
