@@ -131,7 +131,7 @@ export async function clearCloudState(api: string = DEFAULT_API_PATH): Promise<b
   return res.ok;
 }
 
-/** Newest write wins per date; deletes (trash + tombstone) beat stale edits. */
+/** Newest write wins per date; deletes (trash rows) beat stale edits. */
 export function mergeRecords(local: SyncRecord[], cloud: SyncRecord[]): { rows: SyncRecord[]; conflicts: string[] } {
   const map = new Map<string, SyncRecord>();
   const conflicts: string[] = [];
@@ -187,7 +187,7 @@ export function mergeStates(
    One request is parked on the server carrying the cloud version this
    device holds. It answers the moment another device saves, so the
    caller learns "the cloud moved" in seconds instead of at the next
-   scheduled sync. It never carries the document: pull /api/sync after
+   manual refresh. It never carries the document: pull /api/sync after
    a `changed` answer.
 ------------------------------------------------------------------ */
 
