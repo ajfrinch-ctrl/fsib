@@ -346,6 +346,40 @@ test("a lost race (409) re-merges and retries without losing either device's day
   assert.deepEqual(errors, []);
 });
 
+test("every settings section is closed until it is tapped", async () => {
+  const { window, errors } = bootApp({
+    records: [day("2026-09-22", "1000000", "2026-09-22T09:00:00.000Z")]
+  });
+  assert.ok(await waitUntil(() => typeof window.nav === "function"));
+  window.nav("settings");
+  const doc = window.document;
+  const cards = [...doc.querySelectorAll("#settings > details.settings-card")];
+  assert.equal(cards.length, 4, "profile, template, security, backup");
+  assert.deepEqual(cards.map((c) => c.open), [false, false, false, false],
+    "nothing is open on arrival — the page stays short");
+
+  /* A closed section still says what is inside it. */
+  const heads = cards.map((c) => c.querySelector("summary").textContent.replace(/\s+/g, " ").trim());
+  assert.match(heads[0], /Branch profile/);
+  assert.match(heads[0], /Tantar Branch/);
+  assert.match(heads[1], /WhatsApp template/);
+  assert.match(heads[3], /1 record/);
+
+  /* Tap to open, tap again to close — one section at a time stays open. */
+  cards[1].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, true, false, false]);
+  assert.ok(doc.querySelector("#sTemplate"), "the template is there, just hidden until asked for");
+  cards[3].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, true, false, true],
+    "opening another section does not close the one already open");
+  cards[1].querySelector("summary").click();
+  assert.deepEqual(cards.map((c) => c.open), [false, false, false, true]);
+
+  /* The Save button is never inside a section: it is always reachable. */
+  assert.equal(doc.querySelector("#saveSettings").closest("details"), null);
+  assert.deepEqual(errors, []);
+});
+
 test("the PIN stays on the device and never reaches the blob", async () => {
   const { window, blob, errors } = bootApp({
     records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")],

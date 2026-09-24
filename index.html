@@ -381,6 +381,17 @@ details.det[open] summary::after{transform:rotate(180deg)}
 .settings-hero{margin-bottom:14px;padding:16px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#062f70,#1264d6);box-shadow:0 10px 24px #0a479d2b}
 .settings-hero h2{margin:0 0 4px;font-size:20px}.settings-hero p{margin:0;color:#dceaff;font-size:12px}
 .settings-card{margin:14px 0;padding:15px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+/* Every section is closed until it is tapped: the header carries a one-line
+   summary so the page still says what is in it without opening anything. */
+.settings-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.settings-card>summary::-webkit-details-marker{display:none}
+.settings-card>summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:12px}
+.settings-head .sectiontitle{margin:0;flex:0 0 auto}
+.settings-hsub{flex:1 1 auto;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.settings-chev{flex:0 0 auto;width:9px;height:9px;margin-left:auto;border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .18s ease}
+.settings-card[open] .settings-chev{transform:rotate(45deg)}
+.settings-body{margin-top:13px}
 .settings-card .sectiontitle{display:flex;align-items:center;gap:8px;margin-bottom:13px}.settings-card .sectiontitle::before{content:attr(data-icon);display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--soft);color:var(--blue);font-size:15px}
 .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .settings-grid .formgroup{margin-bottom:0}
@@ -397,7 +408,10 @@ details.det[open] summary::after{transform:rotate(180deg)}
 
 /* ---------------- security card ---------------- */
 .security-card{position:relative;overflow:hidden}.security-card::after{content:"";position:absolute;right:-28px;top:-34px;width:110px;height:110px;border-radius:50%;background:var(--soft);pointer-events:none}
-.security-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}.security-title{display:flex;align-items:center;gap:10px}.security-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:18px}.security-title h3{margin:0;font-size:15px}.security-title p{margin:2px 0 0;color:var(--muted);font-size:11px}.security-state{padding:6px 10px;border-radius:20px;background:#e4f7ef;color:var(--green);font-size:11px;font-weight:900;white-space:nowrap}.security-state.off{background:#fff2df;color:#a56500}.dark .security-state{background:#10291f}.dark .security-state.off{background:#2e2410}.security-copy{margin:14px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px;background:var(--bg)}
+.security-head{display:flex;align-items:center;gap:12px;position:relative;z-index:1;cursor:pointer;list-style:none}
+.security-head::-webkit-details-marker{display:none}
+.security-head .security-state{margin-left:auto}
+.security-head .settings-chev{margin-left:0}.security-title{display:flex;align-items:center;gap:10px}.security-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:18px}.security-title h3{margin:0;font-size:15px}.security-title p{margin:2px 0 0;color:var(--muted);font-size:11px}.security-state{padding:6px 10px;border-radius:20px;background:#e4f7ef;color:var(--green);font-size:11px;font-weight:900;white-space:nowrap}.security-state.off{background:#fff2df;color:#a56500}.dark .security-state{background:#10291f}.dark .security-state.off{background:#2e2410}.security-copy{margin:14px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px;background:var(--bg)}
 </style></head><body><main class="app">
 <header class="top"><div class="brand-wrap"><div class="brand-mark">FSIB</div><div class="top-copy"><div class="reportname">Daily Branch Report</div><div class="top-subtitle">Branch activity &amp; performance</div></div></div><div class="head-actions"><span id="netStatus" style="display:none">ONLINE</span><span id="liveBadge" style="display:none"><i></i><span id="liveBadgeText">LIVE</span></span><button id="installBtn" class="hidden">Install</button><button class="theme" id="themeBtn" aria-label="theme">☀️</button></div></header>
 <section class="page active" id="dashboard"></section><section class="page" id="entry"></section><section class="page" id="history"></section><section class="page" id="reports"></section><section class="page" id="settings"></section>
@@ -964,30 +978,44 @@ function closePdfPreview(){$('#pdfModal').classList.remove('show');_pdfPending=n
 function confirmPdfDownload(){if(!_pdfPending)return;const p=_pdfPending;savePdf(p.lines,p.filename,p.layout);closePdfPreview()}
 function renderSettings(){
   let tr=trash.length;
-  $('#settings').innerHTML=`<div class="settings-hero"><h2>Settings</h2><p>Manage branch information, security and local data.</p></div>
-  <section class="settings-card"><div class="sectiontitle" data-icon="🏢">Branch profile</div>
-    <div class="settings-group">Branch</div>
-    <div class="settings-grid">
-      <div class="formgroup wide"><label for="sBranch">Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div>
-      <div class="formgroup"><label for="sZone">Zone</label><input id="sZone" value="${esc(settings.zone)}"></div>
-      <div class="formgroup"><label for="sTeam">Team</label><input id="sTeam" value="${esc(settings.team)}"></div>
-      <div class="formgroup"><label for="sBranches">Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div>
+  /* One line per closed section, so the page still says what is inside it. */
+  const clip=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'\u2026':t};
+  const tplFirst=clip((settings.template||treasuryTemplate).split('\n')[0],40);
+  const target=num(settings.target);
+  const profileLine=[settings.branch,settings.team].filter(Boolean).join(' \u00b7 ')+(target>0?(' \u00b7 Target \u09f3 '+money(target)):'');
+  const backupLine=records.length+' record'+(records.length===1?'':'s')+' \u00b7 '+tr+' deleted \u00b7 Last backup: '+(settings.lastBackup||'never');
+  $('#settings').innerHTML=`<div class="settings-hero"><h2>Settings</h2><p>Manage branch information, security and local data. Tap a section to open it.</p></div>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="🏢">Branch profile</span><span class="small settings-hsub">${esc(profileLine)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body">
+      <div class="settings-group">Branch</div>
+      <div class="settings-grid">
+        <div class="formgroup wide"><label for="sBranch">Branch Name</label><input id="sBranch" value="${esc(settings.branch)}"></div>
+        <div class="formgroup"><label for="sZone">Zone</label><input id="sZone" value="${esc(settings.zone)}"></div>
+        <div class="formgroup"><label for="sTeam">Team</label><input id="sTeam" value="${esc(settings.team)}"></div>
+        <div class="formgroup"><label for="sBranches">Total Branch</label><input id="sBranches" inputmode="numeric" value="${settings.totalBranch}"></div>
+      </div>
+      <div class="settings-group">Manager</div>
+      <div class="settings-grid">
+        <div class="formgroup"><label for="sManager">Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div>
+        <div class="formgroup"><label for="sManagerDesignation">Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div>
+      </div>
+      <div class="settings-group">Monthly target</div>
+      <div class="settings-grid">
+        <div class="formgroup"><label for="sTarget">Deposit Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}" placeholder="0"></div>
+        <div class="formgroup settings-hint"><span class="small">Leave as 0 if you do not want to track a target.</span></div>
+      </div>
     </div>
-    <div class="settings-group">Manager</div>
-    <div class="settings-grid">
-      <div class="formgroup"><label for="sManager">Manager Name</label><input id="sManager" value="${esc(settings.manager||'Harun Or Rashid')}"></div>
-      <div class="formgroup"><label for="sManagerDesignation">Manager Designation</label><input id="sManagerDesignation" value="${esc(settings.managerDesignation||'Manager')}"></div>
-    </div>
-    <div class="settings-group">Monthly target</div>
-    <div class="settings-grid">
-      <div class="formgroup"><label for="sTarget">Deposit Target (৳)</label><input id="sTarget" inputmode="decimal" value="${settings.target}" placeholder="0"></div>
-      <div class="formgroup settings-hint"><span class="small">Leave as 0 if you do not want to track a target.</span></div>
-    </div>
-  </section>
-  <section class="settings-card"><div class="sectiontitle" data-icon="💬">WhatsApp template</div><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(settings.template||treasuryTemplate)}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{accounts}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span></div></section>
-  <div class="settings-save"><button type="button" class="primary" id="saveSettings">Save Settings</button><span class="small">Saves the branch profile, the monthly target and the WhatsApp template.</span></div>
-  <section class="settings-card security-card"><div class="security-head"><div class="security-title"><div class="security-icon">🔒</div><div><h3>App security</h3><p>Protect access on this device</p></div></div><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span></div><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></section>
-  <section class="settings-card"><div class="sectiontitle" data-icon="💾">Backup &amp; recovery</div><div class="settings-count"><span>Saved records</span><b>${records.length}</b></div><div class="settings-count"><span>Recently deleted</span><b>${tr}</b></div><div class="settings-count"><span>Last backup</span><b>${settings.lastBackup||'Never'}</b></div><div class="settings-actions" style="margin-top:12px"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted</button></div><button class="danger" id="clear" style="width:100%;margin-top:10px">Clear All Data</button></section>`;
+  </details>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💬">WhatsApp template</span><span class="small settings-hsub">${esc(tplFirst)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(settings.template||treasuryTemplate)}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{accounts}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span></div></div>
+  </details>
+  <details class="settings-card security-card"><summary class="security-head"><span class="security-title"><span class="security-icon">🔒</span><span><h3>App security</h3><p>Protect access on this device</p></span></span><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></div>
+  </details>
+  <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💾">Backup &amp; recovery</span><span class="small settings-hsub">${esc(backupLine)}</span><span class="settings-chev"></span></summary>
+    <div class="settings-body"><div class="settings-count"><span>Saved records</span><b>${records.length}</b></div><div class="settings-count"><span>Recently deleted</span><b>${tr}</b></div><div class="settings-count"><span>Last backup</span><b>${settings.lastBackup||'Never'}</b></div><div class="settings-actions" style="margin-top:12px"><button class="primary" id="backup">Backup JSON</button><label class="outline" style="text-align:center">Restore Backup<input id="restore" type="file" accept="application/json" hidden></label><button class="outline" id="trashBtn">Recently Deleted</button></div><button class="danger" id="clear" style="width:100%;margin-top:10px">Clear All Data</button></div>
+  </details>
+  <div class="settings-save"><button type="button" class="primary" id="saveSettings">Save Settings</button><span class="small">Saves the branch profile, the monthly target and the WhatsApp template.</span></div>`;
   $('#saveSettings').onclick=applySettings;
   function bind(id,fn){const el=$('#'+id);if(el)el.onclick=fn}
   bind('setPin',()=>setPin());bind('removePin',()=>protectedAction(()=>{setPinValue('');toast('PIN disabled');renderSettings()}));bind('lockNow',lock);bind('backup',backup);const restoreInput=$('#restore');if(restoreInput)restoreInput.onchange=restore;bind('trashBtn',showTrash);bind('clear',()=>protectedAction(()=>{if(confirm('Permanently clear all active records?')){let cleared=records.map(r=>r.date);records=[];cleared.forEach(x=>queueRecordDelete(x));save();renderSettings();renderDashboard();toast('All data cleared')}}));
