@@ -420,6 +420,34 @@ test("the settings page has no sync section or sync controls", async () => {
   assert.deepEqual(errors, []);
 });
 
+test("the Save button sits under everything it saves, and it saves all of it", async () => {
+  const { window, errors } = bootApp({ records: [] });
+  assert.ok(await waitUntil(() => typeof window.nav === "function"));
+  window.nav("settings");
+  const doc = window.document;
+  const save = doc.querySelector("#saveSettings");
+  assert.ok(save, "there is a Save button");
+  /* It used to live inside the Branch profile card, above the monthly target
+     and the WhatsApp template — two things it also writes. */
+  /* el is followed by the button: the button sits below everything it writes. */
+  const after = (el) => Boolean(el.compareDocumentPosition(save) & window.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.equal(after(doc.querySelector("#sTarget")), true, "the button comes after the monthly target");
+  assert.equal(after(doc.querySelector("#sTemplate")), true, "the button comes after the WhatsApp template");
+  assert.equal(save.closest(".settings-card"), null, "it is not buried inside one section");
+
+  doc.querySelector("#sBranch").value = "Cumilla Branch";
+  doc.querySelector("#sTarget").value = "5000000";
+  doc.querySelector("#sTemplate").value = "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}";
+  save.click();
+  assert.equal(window.eval("settings.branch"), "Cumilla Branch");
+  assert.equal(window.eval("settings.target"), 5000000);
+  assert.equal(window.eval("settings.template"), "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}",
+    "the WhatsApp template box is not dead");
+  assert.match(window.eval("message({ date: '2026-09-21', places: '4', cash: '1250000', officers: [], accounts: [] })"),
+    /TODAY 21 September 2026 4 0 12,50,000 12.50 Lac/);
+  assert.deepEqual(errors, []);
+});
+
 test("there is no sync status button; an online sync paints the top bar green", async () => {
   const { window, errors } = bootApp({ holdUpload: true });
   assert.ok(await waitUntil(() => typeof window.updateSyncUI === "function"));
