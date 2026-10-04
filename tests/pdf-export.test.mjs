@@ -369,6 +369,36 @@ test("WhatsApp share stays the daily message, not the statement table", async ()
   assert.doesNotMatch(summary, /STATEMENT|Clr\/BFTN/);
 });
 
+test("a template that arrives from another device is upgraded where it is read", async () => {
+  /* A phone that only ever syncs can be handed the old wording by the cloud, by
+     IndexedDB or by a device that has not opened the app in weeks — so the
+     upgrade is not a one-time boot migration, it is what the message reads. */
+  const { window } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  const legacy = window.eval("LEGACY_TREASURY_TEMPLATE");
+  assert.ok(legacy && legacy.includes("Total Accounts: {{accounts}}"), "the old wording is known to the app");
+  window.eval("settings.template=" + JSON.stringify(legacy) + ";");
+  const rec = day("2026-09-21", "1250000");
+  rec.accounts = [{ category: "Savings", count: "2", amount: "300000" }];
+  window.openShareModal(rec);
+  const summary = window.document.querySelector("#summaryPreview").textContent;
+  assert.match(summary, /Total Deposit: 12\.50 Lac/, "the day's money, in lakh, nothing else");
+  assert.doesNotMatch(summary, /Accounts|12,50,000|30,000|0\.30 Lac|3\.00 Lac/i);
+  /* The Settings box shows the wording that will actually go out, so saving the
+     settings as they are shown carries the device forward for every other one. */
+  window.renderSettings();
+  const box = window.document.querySelector("#sTemplate").value;
+  assert.doesNotMatch(box, /Accounts|\{\{deposit\}\}/);
+  /* A hand-edited template is not touched beyond the retired account lines. */
+  const edited = "Daily {{date}}\nTotal Deposit: Tk {{deposit}}\nTotal Accounts: {{accounts}}";
+  window.eval("settings.template=" + JSON.stringify(edited) + ";");
+  window.openShareModal(rec);
+  const editedSummary = window.document.querySelector("#summaryPreview").textContent;
+  assert.match(editedSummary, /^Daily 21 September 2026\n/, "the read is not replaced wholesale");
+  assert.match(editedSummary, /Total Deposit: Tk 12,50,000/, "what the branch wrote itself is what goes out");
+  assert.doesNotMatch(editedSummary, /Accounts/);
+});
+
 test("an older, hand-edited template cannot put accounts back in the message", async () => {
   const { window } = bootOffline({ records: [day("2026-09-21", "1250000")] });
   await new Promise((r) => setTimeout(r, 250));

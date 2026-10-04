@@ -115,9 +115,12 @@ Accounts stay out of the note the same way. Neither the money they brought in
 nor how many of them were opened is part of it, and the day's deposit is never
 topped up with the account deposit. A template an older build stored, or one the
 branch hand-edited, cannot put those lines back: `message()` drops every line
-about accounts (`dropAccountLines`) before the fields are filled, and a stored
-copy of the old default template is brought forward to the current one. Settings
-lists the fields that remain — `{{accounts}}` is no longer among them.
+about accounts (`dropAccountLines`) before the fields are filled, and the old
+default wording is brought forward to the current one wherever the template is
+read (`currentTemplate()`) — from this device's own store, from the cloud or
+from a phone that has not been opened in weeks — because a template is a shared
+setting and arrives from all three. Settings lists the fields that remain —
+`{{accounts}}` is no longer among them, and the box shows what will be sent.
 
 An account number is not collected at all. The entry form asks for an account
 type, **how many accounts of that type were opened** (`No. of A/C`), and the

@@ -566,6 +566,9 @@ if(settings.pin){setPinValue(settings.pin);delete settings.pin;try{localStorage.
    older build wrote there — accounts counted, money in Taka. Bring that one
    exact template forward to the current one; anything edited by hand is kept. */
 if(settings.template===LEGACY_TREASURY_TEMPLATE){settings.template=treasuryTemplate;try{localStorage.setItem(K+'settings',JSON.stringify(settings))}catch(e){}}
+/* Every other read is guarded by currentTemplate(), so a template that arrives
+   later — from the cloud, from IndexedDB, from another device — cannot put the
+   retired wording back on the phone. */
 
 /* ---------- cloud version (optimistic concurrency cursor) ---------- */
 const CLOUD_VERSION_KEY=K+'cloud_version';
@@ -710,6 +713,15 @@ function currentForm(){let f=$('#form');return {date:$('#date').value,places:$('
    the app — they are not part of the note, so a line an older, hand-edited
    template still carries about accounts comes out before the fields are filled. */
 const ACCOUNT_MESSAGE_LINE=/\{\{\s*(accounts|accountsCount|accountDeposit|accountsTotal)\s*\}\}|^\s*[*_\s-]*(total|number of|new)?\s*accounts?\b|\baccount\s+(deposit|total)\b|\ba\/c\s+(deposit|total)\b/i;
+/* The template is a shared setting: it lands from the cloud, from the local
+   store, from a device that has not opened the app since the last build — and
+   from any of those it can still be the wording an older build wrote. So the
+   upgrade is applied wherever the template is read, not only once at boot; a
+   template the branch edited by hand is kept exactly as it is. */
+function currentTemplate(){
+  const t=settings.template||treasuryTemplate;
+  return t===LEGACY_TREASURY_TEMPLATE?treasuryTemplate:t;
+}
 function dropAccountLines(text){
   /* Removing a line leaves its blank line behind — the note keeps one blank line
      between sections, never two. */
@@ -719,7 +731,7 @@ function message(r){
   let os=(r.officers||[]).map((o,i)=>`${i+1}. ${o.name}, ${o.designation}`).join('\n')||'No officer entered';
   // replaceAll is important: {{branch}} appears both in the report heading and beneath the manager signature.
   const values={date:dateText(r.date),team:settings.team,zone:settings.zone,branches:settings.totalBranch,branch:settings.branch,visits:visits(r),deposit:money(total(r)),depositLac:lac(total(r)),manager:settings.manager||'Harun Or Rashid',managerDesignation:settings.managerDesignation||'Manager',officers:os};
-  let text=dropAccountLines(settings.template||treasuryTemplate);
+  let text=dropAccountLines(currentTemplate());
   Object.entries(values).forEach(([key,value])=>text=text.split('{{'+key+'}}').join(String(value)));
   // Keeps older, manually customized templates in sync too.
   return text.split('Tantar Branch').join(settings.branch);
@@ -1053,7 +1065,7 @@ function renderSettings(){
   let tr=trash.length;
   /* One line per closed section, so the page still says what is inside it. */
   const clip=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'\u2026':t};
-  const tplFirst=clip((settings.template||treasuryTemplate).split('\n')[0],40);
+  const tplFirst=clip(currentTemplate().split('\n')[0],40);
   const target=num(settings.target);
   const profileLine=[settings.branch,settings.team].filter(Boolean).join(' \u00b7 ')+(target>0?(' \u00b7 Target \u09f3 '+money(target)):'');
   const backupLine=records.length+' record'+(records.length===1?'':'s')+' \u00b7 '+tr+' deleted \u00b7 Last backup: '+(settings.lastBackup||'never');
@@ -1080,7 +1092,7 @@ function renderSettings(){
     </div>
   </details>
   <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💬">WhatsApp template</span><span class="small settings-hsub">${esc(tplFirst)}</span><span class="settings-chev"></span></summary>
-    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(settings.template||treasuryTemplate)}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span><span class="small">Money goes out in <b>lakh</b>. Account figures — how many were opened and what they brought in — are not shared.</span></div></div>
+    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(currentTemplate())}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span><span class="small">Money goes out in <b>lakh</b>. Account figures — how many were opened and what they brought in — are not shared.</span></div></div>
   </details>
   <details class="settings-card security-card"><summary class="security-head"><span class="security-title"><span class="security-icon">🔒</span><span><h3>App security</h3><p>Protect access on this device</p></span></span><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span><span class="settings-chev"></span></summary>
     <div class="settings-body"><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></div>
