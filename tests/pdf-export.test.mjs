@@ -7,6 +7,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { JSDOM, VirtualConsole } from "jsdom";
+import { pinClock, FIXTURE_DAY } from "./clock.mjs";
 
 const HTML = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -40,7 +41,7 @@ const day = (date, cash) => ({
   updated: date + "T09:00:00.000Z"
 });
 
-function bootOffline({ records = [] } = {}) {
+function bootOffline({ records = [], now = null } = {}) {
   const downloads = [];
   const blobs = [];
   let fetches = 0;
@@ -57,6 +58,7 @@ function bootOffline({ records = [] } = {}) {
     url: "https://example.test/",
     virtualConsole: vc,
     beforeParse(window) {
+      if (now) pinClock(window, now);
       window.matchMedia = () => ({
         media: "", matches: false, onchange: null,
         addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false
@@ -480,7 +482,10 @@ test("each account row says how many accounts were opened, and every total adds 
         { category: "Savings", count: "3", amount: "60000" },
         { category: "MTDR", amount: "10000" }
       ]
-    }]
+    }],
+    /* The dashboard strip below reads the current month, so the day is pinned
+       to the month the fixtures are written in — see tests/clock.mjs. */
+    now: FIXTURE_DAY
   });
   await new Promise((r) => setTimeout(r, 250));
   const doc = window.document;

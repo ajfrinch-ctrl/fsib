@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { createSyncHandler } from "../src/lib/store.ts";
 import { createLiveHandler, createLiveHub, withLiveNotify } from "../src/lib/live.ts";
+import { pinClock, FIXTURE_DAY } from "./clock.mjs";
 
 const HTML = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -134,7 +135,9 @@ function bootApp({
   /* Where the app shell is served from (default: a host that has the API). */
   url = "https://example.test/",
   /* Extra localStorage keys to seed before the app boots. */
-  storage = null
+  storage = null,
+  /* Pin the day the app believes it is, for a test that reads the current month. */
+  now = null
 } = {}) {
   const own = backend || makeBackend(cloud);
   const blob = own.blob;
@@ -159,6 +162,7 @@ function bootApp({
     url,
     virtualConsole: vc,
     beforeParse(window) {
+      if (now) pinClock(window, now);
       if (holdUpload) window.__fsibHoldUpload = true;
       fakeIndexedDB(window);
       window.matchMedia = (q) => ({
@@ -414,7 +418,10 @@ test("the dashboard renders the synced numbers", async () => {
       day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z"),
       day("2026-09-14", "2400000", "2026-09-14T09:00:00.000Z"),
       withAccounts
-    ]
+    ],
+    /* The month and 30-day strips below read the current month, so the day is
+       pinned inside those fixtures — see tests/clock.mjs. */
+    now: FIXTURE_DAY
   });
   assert.ok(await waitUntil(() => typeof window.renderDashboard === "function"));
   window.renderDashboard();
@@ -517,7 +524,9 @@ test("two devices on the same blob converge on the same data", async () => {
   const handler = createSyncHandler(blob.adapter);
 
   /* Device A: has 1 September, syncs first. */
-  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler, holdUpload: true });
+  /* Both devices are pinned to the September these days belong to: the test ends
+     by comparing what each dashboard shows for the month. */
+  const a = bootApp({ records: [day("2026-09-01", "5000", "2026-09-01T09:00:00.000Z")], handler, holdUpload: true, now: FIXTURE_DAY });
   assert.ok(await waitUntil(() => typeof a.window.pendingCount === "function" && a.window.pendingCount() >= 1));
   await appSettled(a.window);
   const resA = await a.window.syncNow("manual");
@@ -526,7 +535,7 @@ test("two devices on the same blob converge on the same data", async () => {
   assert.deepEqual(blob.peek().records.map((r) => r.date), ["2026-09-01"]);
 
   /* Device B: fresh phone, its own 20 September, never seen A's data. */
-  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler, holdUpload: true });
+  const b = bootApp({ records: [day("2026-09-20", "8888", "2026-09-20T09:00:00.000Z")], handler, holdUpload: true, now: FIXTURE_DAY });
   assert.ok(await waitUntil(() => typeof b.window.pendingCount === "function" && b.window.pendingCount() >= 1));
   await appSettled(b.window);
   const resB = await b.window.syncNow("manual");

@@ -245,7 +245,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 88 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number, the per-row accounts-opened count
+npm test           # 90 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number, the per-row accounts-opened count
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -277,7 +277,16 @@ written to disk unless Download is tapped. Every report PDF — statement,
 visiting, and accounts, for a day, a week, or a month — is the same landscape
 statement: one row per date in that period, and a column for every daily
 entry. A column with no entry is left blank. WhatsApp share text is separate
-and is not this table.
+and is not this table — and it is deliberately not the same money either: the
+printed statement carries the exact Taka figures, while the note on the phone
+says the same day in lakh.
+
+A test that reads the dashboard's *this month* strip pins the day instead of
+dating its fixtures around the calendar: `bootApp({ ..., now: FIXTURE_DAY })`
+and `bootOffline({ ..., now: FIXTURE_DAY })` hand the booted page a frozen
+`Date` (`tests/clock.mjs`), so a fixture dated September is still in "this
+month" in October. Only the page's clock is pinned — `setTimeout`, the waits and
+the runner stay on real time, so a debounce still debounces.
 
 ## Deploy
 
