@@ -102,27 +102,29 @@ work, and opening one section leaves any other open section alone.
 
 ## WhatsApp share
 
-The report the branch sends has two parts, both built in the page:
+One message goes out — **Current Daily Report**, the editable treasury template
+itself. It carries `Total Places Visited: {{visits}}` and
+`Total Deposit: {{depositLac}}`, and the money it names is written in **lakh**
+(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. There is
+no second, detailed block anymore: the **Detailed Daily Activity** section — its
+preview, its `Copy Details` / `Send Details` buttons and the message builder
+behind them — has been taken out of the share sheet entirely, so the day's
+officers, visit rows and new-account rows stay on the device.
 
-- **Current Daily Report** — the editable treasury template. It carries
-  `Total Places Visited: {{visits}}`, `Total Accounts: {{accounts}}` and
-  `Total Deposit: Tk {{deposit}} ({{depositLac}})`, so the places visited and the
-  number of accounts opened that day go out with the day's money. Settings lists
-  every available field (`{{visits}}`, `{{accounts}}` and `{{depositLac}}`
-  included), and an older, hand-edited template keeps working.
-- **Detailed Daily Activity** — the plain-text breakdown: officers, visit
-  details, deposit details, new accounts. Every amount in it is written in
-  **lakh** beside the full figure (`Tk 15,00,000 (15.00 Lac)`), because that is
-  the unit the branch reads.
+Accounts stay out of the note the same way. Neither the money they brought in
+nor how many of them were opened is part of it, and the day's deposit is never
+topped up with the account deposit. A template an older build stored, or one the
+branch hand-edited, cannot put those lines back: `message()` drops every line
+about accounts (`dropAccountLines`) before the fields are filled, and a stored
+copy of the old default template is brought forward to the current one. Settings
+lists the fields that remain — `{{accounts}}` is no longer among them.
 
 An account number is not collected at all. The entry form asks for an account
 type, **how many accounts of that type were opened** (`No. of A/C`), and the
-money they brought in — and the detailed message says
-**`NUMBER OF ACCOUNTS:`** — those counts added up, the way `ACCOUNT DEPOSIT`
-adds the amounts — and lists each new account by type, count and amount. The
-same total appears everywhere a number belongs: the dashboard, the day cards,
-the statement PDF (each day's Accounts cell, and the `TOTAL` row sums the
-counts beside the summed money) and the New Account report. A row whose count
+money they brought in, and those totals appear everywhere a number belongs
+inside the app: the dashboard, the day cards, the statement PDF (each day's
+Accounts cell, and the `TOTAL` row sums the counts beside the summed money) and
+the New Account report. A row whose count
 is left empty — every day saved by an older build — is one account. The
 account *number* itself is still dropped on every read and write by the same
 rule that drops the retired sync switches (`no` in `RETIRED_ACCOUNT_FIELDS`),

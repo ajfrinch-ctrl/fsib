@@ -483,14 +483,14 @@ test("the Save button sits under everything it saves, and it saves all of it", a
 
   doc.querySelector("#sBranch").value = "Cumilla Branch";
   doc.querySelector("#sTarget").value = "5000000";
-  doc.querySelector("#sTemplate").value = "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}";
+  doc.querySelector("#sTemplate").value = "TODAY {{date}} {{visits}} {{deposit}} {{depositLac}}";
   save.click();
   assert.equal(window.eval("settings.branch"), "Cumilla Branch");
   assert.equal(window.eval("settings.target"), 5000000);
-  assert.equal(window.eval("settings.template"), "TODAY {{date}} {{visits}} {{accounts}} {{deposit}} {{depositLac}}",
+  assert.equal(window.eval("settings.template"), "TODAY {{date}} {{visits}} {{deposit}} {{depositLac}}",
     "the WhatsApp template box is not dead");
   assert.match(window.eval("message({ date: '2026-09-21', places: '4', cash: '1250000', officers: [], accounts: [] })"),
-    /TODAY 21 September 2026 4 0 12,50,000 12.50 Lac/);
+    /TODAY 21 September 2026 4 12,50,000 12.50 Lac/);
   assert.deepEqual(errors, []);
 });
 
