@@ -102,27 +102,32 @@ work, and opening one section leaves any other open section alone.
 
 ## WhatsApp share
 
-The report the branch sends has two parts, both built in the page:
+One message goes out — **Current Daily Report**, the editable treasury template
+itself. It carries `Total Places Visited: {{visits}}` and
+`Total Deposit: {{depositLac}}`, and the money it names is written in **lakh**
+(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. There is
+no second, detailed block anymore: the **Detailed Daily Activity** section — its
+preview, its `Copy Details` / `Send Details` buttons and the message builder
+behind them — has been taken out of the share sheet entirely, so the day's
+officers, visit rows and new-account rows stay on the device.
 
-- **Current Daily Report** — the editable treasury template. It carries
-  `Total Places Visited: {{visits}}`, `Total Accounts: {{accounts}}` and
-  `Total Deposit: Tk {{deposit}} ({{depositLac}})`, so the places visited and the
-  number of accounts opened that day go out with the day's money. Settings lists
-  every available field (`{{visits}}`, `{{accounts}}` and `{{depositLac}}`
-  included), and an older, hand-edited template keeps working.
-- **Detailed Daily Activity** — the plain-text breakdown: officers, visit
-  details, deposit details, new accounts. Every amount in it is written in
-  **lakh** beside the full figure (`Tk 15,00,000 (15.00 Lac)`), because that is
-  the unit the branch reads.
+Accounts stay out of the note the same way. Neither the money they brought in
+nor how many of them were opened is part of it, and the day's deposit is never
+topped up with the account deposit. A template an older build stored, or one the
+branch hand-edited, cannot put those lines back: `message()` drops every line
+about accounts (`dropAccountLines`) before the fields are filled, and the old
+default wording is brought forward to the current one wherever the template is
+read (`currentTemplate()`) — from this device's own store, from the cloud or
+from a phone that has not been opened in weeks — because a template is a shared
+setting and arrives from all three. Settings lists the fields that remain —
+`{{accounts}}` is no longer among them, and the box shows what will be sent.
 
 An account number is not collected at all. The entry form asks for an account
 type, **how many accounts of that type were opened** (`No. of A/C`), and the
-money they brought in — and the detailed message says
-**`NUMBER OF ACCOUNTS:`** — those counts added up, the way `ACCOUNT DEPOSIT`
-adds the amounts — and lists each new account by type, count and amount. The
-same total appears everywhere a number belongs: the dashboard, the day cards,
-the statement PDF (each day's Accounts cell, and the `TOTAL` row sums the
-counts beside the summed money) and the New Account report. A row whose count
+money they brought in, and those totals appear everywhere a number belongs
+inside the app: the dashboard, the day cards, the statement PDF (each day's
+Accounts cell, and the `TOTAL` row sums the counts beside the summed money) and
+the New Account report. A row whose count
 is left empty — every day saved by an older build — is one account. The
 account *number* itself is still dropped on every read and write by the same
 rule that drops the retired sync switches (`no` in `RETIRED_ACCOUNT_FIELDS`),
@@ -240,7 +245,7 @@ channel: /api/live long-poll”). Keep the two in step.
 ```bash
 npm install
 npm run dev        # http://localhost:8080 — cloud state in .tmp/dev-state.json
-npm test           # 88 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number, the per-row accounts-opened count
+npm test           # 90 tests: store, live channel (holds, ceiling, hub+poller), client merge, app↔API, CORS, safety net, two devices over real HTTP, a Pages install over real HTTP, offline report generate/preview/download, the WhatsApp share text, the retired account number, the per-row accounts-opened count
 npm run typecheck  # tsc over src/ and netlify/
 npm run build      # produce public/
 ```
@@ -272,7 +277,16 @@ written to disk unless Download is tapped. Every report PDF — statement,
 visiting, and accounts, for a day, a week, or a month — is the same landscape
 statement: one row per date in that period, and a column for every daily
 entry. A column with no entry is left blank. WhatsApp share text is separate
-and is not this table.
+and is not this table — and it is deliberately not the same money either: the
+printed statement carries the exact Taka figures, while the note on the phone
+says the same day in lakh.
+
+A test that reads the dashboard's *this month* strip pins the day instead of
+dating its fixtures around the calendar: `bootApp({ ..., now: FIXTURE_DAY })`
+and `bootOffline({ ..., now: FIXTURE_DAY })` hand the booted page a frozen
+`Date` (`tests/clock.mjs`), so a fixture dated September is still in "this
+month" in October. Only the page's clock is pinned — `setTimeout`, the waits and
+the runner stay on real time, so a debounce still debounces.
 
 ## Deploy
 

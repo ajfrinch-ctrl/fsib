@@ -7,6 +7,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { JSDOM, VirtualConsole } from "jsdom";
+import { pinClock, FIXTURE_DAY } from "./clock.mjs";
 
 const HTML = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -40,7 +41,7 @@ const day = (date, cash) => ({
   updated: date + "T09:00:00.000Z"
 });
 
-function bootOffline({ records = [] } = {}) {
+function bootOffline({ records = [], now = null } = {}) {
   const downloads = [];
   const blobs = [];
   let fetches = 0;
@@ -57,6 +58,7 @@ function bootOffline({ records = [] } = {}) {
     url: "https://example.test/",
     virtualConsole: vc,
     beforeParse(window) {
+      if (now) pinClock(window, now);
       window.matchMedia = () => ({
         media: "", matches: false, onchange: null,
         addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false
@@ -349,22 +351,80 @@ test("WhatsApp share stays the daily message, not the statement table", async ()
   await new Promise((r) => setTimeout(r, 250));
   window.openShareModal(day("2026-09-21", "1250000"));
   const summary = window.document.querySelector("#summaryPreview").textContent;
-  const details = window.document.querySelector("#detailPreview").textContent;
   assert.match(summary, /Daily Report Date : 21 September 2026/);
-  assert.match(summary, /Total Deposit: Tk 12,50,000 \(12\.50 Lac\)/);
   assert.match(summary, /Total Places Visited: 4/);
-  assert.match(summary, /Total Accounts: 1/);
-  assert.match(details, /\*DAILY BRANCH ACTIVITY DETAILS\*/);
-  assert.match(details, /Harun Or Rashid \| School: Tantar High \| Tantar \| 01711111111/);
-  assert.match(details, /\*NUMBER OF ACCOUNTS:\* 1/);
-  assert.match(details, /Savings: Tk 20,000 \(0\.20 Lac\)/);
-  assert.match(details, /\*TOTAL DEPOSIT:\* Tk 12,50,000 \(12\.50 Lac\)/);
-  assert.match(details, /\*ACCOUNT DEPOSIT:\* Tk 20,000 \(0\.20 Lac\)/);
-  /* An account number is a local record detail, not something the branch
-     broadcasts on WhatsApp — the count of accounts opened is what goes out. */
-  assert.doesNotMatch(details, /1001/);
-  assert.doesNotMatch(summary, /STATEMENT/);
-  assert.doesNotMatch(details, /DAILY STATEMENT|MONTHLY STATEMENT|Clr\/BFTN/);
+  /* The branch reads its money in lakh, so lakh alone goes out on WhatsApp. */
+  assert.match(summary, /Total Deposit: 12\.50 Lac/);
+  assert.doesNotMatch(summary, /12,50,000/, "the full Taka figure stays off the note");
+  /* An account number, and accounts as such, are local record details — the note
+     carries the day's deposit and the places it came from, nothing else. */
+  assert.doesNotMatch(summary, /account/i);
+  assert.doesNotMatch(summary, /1001|20,000|0\.20 Lac/);
+  /* There is one block to send: the Detailed Daily Activity section is gone. */
+  assert.equal(typeof window.detailedMessage, "undefined", "no detailed message is built anymore");
+  assert.equal(window.document.querySelector("#detailPreview"), null);
+  assert.equal(window.document.querySelector("#copyDetail"), null);
+  assert.equal(window.document.querySelector("#sendDetail"), null);
+  assert.equal(window.document.querySelector("#reportModal").textContent.includes("Detailed Daily Activity"), false);
+  assert.ok(window.document.querySelector("#copySummary") && window.document.querySelector("#sendSummary"),
+    "the daily report can still be copied and sent");
+  assert.doesNotMatch(summary, /STATEMENT|Clr\/BFTN/);
+});
+
+test("a template that arrives from another device is upgraded where it is read", async () => {
+  /* A phone that only ever syncs can be handed the old wording by the cloud, by
+     IndexedDB or by a device that has not opened the app in weeks — so the
+     upgrade is not a one-time boot migration, it is what the message reads. */
+  const { window } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  const legacy = window.eval("LEGACY_TREASURY_TEMPLATE");
+  assert.ok(legacy && legacy.includes("Total Accounts: {{accounts}}"), "the old wording is known to the app");
+  window.eval("settings.template=" + JSON.stringify(legacy) + ";");
+  const rec = day("2026-09-21", "1250000");
+  rec.accounts = [{ category: "Savings", count: "2", amount: "300000" }];
+  window.openShareModal(rec);
+  const summary = window.document.querySelector("#summaryPreview").textContent;
+  assert.match(summary, /Total Deposit: 12\.50 Lac/, "the day's money, in lakh, nothing else");
+  assert.doesNotMatch(summary, /Accounts|12,50,000|30,000|0\.30 Lac|3\.00 Lac/i);
+  /* The Settings box shows the wording that will actually go out, so saving the
+     settings as they are shown carries the device forward for every other one. */
+  window.renderSettings();
+  const box = window.document.querySelector("#sTemplate").value;
+  assert.doesNotMatch(box, /Accounts|\{\{deposit\}\}/);
+  /* A hand-edited template is not touched beyond the retired account lines. */
+  const edited = "Daily {{date}}\nTotal Deposit: Tk {{deposit}}\nTotal Accounts: {{accounts}}";
+  window.eval("settings.template=" + JSON.stringify(edited) + ";");
+  window.openShareModal(rec);
+  const editedSummary = window.document.querySelector("#summaryPreview").textContent;
+  assert.match(editedSummary, /^Daily 21 September 2026\n/, "the read is not replaced wholesale");
+  assert.match(editedSummary, /Total Deposit: Tk 12,50,000/, "what the branch wrote itself is what goes out");
+  assert.doesNotMatch(editedSummary, /Accounts/);
+});
+
+test("an older, hand-edited template cannot put accounts back in the message", async () => {
+  const { window } = bootOffline({ records: [day("2026-09-21", "1250000")] });
+  await new Promise((r) => setTimeout(r, 250));
+  const legacy = [
+    "Attn : Head of Treasury.",
+    "",
+    "Daily Report Date : {{date}}",
+    "",
+    "Total Places Visited: {{visits}}",
+    "",
+    "Total Accounts: {{accounts}}",
+    "",
+    "Total Deposit: Tk {{deposit}} ({{depositLac}})",
+    "",
+    "Account Deposit: Tk {{accountDeposit}}"
+  ].join("\n");
+  window.eval("settings.template=" + JSON.stringify(legacy) + ";");
+  window.openShareModal(day("2026-09-21", "1250000"));
+  const summary = window.document.querySelector("#summaryPreview").textContent;
+  assert.match(summary, /Total Deposit: Tk 12,50,000 \(12\.50 Lac\)/,
+    "a hand-edited template keeps the fields it uses");
+  assert.doesNotMatch(summary, /Accounts|Account Deposit|\{\{/, "…but the account lines never leave the phone");
+  assert.equal(summary.match(/Total Places Visited: 4\n\nTotal Deposit/)[0], "Total Places Visited: 4\n\nTotal Deposit",
+    "the blank line the dropped row left behind collapses back to one");
 });
 
 test("the entry form keeps Total Places Visited and saves it with the day", async () => {
@@ -422,7 +482,10 @@ test("each account row says how many accounts were opened, and every total adds 
         { category: "Savings", count: "3", amount: "60000" },
         { category: "MTDR", amount: "10000" }
       ]
-    }]
+    }],
+    /* The dashboard strip below reads the current month, so the day is pinned
+       to the month the fixtures are written in — see tests/clock.mjs. */
+    now: FIXTURE_DAY
   });
   await new Promise((r) => setTimeout(r, 250));
   const doc = window.document;
@@ -456,14 +519,12 @@ test("each account row says how many accounts were opened, and every total adds 
   assert.equal(window.accountsCount(rec), 4, "the counts are added up");
   assert.equal(window.accountsTotal(rec), 70000, "the amounts are added up as before");
 
-  /* WhatsApp: the count travels both in the headline and beside each type. */
+  /* WhatsApp: neither the count nor the account money goes out with the note —
+     the day's own deposit is what the branch sends, in lakh. */
   window.openShareModal(rec);
   const summary = doc.querySelector("#summaryPreview").textContent;
-  const details = doc.querySelector("#detailPreview").textContent;
-  assert.match(summary, /Total Accounts: 4/);
-  assert.match(details, /\*NUMBER OF ACCOUNTS:\* 4/);
-  assert.match(details, /Savings \(3 a\/c\): Tk 60,000 \(0\.60 Lac\)/);
-  assert.match(details, /MTDR: Tk 10,000 \(0\.10 Lac\)/);
+  assert.match(summary, /Total Deposit: 12\.50 Lac/, "the day's own money, in lakh");
+  assert.doesNotMatch(summary, /Accounts: 4|Savings|MTDR|70,000|0\.70 Lac|13\.20/);
 
   /* The dashboard's this-month figure counts 4 accounts opened. */
   window.renderDashboard();
