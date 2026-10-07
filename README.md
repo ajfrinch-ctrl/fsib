@@ -105,7 +105,9 @@ work, and opening one section leaves any other open section alone.
 One message goes out — **Current Daily Report**, the editable treasury template
 itself. It carries `Total Places Visited: {{visits}}` and
 `Total Deposit: {{depositLac}}`, and the money it names is written in **lakh**
-(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. There is
+(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. The lakh
+figure is truncated to two decimals, never rounded — Tk 30,79,541 goes out as
+`Total Deposit: 30.79 Lac`. There is
 no second, detailed block anymore: the **Detailed Daily Activity** section — its
 preview, its `Copy Details` / `Send Details` buttons and the message builder
 behind them — has been taken out of the share sheet entirely, so the day's
