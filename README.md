@@ -56,9 +56,13 @@ of the top bar means this device is online and synced.
 
 ## Dashboard
 
-The top of the dashboard is the four periods the branch reads at a glance, each
-with the accounts opened, the money those accounts brought in, and the deposit
-collected in it:
+Accounts Opening and Deposit Collection stay in two separate cards, each with
+the four periods the branch reads at a glance:
+
+| Card | Columns |
+| --- | --- |
+| Deposit Collection | Period · Deposit (official Total Deposit) |
+| Accounts Opening | Period · Accounts · A/C Deposit |
 
 | Period | Accounts | A/C Deposit | Deposit |
 | --- | --- | --- | --- |
@@ -67,9 +71,8 @@ collected in it:
 | This month | accounts this calendar month | their initial deposits | deposit this calendar month |
 | Last 30 days | accounts in the rolling 30 days | their initial deposits | deposit in the rolling 30 days |
 
-The Accounts cell shows both figures at once — the count, with the
-initial-deposit money below it — so each period reads how many accounts and how
-much money at a glance.
+So each period reads how many accounts and how much money at a glance, without
+mixing the two figures.
 
 "Deposit" here is the official **Total Deposit**: the day's cash, clearing/BFTN,
 RTGS, NPSB and agent outlet deposits only. Account opening (initial deposit)

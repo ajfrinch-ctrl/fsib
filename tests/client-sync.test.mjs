@@ -427,12 +427,16 @@ test("the dashboard renders the synced numbers", async () => {
   window.renderDashboard();
   /* The dashboard is the four periods the branch reads at a glance, each with
      the accounts opened and the deposit collected in it. */
-  const periods = [...window.document.querySelectorAll("#dashboard .prow[data-period]")].map((r) => r.dataset.period);
-  assert.deepEqual(periods, ["today", "week", "month", "30d"]);
-  const cell = (key, cls) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
-  /* The accounts cell carries the count with the A/C deposit money below it. */
-  const acctCount = (key) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .pacct`).childNodes[0].textContent.trim();
-  const acctMoney = (key) => window.document.querySelector(`#dashboard [data-acdep="${key}"]`).textContent.replace(/\s+/g, " ").trim();
+  assert.equal(window.document.querySelector("#dashDeposit .sectiontitle").textContent, "Deposit Collection");
+  assert.equal(window.document.querySelector("#dashAccounts .sectiontitle").textContent, "Accounts Opening");
+  for (const card of ["#dashDeposit", "#dashAccounts"]) {
+    const periods = [...window.document.querySelectorAll(`${card} .prow[data-period]`)].map((r) => r.dataset.period);
+    assert.deepEqual(periods, ["today", "week", "month", "30d"]);
+  }
+  const cell = (key, cls) => window.document.querySelector(`#dashDeposit .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
+  /* Accounts Opening is its own card: the count plus the A/C deposit money. */
+  const acctCount = (key) => window.document.querySelector(`#dashAccounts .prow[data-period="${key}"] .pacct`).textContent.trim();
+  const acctMoney = (key) => window.document.querySelector(`#dashAccounts [data-acdep="${key}"]`).textContent.replace(/\s+/g, " ").trim();
   assert.equal(acctCount("today"), "0", "nothing saved today");
   assert.match(acctMoney("today"), /৳ 0/, "no account money today");
   assert.match(cell("today", "pdep"), /৳ 0/, "no deposit today");
@@ -564,7 +568,7 @@ test("two devices on the same blob converge on the same data", async () => {
   /* And both dashboards show the same monthly total. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashDeposit .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.match(monthlyOf(a.window), /13,888/);
   assert.deepEqual([...a.errors, ...b.errors], []);
@@ -693,7 +697,7 @@ test("the live channel carries one device's edit to another with nobody tapping 
   /* Both dashboards now tell the same story. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashDeposit .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.deepEqual([...a.errors, ...b.errors], []);
 });

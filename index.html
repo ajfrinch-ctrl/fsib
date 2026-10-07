@@ -177,12 +177,13 @@ input[type=date],input[type=month]{min-height:46px}
 .tbar.now em{color:var(--green)}
 .dash-goal .dh-goalnum{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
 .dash-goal .progress i{background:linear-gradient(90deg,#3f8bff,#1264d6)}
-/* Period summary: one row per period — the accounts cell carries the count with
-   the initial-deposit money below it, then the deposit cell. */
+/* Period summaries: the Deposit Collection card (period + deposit) and the
+   Accounts Opening card (period + count + A/C deposit) — two separate tables. */
 .dash-periods{margin-top:10px;padding:14px 14px 10px}
 .ptable{margin-top:10px}
 .prow{display:grid;grid-template-columns:minmax(96px,1.15fr) minmax(58px,.7fr) minmax(0,1.35fr);
   gap:8px;align-items:baseline;padding:11px 8px;border-radius:12px}
+.prow.cols2{grid-template-columns:minmax(96px,1fr) minmax(0,1fr)}
 .prow+.prow{border-top:1px dashed var(--line)}
 .prow.phead{padding:0 8px 6px;border:0}
 .prow.phead span{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
@@ -192,7 +193,6 @@ input[type=date],input[type=month]{min-height:46px}
 .pname b{font-size:13.5px;font-weight:800;overflow-wrap:anywhere}
 .pname em{font-style:normal;font-size:11px;color:var(--muted);overflow-wrap:anywhere}
 .pacct{font-size:19px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
-.pacct small{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-top:2px;white-space:nowrap}
 .pdep{font-size:15.5px;font-weight:800;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .pdep small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:2px}
 .prow .pacct.hi{color:var(--green)}
@@ -210,6 +210,7 @@ input[type=date],input[type=month]{min-height:46px}
   #dashboard .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .dh-amount{font-size:40px}
   .prow{grid-template-columns:minmax(150px,1.2fr) minmax(90px,.6fr) minmax(0,1.2fr)}
+  .prow.cols2{grid-template-columns:minmax(150px,1.2fr) minmax(0,1.2fr)}
   .pacct{font-size:21px}
   .pdep{font-size:17px}
 }
@@ -633,17 +634,23 @@ function renderDashboard(){
     {key:'month',en:'This month',rows:month},
     {key:'30d',en:'Last 30 days',rows:inRange(shift(t,-29),t)}
   ];
-  const periodRows=periods.map(pd=>{
-    const dep=sum(pd.rows),ac=acOf(pd.rows),acDep=acDepOf(pd.rows);
-    const sub=pd.key==='today'
-      ?(pd.rows.length?'entry saved':'no entry yet')
-      :(pd.rows.length+' day'+(pd.rows.length===1?'':'s'));
-    return '<div class="prow'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
-      +'<span class="pname"><b>'+pd.en+'</b></span>'
-      +'<span class="pacct" data-acct="'+pd.key+'">'+ac+'<small data-acdep="'+pd.key+'">\u09f3 '+money(acDep)+'</small></span>'
-      +'<span class="pdep" data-dep="'+pd.key+'">\u09f3 '+money(dep)+'<small>'+sub+'</small></span>'
-      +'</div>';
-  }).join('');
+  const subFor=pd=>pd.key==='today'
+    ?(pd.rows.length?'entry saved':'no entry yet')
+    :(pd.rows.length+' day'+(pd.rows.length===1?'':'s'));
+  /* Deposit Collection and Accounts Opening stay in separate tables. */
+  const depRows=periods.map(pd=>
+    '<div class="prow cols2'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
+    +'<span class="pname"><b>'+pd.en+'</b></span>'
+    +'<span class="pdep" data-dep="'+pd.key+'">\u09f3 '+money(sum(pd.rows))+'<small>'+subFor(pd)+'</small></span>'
+    +'</div>'
+  ).join('');
+  const acRows=periods.map(pd=>
+    '<div class="prow'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
+    +'<span class="pname"><b>'+pd.en+'</b></span>'
+    +'<span class="pacct" data-acct="'+pd.key+'">'+acOf(pd.rows)+'</span>'
+    +'<span class="pdep" data-acdep="'+pd.key+'">\u09f3 '+money(acDepOf(pd.rows))+'</span>'
+    +'</div>'
+  ).join('');
   const weekNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   /* last seven days (today last) as a small bar chart */
   const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
@@ -678,13 +685,20 @@ function renderDashboard(){
       :`<div class="empty">Monthly target not set.</div>`}
     </div>
   </div>
-  <div class="card dash-periods">
-    <div class="dh-row"><div class="sectiontitle">Accounts &amp; Deposit</div><span class="pill">${monthAc} this month</span></div>
+  <div class="card dash-periods" id="dashDeposit">
+    <div class="dh-row"><div class="sectiontitle">Deposit Collection</div><span class="pill">\u09f3 ${money(monthDep)} this month</span></div>
     <div class="ptable">
-      <div class="prow phead"><span class="pname">Period</span><span class="pacct">Accounts</span><span class="pdep">Deposit (\u09f3)</span></div>
-      ${periodRows}
+      <div class="prow phead cols2"><span class="pname">Period</span><span class="pdep">Deposit (\u09f3)</span></div>
+      ${depRows}
     </div>
     <div class="pnote">Deposit = cash, clearing/BFTN, RTGS, NPSB, agent outlet (official Total Deposit — account opening money is never added). Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]}, ${dateShort(weekStart)} to ${dateShort(weekEnd)}. Last 30 days includes today.</div>
+  </div>
+  <div class="card dash-periods" id="dashAccounts">
+    <div class="dh-row"><div class="sectiontitle">Accounts Opening</div><span class="pill">${monthAc} this month</span></div>
+    <div class="ptable">
+      <div class="prow phead"><span class="pname">Period</span><span class="pacct">Accounts</span><span class="pdep">A/C Deposit (\u09f3)</span></div>
+      ${acRows}
+    </div>
   </div>
   <div class="card dash-hi">
     <div class="sectiontitle">Highlights</div>
