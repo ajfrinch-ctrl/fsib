@@ -559,10 +559,12 @@ test("each account row says how many accounts were opened, and every total adds 
   assert.match(summary, /Total Deposit: 12\.50 Lac/, "the day's own money, in lakh");
   assert.doesNotMatch(summary, /Accounts: 4|Savings|MTDR|70,000|0\.70 Lac|13\.20/);
 
-  /* The dashboard's this-month figure counts 4 accounts opened. */
+  /* The dashboard's this-month figure counts 4 accounts opened, and below the
+     count it shows the ৳ 70,000 those accounts brought in. */
   window.renderDashboard();
   const pacct = doc.querySelector('#dashboard .prow[data-period="month"] .pacct');
-  assert.equal(pacct.textContent.replace(/\s+/g, " ").trim(), "4");
+  assert.equal(pacct.childNodes[0].textContent.trim(), "4");
+  assert.match(doc.querySelector('#dashboard [data-acdep="month"]').textContent.replace(/\s+/g, " ").trim(), /৳ 70,000/);
   /* …but the ৳ 70,000 of account opening money is not added to Total Deposit. */
   const pdep = doc.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.match(pdep, /12,50,000/);

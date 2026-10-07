@@ -177,8 +177,8 @@ input[type=date],input[type=month]{min-height:46px}
 .tbar.now em{color:var(--green)}
 .dash-goal .dh-goalnum{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
 .dash-goal .progress i{background:linear-gradient(90deg,#3f8bff,#1264d6)}
-/* Period summary: one row per period, an accounts cell and a deposit cell —
-   today / this week / this month / last 30 days. */
+/* Period summary: one row per period — the accounts cell carries the count with
+   the initial-deposit money below it, then the deposit cell. */
 .dash-periods{margin-top:10px;padding:14px 14px 10px}
 .ptable{margin-top:10px}
 .prow{display:grid;grid-template-columns:minmax(96px,1.15fr) minmax(58px,.7fr) minmax(0,1.35fr);
@@ -192,6 +192,7 @@ input[type=date],input[type=month]{min-height:46px}
 .pname b{font-size:13.5px;font-weight:800;overflow-wrap:anywhere}
 .pname em{font-style:normal;font-size:11px;color:var(--muted);overflow-wrap:anywhere}
 .pacct{font-size:19px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.pacct small{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-top:2px;white-space:nowrap}
 .pdep{font-size:15.5px;font-weight:800;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .pdep small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:2px}
 .prow .pacct.hi{color:var(--green)}
@@ -624,6 +625,7 @@ function renderDashboard(){
   const weekEnd=shift(weekStart,Math.max(0,(Number(settings.weeklyEnd)||0)-(Number(settings.weeklyStart)||0)));
   const inRange=(a,b)=>records.filter(r=>r.date>=a&&r.date<=b);
   const acOf=a=>a.reduce((x,r)=>x+accountsCount(r),0);
+  const acDepOf=a=>a.reduce((x,r)=>x+accountsTotal(r),0);
   const visOfList=a=>a.reduce((x,r)=>x+visits(r),0);
   const periods=[
     {key:'today',en:'Today',rows:now?[now]:[]},
@@ -632,13 +634,13 @@ function renderDashboard(){
     {key:'30d',en:'Last 30 days',rows:inRange(shift(t,-29),t)}
   ];
   const periodRows=periods.map(pd=>{
-    const dep=sum(pd.rows),ac=acOf(pd.rows);
+    const dep=sum(pd.rows),ac=acOf(pd.rows),acDep=acDepOf(pd.rows);
     const sub=pd.key==='today'
       ?(pd.rows.length?'entry saved':'no entry yet')
       :(pd.rows.length+' day'+(pd.rows.length===1?'':'s'));
     return '<div class="prow'+(pd.key==='today'?' pnow':'')+'" data-period="'+pd.key+'">'
       +'<span class="pname"><b>'+pd.en+'</b></span>'
-      +'<span class="pacct" data-acct="'+pd.key+'">'+ac+'</span>'
+      +'<span class="pacct" data-acct="'+pd.key+'">'+ac+'<small data-acdep="'+pd.key+'">\u09f3 '+money(acDep)+'</small></span>'
       +'<span class="pdep" data-dep="'+pd.key+'">\u09f3 '+money(dep)+'<small>'+sub+'</small></span>'
       +'</div>';
   }).join('');

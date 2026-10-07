@@ -430,12 +430,18 @@ test("the dashboard renders the synced numbers", async () => {
   const periods = [...window.document.querySelectorAll("#dashboard .prow[data-period]")].map((r) => r.dataset.period);
   assert.deepEqual(periods, ["today", "week", "month", "30d"]);
   const cell = (key, cls) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
-  assert.equal(cell("today", "pacct"), "0", "nothing saved today");
+  /* The accounts cell carries the count with the A/C deposit money below it. */
+  const acctCount = (key) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .pacct`).childNodes[0].textContent.trim();
+  const acctMoney = (key) => window.document.querySelector(`#dashboard [data-acdep="${key}"]`).textContent.replace(/\s+/g, " ").trim();
+  assert.equal(acctCount("today"), "0", "nothing saved today");
+  assert.match(acctMoney("today"), /৳ 0/, "no account money today");
   assert.match(cell("today", "pdep"), /৳ 0/, "no deposit today");
   assert.match(cell("month", "pdep"), /25,05,000/, "this month totals every day's own deposit");
   assert.doesNotMatch(cell("month", "pdep"), /25,35,000/, "the ৳ 30,000 of account opening money is not added");
   assert.match(cell("30d", "pdep"), /25,05,000/, "the last 30 days include every day, account money excluded");
-  assert.equal(cell("month", "pacct"), "2", "the two accounts opened this month are counted");
+  assert.equal(acctCount("month"), "2", "the two accounts opened this month are counted");
+  assert.match(acctMoney("month"), /৳ 30,000/, "…and how much money they brought in");
+  assert.match(acctMoney("30d"), /৳ 30,000/, "the last 30 days show the same account money");
   assert.match(window.document.querySelector("#dashboard .pnote").textContent, /never added/,
     "the card says account opening money stays out of Total Deposit");
   assert.deepEqual(errors, []);
