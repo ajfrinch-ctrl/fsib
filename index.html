@@ -590,10 +590,9 @@ function save(){
    disagree. Account numbers are not collected anymore. */
 function accountRows(r){return (r.accounts||[]).filter(x=>num(x&&x.amount)>0)}
 function accountsTotal(r){return accountRows(r).reduce((a,x)=>a+num(x.amount),0)}
-/* The dashboard's deposit figure: the day's own deposit plus the money its new
-   accounts brought in. The entry form, the WhatsApp text and the PDFs keep the
-   official Total Deposit (cash/clearing/RTGS/NPSB/agent) exactly as it was. */
-function depositAll(r){return total(r)+accountsTotal(r)}/* Accounts opened = the "No. of A/C" numbers added up, the way Account Deposit adds the amounts. A row that predates the count — or leaves it empty — is one account. */function accountsCount(r){return accountRows(r).reduce((a,x)=>a+(num(x.count)||1),0)}function visits(r){return num(r.places)||((r.visits||[]).length)}
+/* Total Deposit is the official figure everywhere — cash, clearing/BFTN, RTGS,
+   NPSB and agent outlet deposits only. Account opening (initial deposit) money
+   is tracked separately and is never added to it, on the dashboard included. *//* Accounts opened = the "No. of A/C" numbers added up, the way Account Deposit adds the amounts. A row that predates the count — or leaves it empty — is one account. */function accountsCount(r){return accountRows(r).reduce((a,x)=>a+(num(x.count)||1),0)}function visits(r){return num(r.places)||((r.visits||[]).length)}
 function theme(){let dark=settings.theme==='dark'||(settings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark);$('#themeBtn').textContent=dark?'🌙':'☀️'}function setTheme(){settings.theme=document.body.classList.contains('dark')?'light':'dark';save();theme()}$('#themeBtn').onclick=setTheme;
 function nav(page){if(page==='entry') renderEntry();if(page==='history')renderHistory();if(page==='reports')renderReports();if(page==='settings')renderSettings();if(page==='dashboard')renderDashboard();$$('.page').forEach(x=>x.classList.toggle('active',x.id===page));$$('.nav button').forEach(x=>{const on=x.dataset.page===page;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});window.scrollTo(0,0)}$$('.nav button').forEach(b=>b.onclick=()=>nav(b.dataset.page));
 function renderDashboard(){
@@ -603,12 +602,11 @@ function renderDashboard(){
   const week=records.filter(r=>new Date(r.date+'T12:00')>=start);
   const month=records.filter(r=>r.date.slice(0,7)===t.slice(0,7));
   const sum=a=>a.reduce((x,r)=>x+total(r),0);
-  const sumAll=a=>a.reduce((x,r)=>x+depositAll(r),0);
   const best=[...records].sort((a,b)=>total(b)-total(a))[0];
   const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
   const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
   const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
-  const monthDep=sumAll(month);
+  const monthDep=sum(month);
   const monthAc=month.reduce((a,r)=>a+accountsCount(r),0);
   const target=num(settings.target);
   const pct=target>0?Math.min(100,Math.round(monthDep/target*100)):0;
@@ -626,7 +624,6 @@ function renderDashboard(){
   const weekEnd=shift(weekStart,Math.max(0,(Number(settings.weeklyEnd)||0)-(Number(settings.weeklyStart)||0)));
   const inRange=(a,b)=>records.filter(r=>r.date>=a&&r.date<=b);
   const acOf=a=>a.reduce((x,r)=>x+accountsCount(r),0);
-  const acDepOf=a=>a.reduce((x,r)=>x+accountsTotal(r),0);
   const visOfList=a=>a.reduce((x,r)=>x+visits(r),0);
   const periods=[
     {key:'today',en:'Today',rows:now?[now]:[]},
@@ -635,7 +632,7 @@ function renderDashboard(){
     {key:'30d',en:'Last 30 days',rows:inRange(shift(t,-29),t)}
   ];
   const periodRows=periods.map(pd=>{
-    const dep=sumAll(pd.rows),ac=acOf(pd.rows);
+    const dep=sum(pd.rows),ac=acOf(pd.rows);
     const sub=pd.key==='today'
       ?(pd.rows.length?'entry saved':'no entry yet')
       :(pd.rows.length+' day'+(pd.rows.length===1?'':'s'));
@@ -649,7 +646,7 @@ function renderDashboard(){
   /* last seven days (today last) as a small bar chart */
   const dayKeys=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);dayKeys.push(x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()));}
   const recOf=k=>records.find(z=>z.date===k);
-  const depOf=k=>{const r=recOf(k);return r?depositAll(r):0};
+  const depOf=k=>{const r=recOf(k);return r?total(r):0};
   const visOf=k=>{const r=recOf(k);return r?visits(r):0};
   const maxDep=Math.max(1,...dayKeys.map(depOf));
   const bars=dayKeys.map(k=>{
@@ -661,13 +658,13 @@ function renderDashboard(){
   $('#dashboard').innerHTML=`<div class="sectionhead"><div><h2>Dashboard</h2></div><span class="small">${dateText(t)}</span></div>
   <div class="dash-hero${now?'':' todo'}">
     <div class="dh-top"><span class="dh-eyebrow">Today\u2019s Deposit</span><span class="dh-pill">${now?'Entry saved':'No entry yet'}</span></div>
-    <div class="dh-amount">\u09f3 ${money(now?depositAll(now):0)}</div>
-    <div class="dh-sub">${lac(now?depositAll(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
+    <div class="dh-amount">\u09f3 ${money(now?total(now):0)}</div>
+    <div class="dh-sub">${lac(now?total(now):0)}${now?(' \u00b7 '+visits(now)+' visits \u00b7 '+accountsCount(now)+' new account'+(accountsCount(now)===1?'':'s')):''}</div>
     <button class="dh-cta" id="dashCta" type="button">${now?'Edit Today\u2019s Entry':'Add Today\u2019s Data'}</button>
   </div>
   <div class="dash-row">
     <div class="card dash-trend">
-      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sumAll(week))}</span></div>
+      <div class="dh-row"><div class="sectiontitle">Last 7 days</div><span class="pill">\u09f3 ${money(sum(week))}</span></div>
       <div class="tbars">${bars}</div>
     </div>
     <div class="card dash-goal">
@@ -685,11 +682,11 @@ function renderDashboard(){
       <div class="prow phead"><span class="pname">Period</span><span class="pacct">Accounts</span><span class="pdep">Deposit (\u09f3)</span></div>
       ${periodRows}
     </div>
-    <div class="pnote">Deposit = cash, clearing/BFTN, RTGS, NPSB, agent outlet + new-account initial deposits (\u09f3 ${money(acDepOf(periods[3].rows))} of the 30-day figure). Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]}, ${dateShort(weekStart)} to ${dateShort(weekEnd)}. Last 30 days includes today.</div>
+    <div class="pnote">Deposit = cash, clearing/BFTN, RTGS, NPSB, agent outlet (official Total Deposit — account opening money is never added). Week: ${weekNames[Number(settings.weeklyStart)||0]}\u2013${weekNames[(Number(settings.weeklyEnd)||4)%7]}, ${dateShort(weekStart)} to ${dateShort(weekEnd)}. Last 30 days includes today.</div>
   </div>
   <div class="card dash-hi">
     <div class="sectiontitle">Highlights</div>
-    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(depositAll(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
+    ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(total(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
     ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
     ${(bestV&&visits(bestV)>0)?('<div class="hirow"><span class="hilabel">Most places visited</span><b>'+visits(bestV)+' places</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
     ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}

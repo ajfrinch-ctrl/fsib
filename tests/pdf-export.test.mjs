@@ -563,6 +563,10 @@ test("each account row says how many accounts were opened, and every total adds 
   window.renderDashboard();
   const pacct = doc.querySelector('#dashboard .prow[data-period="month"] .pacct');
   assert.equal(pacct.textContent.replace(/\s+/g, " ").trim(), "4");
+  /* …but the ৳ 70,000 of account opening money is not added to Total Deposit. */
+  const pdep = doc.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  assert.match(pdep, /12,50,000/);
+  assert.doesNotMatch(pdep, /13,20,000/);
 
   /* The statement PDF: the day cell carries the count, the header says 4, and
      the TOTAL row adds them up like it adds the money. */
