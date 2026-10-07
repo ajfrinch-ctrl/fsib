@@ -371,6 +371,39 @@ test("WhatsApp share stays the daily message, not the statement table", async ()
   assert.doesNotMatch(summary, /STATEMENT|Clr\/BFTN/);
 });
 
+test("the WhatsApp note reads the deposit truncated to lakh — Tk 30,79,541 goes as 30.79 Lac", async () => {
+  const rec = { ...day("2026-10-06", "3079541"), places: "2" };
+  const { window } = bootOffline({ records: [rec] });
+  await new Promise((r) => setTimeout(r, 250));
+  /* Truncated, never rounded: 30.79541 Lac reads 30.79, not 30.80. */
+  assert.equal(window.eval("lac('3079541')"), "30.79 Lac");
+  assert.equal(window.eval("lac('1250000')"), "12.50 Lac");
+  assert.equal(window.eval("lac('1249999')"), "12.49 Lac");
+  window.openShareModal(rec);
+  const summary = window.document.querySelector("#summaryPreview").textContent;
+  assert.equal(summary, [
+    "Attn : Head of Treasury.",
+    "",
+    "Daily Report Date : 6 October 2026",
+    "",
+    "Team-8 (Cumilla Zone)",
+    "",
+    "Total Branch: 21",
+    "Reported Branch: Tantar Branch",
+    "",
+    "Total Places Visited: 2",
+    "",
+    "Total Deposit: 30.79 Lac",
+    "",
+    "Regd.",
+    "",
+    "Harun Or Rashid",
+    "Manager",
+    "Tantar Branch"
+  ].join("\n"));
+  assert.doesNotMatch(summary, /30,79,541/, "the full Taka figure stays off the note");
+});
+
 test("a template that arrives from another device is upgraded where it is read", async () => {
   /* A phone that only ever syncs can be handed the old wording by the cloud, by
      IndexedDB or by a device that has not opened the app in weeks — so the
@@ -526,10 +559,16 @@ test("each account row says how many accounts were opened, and every total adds 
   assert.match(summary, /Total Deposit: 12\.50 Lac/, "the day's own money, in lakh");
   assert.doesNotMatch(summary, /Accounts: 4|Savings|MTDR|70,000|0\.70 Lac|13\.20/);
 
-  /* The dashboard's this-month figure counts 4 accounts opened. */
+  /* The Accounts Opening card counts 4 accounts opened this month and the
+     ৳ 70,000 those accounts brought in. */
   window.renderDashboard();
-  const pacct = doc.querySelector('#dashboard .prow[data-period="month"] .pacct');
+  const pacct = doc.querySelector('#dashAccounts .prow[data-period="month"] .pacct');
   assert.equal(pacct.textContent.replace(/\s+/g, " ").trim(), "4");
+  assert.match(doc.querySelector('#dashAccounts [data-acdep="month"]').textContent.replace(/\s+/g, " ").trim(), /৳ 70,000/);
+  /* …but the ৳ 70,000 of account opening money is not added to Total Deposit. */
+  const pdep = doc.querySelector('#dashDeposit .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  assert.match(pdep, /12,50,000/);
+  assert.doesNotMatch(pdep, /13,20,000/);
 
   /* The statement PDF: the day cell carries the count, the header says 4, and
      the TOTAL row adds them up like it adds the money. */

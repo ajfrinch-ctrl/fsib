@@ -56,21 +56,30 @@ of the top bar means this device is online and synced.
 
 ## Dashboard
 
-The top of the dashboard is the four periods the branch reads at a glance, each
-with the accounts opened and the deposit collected in it:
+Accounts Opening and Deposit Collection stay in two separate cards, each with
+the four periods the branch reads at a glance:
 
-| Period | Accounts | Deposit |
-| --- | --- | --- |
-| Today | new accounts opened today | today's deposit |
-| This week | accounts in the branch week | deposit in the branch week |
-| This month | accounts this calendar month | deposit this calendar month |
-| Last 30 days | accounts in the rolling 30 days | deposit in the rolling 30 days |
+| Card | Columns |
+| --- | --- |
+| Deposit Collection | Period · Deposit (official Total Deposit) |
+| Accounts Opening | Period · Accounts · A/C Deposit |
 
-"Deposit" here is one number: the day's cash, clearing/BFTN, RTGS, NPSB and
-agent outlet deposits **plus** the initial deposits the new accounts brought in
-(the card's footer says so and shows how much of the 30-day figure is account
-money). The entry form, the WhatsApp text and the report PDFs keep the official
-Total Deposit untouched — nothing about what the branch files changes.
+| Period | Accounts | A/C Deposit | Deposit |
+| --- | --- | --- | --- |
+| Today | new accounts opened today | their initial deposits | today's deposit |
+| This week | accounts in the branch week | their initial deposits | deposit in the branch week |
+| This month | accounts this calendar month | their initial deposits | deposit this calendar month |
+| Last 30 days | accounts in the rolling 30 days | their initial deposits | deposit in the rolling 30 days |
+
+So each period reads how many accounts and how much money at a glance, without
+mixing the two figures.
+
+"Deposit" here is the official **Total Deposit**: the day's cash, clearing/BFTN,
+RTGS, NPSB and agent outlet deposits only. Account opening (initial deposit)
+money is tracked separately and is never added to it — not in the hero, the
+period rows, the 7-day trend, the monthly target or the highlights (the card's
+footer says so). The entry form, the WhatsApp text and the report PDFs keep the
+same figure, so nothing about what the branch files changes.
 
 "This week" follows `weeklyStart`/`weeklyEnd` (Sunday–Thursday by default), the
 same window History groups by and the weekly report is filed against, so the row
@@ -105,7 +114,9 @@ work, and opening one section leaves any other open section alone.
 One message goes out — **Current Daily Report**, the editable treasury template
 itself. It carries `Total Places Visited: {{visits}}` and
 `Total Deposit: {{depositLac}}`, and the money it names is written in **lakh**
-(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. There is
+(`Total Deposit: 15.00 Lac`) because that is the unit the branch reads. The lakh
+figure is truncated to two decimals, never rounded — Tk 30,79,541 goes out as
+`Total Deposit: 30.79 Lac`. There is
 no second, detailed block anymore: the **Detailed Daily Activity** section — its
 preview, its `Copy Details` / `Send Details` buttons and the message builder
 behind them — has been taken out of the share sheet entirely, so the day's

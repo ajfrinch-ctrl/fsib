@@ -405,7 +405,7 @@ test("the PIN stays on the device and never reaches the blob", async () => {
 
 test("the dashboard renders the synced numbers", async () => {
   /* A day that opened accounts, so the deposit column can be checked against the
-     money the new accounts brought in as well as the day's own deposit. */
+     day's own deposit alone — account opening money is never added to it. */
   const withAccounts = {
     ...day("2026-09-16", "100000", "2026-09-16T09:00:00.000Z"),
     accounts: [
@@ -427,14 +427,27 @@ test("the dashboard renders the synced numbers", async () => {
   window.renderDashboard();
   /* The dashboard is the four periods the branch reads at a glance, each with
      the accounts opened and the deposit collected in it. */
-  const periods = [...window.document.querySelectorAll("#dashboard .prow[data-period]")].map((r) => r.dataset.period);
-  assert.deepEqual(periods, ["today", "week", "month", "30d"]);
-  const cell = (key, cls) => window.document.querySelector(`#dashboard .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
-  assert.equal(cell("today", "pacct"), "0", "nothing saved today");
+  assert.equal(window.document.querySelector("#dashDeposit .sectiontitle").textContent, "Deposit Collection");
+  assert.equal(window.document.querySelector("#dashAccounts .sectiontitle").textContent, "Accounts Opening");
+  for (const card of ["#dashDeposit", "#dashAccounts"]) {
+    const periods = [...window.document.querySelectorAll(`${card} .prow[data-period]`)].map((r) => r.dataset.period);
+    assert.deepEqual(periods, ["today", "week", "month", "30d"]);
+  }
+  const cell = (key, cls) => window.document.querySelector(`#dashDeposit .prow[data-period="${key}"] .${cls}`).textContent.replace(/\s+/g, " ").trim();
+  /* Accounts Opening is its own card: the count plus the A/C deposit money. */
+  const acctCount = (key) => window.document.querySelector(`#dashAccounts .prow[data-period="${key}"] .pacct`).textContent.trim();
+  const acctMoney = (key) => window.document.querySelector(`#dashAccounts [data-acdep="${key}"]`).textContent.replace(/\s+/g, " ").trim();
+  assert.equal(acctCount("today"), "0", "nothing saved today");
+  assert.match(acctMoney("today"), /৳ 0/, "no account money today");
   assert.match(cell("today", "pdep"), /৳ 0/, "no deposit today");
-  assert.match(cell("month", "pdep"), /25,35,000/, "this month totals every day, new-account deposits included");
-  assert.match(cell("30d", "pdep"), /25,35,000/, "the last 30 days include every day");
-  assert.equal(cell("month", "pacct"), "2", "the two accounts opened this month are counted");
+  assert.match(cell("month", "pdep"), /25,05,000/, "this month totals every day's own deposit");
+  assert.doesNotMatch(cell("month", "pdep"), /25,35,000/, "the ৳ 30,000 of account opening money is not added");
+  assert.match(cell("30d", "pdep"), /25,05,000/, "the last 30 days include every day, account money excluded");
+  assert.equal(acctCount("month"), "2", "the two accounts opened this month are counted");
+  assert.match(acctMoney("month"), /৳ 30,000/, "…and how much money they brought in");
+  assert.match(acctMoney("30d"), /৳ 30,000/, "the last 30 days show the same account money");
+  assert.match(window.document.querySelector("#dashboard .pnote").textContent, /never added/,
+    "the card says account opening money stays out of Total Deposit");
   assert.deepEqual(errors, []);
 });
 
@@ -555,7 +568,7 @@ test("two devices on the same blob converge on the same data", async () => {
   /* And both dashboards show the same monthly total. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashDeposit .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.match(monthlyOf(a.window), /13,888/);
   assert.deepEqual([...a.errors, ...b.errors], []);
@@ -684,7 +697,7 @@ test("the live channel carries one device's edit to another with nobody tapping 
   /* Both dashboards now tell the same story. */
   a.window.renderDashboard();
   b.window.renderDashboard();
-  const monthlyOf = (w) => w.document.querySelector('#dashboard .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
+  const monthlyOf = (w) => w.document.querySelector('#dashDeposit .prow[data-period="month"] .pdep').textContent.replace(/\s+/g, " ").trim();
   assert.equal(monthlyOf(a.window), monthlyOf(b.window));
   assert.deepEqual([...a.errors, ...b.errors], []);
 });
