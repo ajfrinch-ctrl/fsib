@@ -675,7 +675,7 @@ function renderDashboard(){
       <div class="dh-goalnum">\u09f3 ${money(monthDep)} <span class="small">/ \u09f3 ${money(target)}</span></div>
       <div class="progress"><i style="width:${pct}%"></i></div>
       <div class="small" style="margin-top:8px">${daysLeft>0?(daysLeft+' days left this month'):'Last day of the month'} \u00b7 ${month.length} day${month.length===1?'':'s'} recorded</div>`
-      :`<div class="empty">Track the month against a target \u2014 set one in Settings.</div><button class="outline" id="dashGoalCfg" type="button" style="width:100%;margin-top:4px">Open Settings</button>`}
+      :`<div class="empty">Monthly target not set.</div>`}
     </div>
   </div>
   <div class="card dash-periods">
@@ -695,8 +695,6 @@ function renderDashboard(){
   </div>`;
   const cta=document.getElementById('dashCta');
   if(cta)cta.onclick=()=>{nav('entry');if(now)renderEntry(now);};
-  const cfg=document.getElementById('dashGoalCfg');
-  if(cfg)cfg.onclick=()=>nav('settings');
 }
 function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-count"><span class="rl">No. of A/C</span><input class="acount" inputmode="numeric" aria-label="Number of accounts" placeholder="1" value="${esc(a.count||'')}"></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
 function renderEntry(record){
