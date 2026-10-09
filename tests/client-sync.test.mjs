@@ -510,7 +510,8 @@ test("the Save button sits under everything it saves, and it saves all of it", a
   assert.equal(window.eval("settings.template"), "TODAY {{date}} {{visits}} {{deposit}} {{depositLac}}",
     "the WhatsApp template box is not dead");
   assert.match(window.eval("message({ date: '2026-09-21', places: '4', cash: '1250000', officers: [], accounts: [] })"),
-    /TODAY 21 September 2026 4 12,50,000 12.50 Lac/);
+    /TODAY 21 September 2026 4 12.50 Lac 12.50 Lac/,
+    "the deposit goes out in lakh no matter which placeholder the template uses");
   assert.deepEqual(errors, []);
 });
 
