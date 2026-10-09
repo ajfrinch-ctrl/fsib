@@ -182,19 +182,17 @@ test("the monthly statement PDF is a date table with blank columns", async () =>
   assert.equal(cells21[5].trim(), "");
   assert.equal(cells21[6].trim(), "");
   const body = lines.join("\n");
-  assert.match(body, /Harun Or Rashid/);
-  assert.match(body, /School/);
-  assert.match(body, /Tantar High/);
-  assert.match(body, /01711111111/);
+  assert.doesNotMatch(body, /Harun Or Rashid/, "agent visits no longer appear in the statement");
+  assert.doesNotMatch(body, /School/);
+  assert.doesNotMatch(body, /Tantar High/);
+  assert.doesNotMatch(body, /01711111111/);
   assert.match(body, /Savings 20,000/);
   assert.doesNotMatch(body, /1001/, "an account number is not printed anywhere");
   const total = lines.find((l) => l.startsWith("TOTAL"));
   const totalCells = statementCells(total, cols);
   assert.equal(totalCells[2].trim(), "21,30,000");
   assert.equal(totalCells[3].trim(), "");
-  assert.equal(totalCells[7].trim(), "");
-  assert.equal(totalCells[8].trim(), "");
-  assert.equal(totalCells[9].trim(), "2 a/c", "the TOTAL row adds the accounts opened, the way it adds the money");
+  assert.equal(totalCells[7].trim(), "2 a/c", "the TOTAL row adds the accounts opened, the way it adds the money");
 
   const feb2024 = window.statementLines("2024-02-01");
   assert.equal(feb2024.find((l) => l.startsWith("29 Feb")).trim(), "29 Feb");
@@ -236,9 +234,7 @@ test("a partial day leaves the missing statement columns empty", async () => {
   assert.equal(cells[4].trim(), "");
   assert.equal(cells[5].trim(), "");
   assert.equal(cells[6].trim(), "");
-  assert.equal(cells[7].trim(), "");
-  assert.equal(cells[8].trim(), "", "a visit with no entered detail does not fill the column");
-  assert.equal(cells[9].trim(), "", "an account row with no number and no amount stays blank");
+  assert.equal(cells[7].trim(), "", "an account row with no number and no amount stays blank");
   assert.equal(lines.find((l) => l.startsWith("03 Sep")).trim(), "03 Sep");
 });
 
@@ -246,8 +242,8 @@ test("the account report exports offline too", async () => {
   const { window, downloads, blobs, fetchCount } = bootOffline({ records: [day("2026-09-21", "1250000")] });
   await new Promise((r) => setTimeout(r, 250));
 
-  /* The visiting view was retired, but its stored rows still belong in the
-     statement table: the Accounts tab is the only report view left, and it
+  /* The visiting view was retired and its stored rows no longer reach the
+     statement: the Accounts tab is the only report view left, and it
      exports the same landscape statement. */
   assert.equal(typeof window.renderVisitReport, "undefined", "the visiting view is gone");
   assert.equal(window.document.querySelector("#visitingPage"), null);
@@ -265,9 +261,9 @@ test("the account report exports offline too", async () => {
   assert.match(accountPdf, /MediaBox \[0 0 842 595\]/);
   assert.match(accountPdf, /BaseFont \/Courier/);
   assert.doesNotMatch(accountPdf, /NEW ACCOUNT REPORT/);
-  assert.match(accountPdf, /School/);
-  assert.match(accountPdf, /Tantar High/);
-  assert.match(accountPdf, /01711111111/);
+  assert.doesNotMatch(accountPdf, /School/, "agent visits no longer appear in the statement");
+  assert.doesNotMatch(accountPdf, /Tantar High/);
+  assert.doesNotMatch(accountPdf, /01711111111/);
   assert.match(accountPdf, /Savings 20,000/);
   assert.doesNotMatch(accountPdf, /1001/);
   assert.match(accountPdf, /12,50,000/);
@@ -430,7 +426,8 @@ test("a template that arrives from another device is upgraded where it is read",
   window.openShareModal(rec);
   const editedSummary = window.document.querySelector("#summaryPreview").textContent;
   assert.match(editedSummary, /^Daily 21 September 2026\n/, "the read is not replaced wholesale");
-  assert.match(editedSummary, /Total Deposit: Tk 12,50,000/, "what the branch wrote itself is what goes out");
+  assert.match(editedSummary, /Total Deposit: Tk 12.50 Lac/, "what the branch wrote itself is what goes out");
+  assert.doesNotMatch(editedSummary, /12,50,000/, "even a hand-edited {{deposit}} figure leaves in lakh");
   assert.doesNotMatch(editedSummary, /Accounts/);
 });
 
@@ -453,8 +450,8 @@ test("an older, hand-edited template cannot put accounts back in the message", a
   window.eval("settings.template=" + JSON.stringify(legacy) + ";");
   window.openShareModal(day("2026-09-21", "1250000"));
   const summary = window.document.querySelector("#summaryPreview").textContent;
-  assert.match(summary, /Total Deposit: Tk 12,50,000 \(12\.50 Lac\)/,
-    "a hand-edited template keeps the fields it uses");
+  assert.match(summary, /Total Deposit: Tk 12\.50 Lac \(12\.50 Lac\)/,
+    "a hand-edited template keeps the fields it uses, the figure in lakh");
   assert.doesNotMatch(summary, /Accounts|Account Deposit|\{\{/, "…but the account lines never leave the phone");
   assert.equal(summary.match(/Total Places Visited: 4\n\nTotal Deposit/)[0], "Total Places Visited: 4\n\nTotal Deposit",
     "the blank line the dropped row left behind collapses back to one");
@@ -576,10 +573,10 @@ test("each account row says how many accounts were opened, and every total adds 
   const lines = window.statementLines("2026-09-21", "daily");
   assert.match(lines.join("\n"), /Accounts: 4/);
   const dayCells = statementCells(lines.find((l) => /^21 Sep /.test(l)), cols);
-  assert.equal(dayCells[9].trim(), "Savings x3 60,000");
+  assert.equal(dayCells[7].trim(), "Savings x3 60,000");
   assert.match(lines.join("\n"), /MTDR 10,000/);
   const totalCells = statementCells(lines.find((l) => l.startsWith("TOTAL")), cols);
-  assert.equal(totalCells[9].trim(), "4 a/c");
+  assert.equal(totalCells[7].trim(), "4 a/c");
 
   /* The New Account report: the hero and the per-day headings count 4, and
      each card names how many accounts the row covers. */

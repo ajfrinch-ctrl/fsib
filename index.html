@@ -102,36 +102,65 @@ input[type=date],input[type=month]{min-height:46px}
 .total b{font-size:18px;color:var(--blue);overflow-wrap:anywhere}
 
 
-/* ---------------- restructured daily entry ---------------- */
-.entry-intro{margin:0 0 14px;background:linear-gradient(135deg,var(--soft),var(--card));border:1px solid #1264d633;border-radius:16px;padding:15px}
-.entry-intro h2{margin:0 0 4px;font-size:20px}.entry-intro .small{display:block}
-.entry-section{margin:14px 0;padding:15px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+/* ---------------- daily data entry (redesigned) ---------------- */
+.entry-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.entry-eyebrow{display:block;font-size:11px;font-weight:900;letter-spacing:.9px;text-transform:uppercase;color:var(--blue)}
+.entry-date-title{display:block;font-size:22px;font-weight:800;line-height:1.2;margin-top:2px;overflow-wrap:anywhere}
+.entry-status{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--green);background:#0b956218;border:1px solid #0b956233;border-radius:20px;padding:6px 10px;white-space:nowrap}
+.dark .entry-status{background:#0b956222}
+.entry-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.estep{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:44px;padding:0 10px;font:inherit;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer}
+.estep i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--soft);color:var(--blue);font-style:normal;font-size:11px;font-weight:900}
+.estep.done{border-color:#0b956255;color:var(--ink)}
+.estep.done i{background:var(--green);color:#fff}
+.entry-section{margin:14px 0;padding:15px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+  scroll-margin-top:calc(var(--sat) + 64px)}
 .entry-section .sectiontitle{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px}.entry-section .sectiontitle::before{content:attr(data-step);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px}
-.entry-date{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.entry-date .formgroup{margin:0}
-.deposit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.deposit-grid .formgroup{margin:0}.deposit-grid .total{grid-column:1/-1;margin-top:4px}
-.account-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.account-summary .total{margin:0}
+.entry-date{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}.entry-date .formgroup{margin:0}
+.amount-main{margin-bottom:12px}
+.amt-box{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 12px;transition:border-color .12s}
+.amt-cur{color:var(--blue);font-weight:800}
+.amt-box input{flex:1;min-width:0;border:0;background:transparent;border-radius:0;padding:12px 0;min-height:46px;font-size:16px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.amt-box input:focus{outline:0;border:0;box-shadow:none}
+.amt-box:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px #1264d633}
+.amt-box.big{border-width:1.5px}
+.amt-box.big .amt-cur{font-size:18px}
+.amt-box.big input{font-size:20px;font-weight:800;padding:14px 0}
+.deposit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}.deposit-grid .formgroup{margin:0}
+.dep-total{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:13px 14px;border-radius:14px;color:#fff;background:linear-gradient(125deg,#06377d,#1264d6)}
+.dep-total>div{min-width:0}
+.dep-total span{display:block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.85}
+.dep-total small{display:block;font-size:11px;opacity:.85;margin-top:2px;overflow-wrap:anywhere}
+.dep-total b{font-size:19px;white-space:nowrap;overflow-wrap:anywhere}
+.dark .dep-total{background:linear-gradient(125deg,#04122b,#0a479d)}
+.ac-strip{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--soft);border:1px solid #1264d633}
+.ac-strip-item{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.ac-strip-item span{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.ac-strip-item b{font-size:18px;color:var(--blue);overflow-wrap:anywhere}
+.ac-strip-sep{width:1px;align-self:stretch;background:#1264d633}
 .entry-section .add{margin-top:2px}
-@media(min-width:700px){.entry-date{grid-template-columns:minmax(220px,360px) minmax(140px,220px)}.deposit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.deposit-grid .total{grid-column:1/-1}.account-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:700px){.entry-date{grid-template-columns:minmax(220px,360px) minmax(140px,220px)}}
 
-/* ---------------- repeating rows (officer / visit / account) ---------------- */
-.repeatrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;align-items:start}
-.visitrow{grid-template-columns:1fr 1fr}
-.accountrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;align-items:start}
-.repeatrow,.accountrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
-.cell{min-width:0;display:flex;flex-direction:column}
-.rl{display:block;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
-.c-name,.c-address{grid-column:1/-1}
+/* ---------------- account rows — the same field design as the deposit grid ---------------- */
+.accountrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(84px,110px) 44px;gap:10px;margin:10px 0;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.accountrow .c-cat,.accountrow .c-count{min-width:0}
 .accountrow .c-amount{grid-column:1/-1}
-.accountrow .remove,.officer .remove{grid-column:1/-1}
-.remove{border:0;border-radius:9px;background:#fbe5e8;color:#c43e53;font-size:20px;line-height:1;
-  min-height:var(--tap);min-width:var(--tap)}
-.dark .remove{background:#2a1115}
+.acct-remove{width:44px;height:44px;align-self:end;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--muted);
+  font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0}
+.acct-remove:active{border-color:var(--red);color:var(--red);background:#fbe5e8}
+.dark .acct-remove{background:transparent}
+.dark .acct-remove:active{background:#2a1115}
 .add{width:100%;padding:13px 10px;color:var(--blue);font-weight:800;background:var(--soft);border:1px dashed var(--blue);
   border-radius:10px;min-height:48px}
 
-/* the entry form's main save button stays reachable while scrolling on phones */
-#form>.primary[type=submit]{position:sticky;bottom:calc(var(--nav-h) + var(--sab) + 10px);z-index:20;
-  margin-top:18px;margin-bottom:8px;box-shadow:0 -8px 22px #1d4c8a2e}
+/* the entry form's save bar stays reachable while scrolling on phones */
+.entry-savebar{position:sticky;bottom:calc(var(--nav-h) + var(--sab) + 10px);z-index:20;
+  margin-top:18px;display:flex;gap:10px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+.savebar-total{display:flex;flex-direction:column;justify-content:center;min-width:0;background:var(--soft);border:1px solid #1264d633;border-radius:12px;padding:8px 12px}
+.savebar-total span{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.savebar-total b{font-size:16px;color:var(--blue);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.entry-savebar .primary{flex:1 1 auto}
 
 /* ---------------- previews, lists ---------------- */
 .preview{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;max-height:min(45vh,300px);overflow:auto;
@@ -237,12 +266,13 @@ input[type=date],input[type=month]{min-height:46px}
 .modalbox h3{margin-top:0}
 .modal-scroll{max-height:92dvh;overflow:auto}
 /* ---------------- reports (view tabs, period bar, statement hero, breakdown) ---------------- */
-.rep-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
-.rep-tabs button{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:12px;min-height:var(--tap);font-size:12.5px;font-weight:800;padding:8px 6px}
-.rep-tabs button.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 16px #1264d640}
-.dark .rep-tabs button.on{background:#1264d6;color:#fff}
+.rep-deck{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow);margin-bottom:12px}
+.rep-deck .rep-bar{margin-bottom:0}
+.rep-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:8px}
+.rep-tabs button{border:0;background:transparent;color:var(--muted);border-radius:9px;min-height:42px;font-size:13px;font-weight:800;padding:8px 6px}
+.rep-tabs button.on{background:var(--card);color:var(--blue);box-shadow:var(--shadow)}
 .rep-seg{display:flex;gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:8px}
-.rep-seg button{flex:1;min-width:0;border:0;background:transparent;border-radius:9px;min-height:40px;font-size:12.5px;font-weight:800;color:var(--muted);padding:0 4px}
+.rep-seg button{flex:1;min-width:0;border:0;background:transparent;border-radius:9px;min-height:38px;font-size:12.5px;font-weight:800;color:var(--muted);padding:0 4px}
 .rep-seg button.on{background:var(--card);color:var(--blue);box-shadow:var(--shadow)}
 .rep-bar{display:flex;align-items:stretch;gap:8px;margin-bottom:12px}
 .rep-nav{flex:0 0 46px;border:1px solid var(--line);background:var(--card);border-radius:12px;font-size:22px;font-weight:800;color:var(--blue);min-height:46px}
@@ -250,31 +280,36 @@ input[type=date],input[type=month]{min-height:46px}
 .rep-date{flex:1;margin:0;min-width:0}
 .rep-hero{border-radius:18px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
   background:linear-gradient(135deg,#0b1f3f,#163a73 55%,#2b63c9);box-shadow:0 12px 30px #0b1f3f33;margin-bottom:12px}
+.rep-hero::before{content:"";position:absolute;left:-52px;top:-72px;width:190px;height:190px;border-radius:50%;background:#ffffff0d}
 .rep-hero::after{content:"";position:absolute;right:-40px;bottom:-56px;width:160px;height:160px;border-radius:50%;background:#ffffff12}
 .dark .rep-hero{background:linear-gradient(135deg,#000,#0a1830 60%,#14315f)}
 .rh-label{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.75;position:relative;z-index:1}
 .rh-period{font-size:15px;font-weight:800;margin-top:2px;position:relative;z-index:1;overflow-wrap:anywhere}
-.rh-amount{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:12px;position:relative;z-index:1;overflow-wrap:anywhere}
-.rh-sub{font-size:12.5px;opacity:.92;margin-top:5px;position:relative;z-index:1;overflow-wrap:anywhere}
+.rh-amtrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.rh-amount{font-size:36px;font-weight:800;letter-spacing:-.5px;line-height:1.1;overflow-wrap:anywhere}
+.rh-lac{background:#ffffff22;border:1px solid #ffffff33;border-radius:20px;padding:5px 12px;font-size:12.5px;font-weight:800;white-space:nowrap}
+.rh-sub{font-size:12.5px;opacity:.92;margin-top:6px;position:relative;z-index:1;overflow-wrap:anywhere}
 .rh-progwrap{margin-top:12px;position:relative;z-index:1}
 .rh-prog{height:10px;border-radius:6px;background:#ffffff2e;overflow:hidden}
 .rh-prog i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#8fd0ff,#4be08a)}
 .rep-metrics{margin-bottom:2px}
-.deprow{padding:9px 0}
+.rep-metrics .metric:last-child{grid-column:span 2}
+.rep-metrics .metric strong{font-size:20px}
+.deprow{padding:10px 0}
 .deprow:first-child{padding-top:2px}
 .deprow:last-child{padding-bottom:2px}
-.deprow .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:6px}
+.deprow .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:7px}
 .deprow .lbl span{font-weight:800;overflow-wrap:anywhere}
 .deprow .lbl b{overflow-wrap:anywhere}
-.deprow .lbl small{color:var(--muted);font-weight:700}
-.dep-track{height:10px;border-radius:6px;background:var(--soft);border:1px solid var(--line);overflow:hidden}
-.dep-fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#4c97ff,#1264d6)}
+.deprow .lbl small{color:var(--blue);font-weight:800;background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin-left:6px;font-size:11px}
+.dep-track{height:12px;border-radius:8px;background:var(--soft);border:1px solid var(--line);overflow:hidden}
+.dep-fill{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#4c97ff,#1264d6)}
 .dark .dep-fill{background:linear-gradient(90deg,#2b63c9,#4c97ff)}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
-.chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+.chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:12.5px;font-weight:700;overflow-wrap:anywhere}
 .chip b{color:var(--blue)}
 .daystats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 11px}
-.daystat{flex:1;min-width:0;background:var(--soft);border-radius:10px;padding:8px 9px}
+.daystat{flex:1;min-width:0;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 9px}
 .daystat label{margin-bottom:3px}
 .daystat b{font-size:13.5px;overflow-wrap:anywhere}
 /* ---------------- collapsible report sections ----------------
@@ -282,9 +317,12 @@ input[type=date],input[type=month]{min-height:46px}
    one-line summary so the page still says what is inside it. */
 .repsec{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
   margin-bottom:10px;overflow:hidden}
-.repsec-head{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px;min-height:52px}
+.repsec-head{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px;min-height:56px;transition:background .15s}
 .repsec-head::-webkit-details-marker{display:none}
+.repsec-head:hover{background:var(--soft)}
 .repsec-head:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.repsec-icon{flex:0 0 auto;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--soft);border:1px solid var(--line);font-size:14px}
+.repsec[open] .repsec-icon{background:var(--blue);border-color:var(--blue)}
 .repsec-title{flex:0 0 auto;font-size:12px;font-weight:900;color:var(--blue);letter-spacing:.5px;text-transform:uppercase}
 .repsec-sub{flex:1 1 auto;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .repsec-chev{flex:0 0 auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
@@ -299,17 +337,20 @@ input[type=date],input[type=month]{min-height:46px}
 /* one row per day: date, what happened, the day's deposit */
 .daycard{display:block;margin-bottom:8px;padding:11px 12px}
 .daycard:last-child{margin-bottom:0}
-.dayhead{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px}
+.dayhead{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
 .dayhead::-webkit-details-marker{display:none}
-.daydate{flex:0 0 auto;font-weight:800;font-size:13px}
+.daydate{flex:0 0 auto;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:44px;padding:5px 8px;border-radius:10px;background:var(--soft);border:1px solid var(--line);line-height:1.15}
+.daydate b{font-size:15px;color:var(--blue)}
+.daymon{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
 .daymeta{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dayamt{flex:0 0 auto;font-weight:800;font-size:13px;color:var(--blue)}
+.dayamt{flex:0 0 auto;font-weight:800;font-size:13.5px;color:var(--blue)}
 .daybody{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px}
 .detrow{margin-top:9px}
 .detrow:last-child{padding-bottom:2px}
 .aitem h3{margin:2px 0 8px;font-size:16px;overflow-wrap:anywhere}
 .rec-meta{display:grid;gap:8px}
 .rec-meta b{overflow-wrap:anywhere}
+@media(min-width:700px){.rec-meta{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.repsec-chev{transition:none}}
 @media(min-width:700px){
   .rep-hero{padding:22px 20px 18px}
@@ -365,17 +406,8 @@ input[type=date],input[type=month]{min-height:46px}
   .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
   .formwide{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
   .formwide .full{grid-column:1/-1}
-  .rl{display:none}
-  .repeatrow,.accountrow{background:none;border:0;padding:0;box-shadow:none;margin:7px 0}
-  .repeatrow{grid-template-columns:1fr 1fr var(--tap)}
-  .visitrow{grid-template-columns:1fr 1fr 1.2fr 1.2fr 1fr var(--tap)}
-  .accountrow{grid-template-columns:minmax(120px,1.2fr) .8fr 1.6fr var(--tap)}
-  .c-name,.c-address{grid-column:auto}
-  .accountrow .c-amount{grid-column:auto}
-  .accountrow .c-amount,.accountrow .remove{order:0}
-  .accountrow .remove{grid-column:auto}
-  .officer .remove{grid-column:auto}
-  #form>.primary[type=submit]{position:static;box-shadow:none;margin-bottom:0}
+  .accountrow{grid-template-columns:minmax(0,1fr) minmax(100px,140px) 44px}
+  .entry-savebar{position:static;box-shadow:none}
   .nav{top:0;bottom:auto;left:auto;width:240px;border:0;border-right:1px solid var(--line);
     height:100vh;height:100dvh;align-items:center;padding-bottom:0;box-shadow:none}
   .navinner{display:block}
@@ -578,7 +610,6 @@ function getCloudVersion(){const v=parseInt(localStorage.getItem(CLOUD_VERSION_K
 function setCloudVersion(v){const n=Number(v)||0;try{localStorage.setItem(CLOUD_VERSION_KEY,String(n))}catch(e){}_meta.lastCloudVersion=n;return n}
 settings.manager=settings.manager||'Harun Or Rashid'; settings.managerDesignation=settings.managerDesignation||'Manager';
 let records=JSON.parse(localStorage.getItem(K+'records')||'[]'), trash=JSON.parse(localStorage.getItem(K+'trash')||'[]'), locked=false, activity;
-const officers={'Harun Or Rashid':'Assistant Vice President','Mohammad Showkat Hossain':'Principle Officer','Md. Mazharul Islam':'Principle Officer (Cash)','Md. Fazlul Karim':'Senior Officer','Mohammed Mominul Hoque':'Officer','Kamruzzaman Shakil':'Officer (Cash)','Mohammad Mijanur Rahman':'Junior Officer','Al-Amin Hafiz Ibne Akhter':'Junior Officer','Md. Jashim Uddin':'Junior Officer','Md. Hanifur Alam':'Junior Officer','Rafiq Uddin':'Junior Officer (Cash)','Md. Arafat':'Assistant Officer (Cash)'};
 function save(){
   try{settings._seq=(settings._seq||0)+1;}catch(e){}
   try{scrubRetiredSyncSettings();}catch(e){}
@@ -606,8 +637,6 @@ function renderDashboard(){
   const sum=a=>a.reduce((x,r)=>x+total(r),0);
   const best=[...records].sort((a,b)=>total(b)-total(a))[0];
   const bestV=[...records].sort((a,b)=>visits(b)-visits(a))[0];
-  const officerScores={};records.forEach(r=>(r.officers||[]).forEach(o=>officerScores[o.name]=(officerScores[o.name]||0)+total(r)));
-  const bestO=Object.entries(officerScores).sort((a,b)=>b[1]-a[1])[0];
   const monthDep=sum(month);
   const monthAc=month.reduce((a,r)=>a+accountsCount(r),0);
   const target=num(settings.target);
@@ -703,23 +732,26 @@ function renderDashboard(){
   <div class="card dash-hi">
     <div class="sectiontitle">Highlights</div>
     ${best?('<div class="hirow"><span class="hilabel">Best day</span><b>\u09f3 '+money(total(best))+'</b><span class="small">'+dateText(best.date)+'</span></div>'):''}
-    ${bestO?('<div class="hirow"><span class="hilabel">Top officer</span><b>'+esc(bestO[0])+'</b><span class="small">\u09f3 '+money(bestO[1])+' credited</span></div>'):''}
     ${(bestV&&visits(bestV)>0)?('<div class="hirow"><span class="hilabel">Most places visited</span><b>'+visits(bestV)+' places</b><span class="small">'+dateText(bestV.date)+'</span></div>'):''}
-    ${(!best&&!bestV&&!bestO)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}
+    ${(!best&&!bestV)?'<div class="empty">Highlights appear after you save a few days of data.</div>':''}
   </div>`;
   const cta=document.getElementById('dashCta');
   if(cta)cta.onclick=()=>{nav('entry');if(now)renderEntry(now);};
 }
-function officerOpts(v=''){return `<option value="">Select officer</option>`+Object.keys(officers).map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('')}function officerRow(o={}){return `<div class="repeatrow officer"><div class="cell c-officer"><span class="rl">Officer</span><select class="oname" aria-label="Officer name">${officerOpts(o.name)}</select></div><div class="cell c-des"><span class="rl">Designation</span><input class="odes" readonly placeholder="Designation" value="${esc(o.designation||officers[o.name]||'')}"></div><button class="remove" type="button" aria-label="Remove officer">×</button></div>`}function visitRow(v={}){return `<div class="visit repeatrow visitrow"><div class="cell c-vofficer"><span class="rl">Officer</span><select class="vofficer" aria-label="Visit officer">${officerOpts(v.officer||'')}</select></div><div class="cell c-type"><span class="rl">Visit Type</span><select class="vtype" aria-label="Visit type">${['Organization','School','College','Mosque','Madrasa','NGO','Business','Customer','Other'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-name"><span class="rl">Place / Institution</span><input class="vname" placeholder="Place / institution" value="${esc(v.name||'')}"></div><div class="cell c-address"><span class="rl">Address</span><input class="vaddress" placeholder="Address" value="${esc(v.address||'')}"></div><div class="cell c-mobile"><span class="rl">Mobile Number</span><input class="vmobile" inputmode="tel" autocomplete="tel" placeholder="Mobile number" value="${esc(v.mobile||'')}"></div><button class="remove" type="button" aria-label="Remove visit">×</button></div>`}function accountRow(a={}){return `<div class="accountrow account"><div class="cell c-cat"><span class="rl">Account Type</span><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="cell c-count"><span class="rl">No. of A/C</span><input class="acount" inputmode="numeric" aria-label="Number of accounts" placeholder="1" value="${esc(a.count||'')}"></div><div class="cell c-amount"><span class="rl">Initial Deposit</span><input class="aamount amount" inputmode="decimal" placeholder="Amount (৳)" value="${esc(a.amount||'')}"></div><button class="remove" type="button" aria-label="Remove account">×</button></div>`}
+function accountRow(a={}){return `<div class="accountrow account"><div class="c-cat"><label>Account Type</label><select class="acat" aria-label="Account type">${['Savings','Current','MTDR','DPS / Other'].map(x=>`<option ${x===a.category?'selected':''}>${x}</option>`).join('')}</select></div><div class="c-count"><label>No. of A/C</label><input class="acount" inputmode="numeric" aria-label="Number of accounts" placeholder="1" value="${esc(a.count||'')}"></div><button class="remove acct-remove" type="button" aria-label="Remove account">×</button><div class="c-amount"><label>Initial Deposit</label><div class="amt-box"><span class="amt-cur">৳</span><input class="aamount amount" inputmode="decimal" placeholder="0" value="${esc(a.amount||'')}"></div></div></div>`}
 function renderEntry(record){
-  record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),officers:[],accounts:[]};
-  $('#entry').innerHTML=`<div class="entry-intro"><h2>Daily Data Entry</h2><span class="small">Enter today’s branch activity in four simple steps. Your draft saves automatically.</span><span class="small" id="draftStatus" style="margin-top:6px">Draft ready</span></div><form id="form">
-  <section class="entry-section"><div class="sectiontitle" data-step="1">Report date</div><div class="entry-date"><div class="formgroup"><label for="date">Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label for="places">Total Places Visited</label><input id="places" class="amount" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(record.places||'')}"></div></div></section>
-  <section class="entry-section"><div class="sectiontitle" data-step="2">Officers</div><div id="officers">${(record.officers||[]).map(officerRow).join('')}</div><button class="add" type="button" id="addOfficer">+ Add officer</button></section>
-  <section class="entry-section"><div class="sectiontitle" data-step="3">Deposit collection</div><div class="deposit-grid">${[['cash','Cash'],['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label for="${id}">${l} (৳)</label><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div>`).join('')}<div class="total"><span>Total Deposit</span><b id="depTotal">৳ 0</b> <span class="small" id="depLac"></span></div></div></section>
-  <section class="entry-section"><div class="sectiontitle" data-step="4">New accounts</div><div id="accounts">${(record.accounts||[]).map(accountRow).join('')}</div><button class="add" type="button" id="addAccount">+ Add account</button><div class="account-summary"><div class="total"><span>Number of Accounts</span><b id="acCount">0</b></div><div class="total"><span>Account Deposit</span><b id="acTotal">৳ 0</b></div></div></section>
-  <button class="primary" style="width:100%;margin-top:18px" type="submit">Save Daily Data</button></form>`;bindEntry();calcEntry()}
-function currentForm(){let f=$('#form');return {date:$('#date').value,places:$('#places').value, cash:$('#cash').value,clearing:$('#clearing').value,rtgs:$('#rtgs').value,npsb:$('#npsb').value,agent:$('#agent').value,officers:$$('.officer').map(x=>({name:x.querySelector('.oname').value,designation:x.querySelector('.odes').value})).filter(x=>x.name),accounts:$$('.account').map(x=>{const a={category:x.querySelector('.acat').value,amount:x.querySelector('.aamount').value};const c=x.querySelector('.acount').value.replace(/[^0-9]/g,'');if(c)a.count=c;return a}).filter(x=>x.amount),updated:new Date().toISOString()}}
+  record=record||JSON.parse(localStorage.getItem(K+'draft')||'null')||{date:today(),accounts:[]};
+  $('#entry').innerHTML=`<div class="entry-head"><div><span class="entry-eyebrow">Daily Data Entry</span><b class="entry-date-title" id="entryDateTitle">Today\u2019s report</b></div><span class="entry-status" id="draftStatus">Draft ready</span></div>
+  <div class="entry-steps" id="entrySteps"><button type="button" class="estep" data-sec="secDate"><i>1</i>Date</button><button type="button" class="estep" data-sec="secDeposit"><i>2</i>Deposit</button><button type="button" class="estep" data-sec="secAccounts"><i>3</i>Accounts</button></div>
+  <form id="form">
+  <section class="entry-section" id="secDate"><div class="sectiontitle" data-step="1">Report date</div><div class="entry-date"><div class="formgroup"><label for="date">Date</label><input id="date" type="date" max="${today()}" value="${record.date||today()}"></div><div class="formgroup"><label for="places">Total Places Visited</label><input id="places" class="amount" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(record.places||'')}"></div></div></section>
+  <section class="entry-section" id="secDeposit"><div class="sectiontitle" data-step="2">Deposit collection</div><div class="formgroup amount-main"><label for="cash">Cash</label><div class="amt-box big"><span class="amt-cur">৳</span><input id="cash" class="amount" inputmode="decimal" value="${record.cash||''}" placeholder="0"></div></div><div class="deposit-grid">${[['clearing','Clearing / BFTN'],['rtgs','RTGS'],['npsb','NPSB'],['agent','Agent Outlet Deposit']].map(([id,l])=>`<div class="formgroup"><label for="${id}">${l}</label><div class="amt-box"><span class="amt-cur">৳</span><input id="${id}" class="amount" inputmode="decimal" value="${record[id]||''}" placeholder="0"></div></div>`).join('')}</div><div class="dep-total"><div><span>Total Deposit</span><small id="depLac"></small></div><b id="depTotal">৳ 0</b></div></section>
+  <section class="entry-section" id="secAccounts"><div class="sectiontitle" data-step="3">New accounts</div><div id="accounts">${(record.accounts||[]).length?(record.accounts||[]).map(accountRow).join(''):accountRow()}</div><button class="add" type="button" id="addAccount">+ Add another account</button><div class="ac-strip" id="accountSummary"><div class="ac-strip-item"><span>New accounts</span><b id="acCount">0</b></div><div class="ac-strip-sep"></div><div class="ac-strip-item"><span>Account deposit</span><b id="acTotal">৳ 0</b></div></div></section>
+  <div class="entry-savebar"><div class="savebar-total"><span>Total Deposit</span><b id="saveTotal">৳ 0</b></div><button class="primary" id="saveBtn" type="submit">Save Daily Data</button></div></form>`;bindEntry();calcEntry()}
+/* Amount fields may show en-IN grouping ("30,79,541") after a blur, so the
+   values leaving the form are normalised back to plain digits. */
+function plainNum(v){return String(v??'').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,'')}
+function currentForm(){let f=$('#form');return {date:$('#date').value,places:plainNum($('#places').value), cash:plainNum($('#cash').value),clearing:plainNum($('#clearing').value),rtgs:plainNum($('#rtgs').value),npsb:plainNum($('#npsb').value),agent:plainNum($('#agent').value),accounts:$$('.account').map(x=>{const a={category:x.querySelector('.acat').value,amount:plainNum(x.querySelector('.aamount').value)};const c=x.querySelector('.acount').value.replace(/[^0-9]/g,'');if(c)a.count=c;return a}).filter(x=>x.amount),updated:new Date().toISOString()}}
 /* What leaves on WhatsApp is the day's money in lakh and the places it came from.
    How many accounts were opened and what those accounts brought in stay inside
    the app — they are not part of the note, so a line an older, hand-edited
@@ -739,16 +771,23 @@ function dropAccountLines(text){
      between sections, never two. */
   return String(text).split('\n').filter(l=>!ACCOUNT_MESSAGE_LINE.test(l)).join('\n').replace(/\n{3,}/g,'\n\n');
 }
+/* Officers are no longer collected, but a template the branch edited by hand
+   (and shared from the cloud) can still carry the {{officers}} field or a
+   numbered officer list — those lines come out the same way the account lines
+   do. */
+const OFFICER_MESSAGE_LINE=/\{\{\s*officers?\s*\}\}|^\s*[*_\s-]*\d*\s*\.?\s*officers?\b/i;
+function dropOfficerLines(text){
+  return String(text).split('\n').filter(l=>!OFFICER_MESSAGE_LINE.test(l)).join('\n').replace(/\n{3,}/g,'\n\n');
+}
 function message(r){
-  let os=(r.officers||[]).map((o,i)=>`${i+1}. ${o.name}, ${o.designation}`).join('\n')||'No officer entered';
   // replaceAll is important: {{branch}} appears both in the report heading and beneath the manager signature.
-  const values={date:dateText(r.date),team:settings.team,zone:settings.zone,branches:settings.totalBranch,branch:settings.branch,visits:visits(r),deposit:money(total(r)),depositLac:lac(total(r)),manager:settings.manager||'Harun Or Rashid',managerDesignation:settings.managerDesignation||'Manager',officers:os};
-  let text=dropAccountLines(currentTemplate());
+  const values={date:dateText(r.date),team:settings.team,zone:settings.zone,branches:settings.totalBranch,branch:settings.branch,visits:visits(r),deposit:lac(total(r)),depositLac:lac(total(r)),manager:settings.manager||'Harun Or Rashid',managerDesignation:settings.managerDesignation||'Manager'};
+  let text=dropOfficerLines(dropAccountLines(currentTemplate()));
   Object.entries(values).forEach(([key,value])=>text=text.split('{{'+key+'}}').join(String(value)));
   // Keeps older, manually customized templates in sync too.
   return text.split('Tantar Branch').join(settings.branch);
 }
-function hasEntryData(r){return num(r.places)>0||total(r)>0||(r.officers||[]).length>0||(r.accounts||[]).length>0}
+function hasEntryData(r){return num(r.places)>0||total(r)>0||(r.accounts||[]).length>0}
 const WHATSAPP_RECIPIENT='8801992044229';
 function whatsappLink(text){return 'https://wa.me/'+WHATSAPP_RECIPIENT+'?text='+encodeURIComponent(text)}
 function openShareModal(record){
@@ -759,9 +798,12 @@ function openShareModal(record){
   $('#copySummary').onclick=()=>{navigator.clipboard?.writeText(summary);toast('Summary copied')};
   $('#sendSummary').onclick=()=>window.open(whatsappLink(summary),'_blank');
 }
-function calcEntry(){if(!$('#form'))return;let r=currentForm();$('#depTotal').textContent='৳ '+money(total(r));$('#depLac').textContent='('+lac(total(r))+')';$('#acCount').textContent=accountsCount(r);$('#acTotal').textContent='৳ '+money(accountsTotal(r))}function bindEntry(){let f=$('#form');f.addEventListener('input',e=>{if(e.target.classList.contains('amount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9.]/g,'');e.target.setSelectionRange(p,p)}if(e.target.classList.contains('acount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9]/g,'');e.target.setSelectionRange(p,p)}localStorage.setItem(K+'draft',JSON.stringify(currentForm()));$('#draftStatus').textContent='Draft saved · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});calcEntry()});f.addEventListener('change',e=>{if(e.target.classList.contains('oname'))e.target.closest('.officer').querySelector('.odes').value=officers[e.target.value]||'';calcEntry()});f.onclick=e=>{if(e.target.id==='addOfficer'){$('#officers').insertAdjacentHTML('beforeend',officerRow());calcEntry()}if(e.target.id==='addAccount'){$('#accounts').insertAdjacentHTML('beforeend',accountRow());calcEntry()}if(e.target.classList.contains('remove')){e.target.parentElement.remove();calcEntry()}};f.onsubmit=e=>{e.preventDefault();saveRecord()}}
+function saveDraft(){if(!$('#form'))return;try{localStorage.setItem(K+'draft',JSON.stringify(currentForm()))}catch(e){}}
+function setStep(n,done){const s=$$('#entrySteps .estep')[n-1];if(!s)return;s.classList.toggle('done',done);const b=s.querySelector('i');if(b)b.textContent=done?'✓':String(n)}
+function calcEntry(){if(!$('#form'))return;let r=currentForm();$('#depTotal').textContent='৳ '+money(total(r));$('#depLac').textContent='('+lac(total(r))+')';$('#saveTotal').textContent='৳ '+money(total(r));$('#acCount').textContent=accountsCount(r);$('#acTotal').textContent='৳ '+money(accountsTotal(r));const dt=$('#entryDateTitle');if(dt)dt.textContent=($('#date').value&&$('#date').value!==today())?dateText($('#date').value):'Today\u2019s report';setStep(1,true);setStep(2,total(r)>0);setStep(3,r.accounts.length>0)}
+function bindEntry(){let f=$('#form');$$('#entrySteps .estep').forEach(b=>b.onclick=()=>{const s=document.getElementById(b.dataset.sec);if(s)s.scrollIntoView({behavior:'smooth',block:'start'})});f.addEventListener('input',e=>{if(e.target.classList.contains('amount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9.]/g,'');e.target.setSelectionRange(p,p)}if(e.target.classList.contains('acount')){let p=e.target.selectionStart;e.target.value=e.target.value.replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/[^0-9]/g,'');e.target.setSelectionRange(p,p)}saveDraft();$('#draftStatus').textContent='Draft saved · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});calcEntry()});f.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classList.contains('amount')){const n=num(e.target.value);if(n>0)e.target.value=money(n)}});f.onclick=e=>{if(e.target.id==='addAccount'){$('#accounts').insertAdjacentHTML('beforeend',accountRow());const n=$('#accounts').lastElementChild;if(n)n.querySelector('.acat').focus();calcEntry()}if(e.target.classList.contains('remove')){const row=e.target.closest('.account');if(row){if($$('.account').length>1)row.remove();else $('#accounts').innerHTML=accountRow()}}calcEntry()};f.onsubmit=e=>{e.preventDefault();saveRecord()}}
 function saveRecord(){let r=currentForm();if(!r.date)return toast('তারিখ নির্বাচন করুন');if(r.accounts.some(a=>num(a.amount)<0)||total(r)<0)return toast('Negative amount অনুমোদিত নয়');let index=records.findIndex(x=>x.date===r.date);if(index>=0&&!confirm('Data already exists for this date. Update existing data?'))return;r.created=index>=0?records[index].created:new Date().toISOString();records[index>=0?index:records.length]=r;queueRecordChange(r.date,(index>=0?'UPDATE':'CREATE'),r);save();localStorage.removeItem(K+'draft');toast(index>=0?'Daily data updated successfully':'Daily data saved successfully');renderDashboard();calcEntry();openShareModal(r);window.open(whatsappLink(message(r)),'_blank')}
-function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2></div><span class="pill">${records.length} saved</span></div><input id="search" type="search" inputmode="search" autocomplete="off" aria-label="Search saved records" placeholder="Search date, officer, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts · ${(r.officers||[]).map(o=>o.name).join(', ')||'No officer'}</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
+function weekLabel(d){let x=new Date(d+'T12:00'),day=x.getDay(),start=new Date(x);start.setDate(x.getDate()-((day+7-settings.weeklyStart)%7));let end=new Date(start);end.setDate(start.getDate()+4);return dateText(start.toISOString().slice(0,10))+' – '+dateText(end.toISOString().slice(0,10))}function renderHistory(){let q='';function draw(){let filtered=[...records].filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));let groups={};filtered.forEach(r=>(groups[weekLabel(r.date)]??=[]).push(r));$('#history').innerHTML=`<div class="sectionhead"><div><h2>Old Data & History</h2></div><span class="pill">${records.length} saved</span></div><input id="search" type="search" inputmode="search" autocomplete="off" aria-label="Search saved records" placeholder="Search date, account, location, amount..." value="${esc(q)}"><div id="historyList">${Object.entries(groups).map(([w,rs])=>`<div class="sectionhead"><h2>${w}</h2><span class="small">৳ ${money(rs.reduce((a,r)=>a+total(r),0))} · ${rs.reduce((a,r)=>a+visits(r),0)} visits</span></div>${rs.map(r=>`<article class="card record"><div class="recordtop"><span>${dateText(r.date)}</span><span class="pill">৳ ${money(total(r))}</span></div><p class="small">${visits(r)} places · ${accountsCount(r)} accounts</p><div class="actions"><button class="outline edit" data-date="${r.date}">Edit</button><button class="secondary history-share" data-date="${r.date}">WhatsApp Share</button><button class="danger del" data-date="${r.date}">Delete</button></div></article>`).join('')}`).join('')||'<div class="empty">No matching saved data.</div>'}</div>`;$('#search').oninput=e=>{q=e.target.value;draw()};$$('.edit').forEach(b=>b.onclick=()=>{nav('entry');renderEntry(records.find(r=>r.date===b.dataset.date))});$$('.history-share').forEach(b=>b.onclick=()=>openShareModal(records.find(r=>r.date===b.dataset.date)));$$('.del').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.date))}draw()}
 function deleteRecord(d){if(!confirm('Delete this daily record? It can be restored from Trash.'))return;let i=records.findIndex(r=>r.date===d),r=records.splice(i,1)[0];trash.push({...r,deleted:new Date().toISOString()});queueRecordDelete(d);save();toast('Deleted. Available in Trash.');renderHistory();renderDashboard()}
 function reportRange(type, ref){
   if(type==='daily') return {label:'Daily Report · '+dateText(ref),records:records.filter(r=>r.date===ref)};
@@ -770,8 +812,8 @@ function reportRange(type, ref){
 }
 function buildReport(type,ref){
   let result=reportRange(type,ref),rs=result.records,dep=rs.reduce((a,r)=>a+total(r),0),v=rs.reduce((a,r)=>a+visits(r),0),ac=rs.reduce((a,r)=>a+accountsCount(r),0),acDep=rs.reduce((a,r)=>a+accountsTotal(r),0),days=rs.length||1;
-  let methods={Cash:0,'Clearing / BFTN':0,RTGS:0,NPSB:0,'Agent Outlet':0},types={},officerCount={};rs.forEach(r=>{methods.Cash+=num(r.cash);methods['Clearing / BFTN']+=num(r.clearing);methods.RTGS+=num(r.rtgs);methods.NPSB+=num(r.npsb);methods['Agent Outlet']+=num(r.agent);(r.visits||[]).forEach(x=>types[x.type]=(types[x.type]||0)+1);(r.officers||[]).forEach(x=>officerCount[x.name]=(officerCount[x.name]||0)+1)});let best=[...rs].sort((a,b)=>total(b)-total(a))[0],bestV=[...rs].sort((a,b)=>visits(b)-visits(a))[0];
-  return {result,rs,dep,v,ac,acDep,days,methods,types,officerCount,best,bestV};
+  let methods={Cash:0,'Clearing / BFTN':0,RTGS:0,NPSB:0,'Agent Outlet':0},types={};rs.forEach(r=>{methods.Cash+=num(r.cash);methods['Clearing / BFTN']+=num(r.clearing);methods.RTGS+=num(r.rtgs);methods.NPSB+=num(r.npsb);methods['Agent Outlet']+=num(r.agent);(r.visits||[]).forEach(x=>types[x.type]=(types[x.type]||0)+1)});let best=[...rs].sort((a,b)=>total(b)-total(a))[0],bestV=[...rs].sort((a,b)=>visits(b)-visits(a))[0];
+  return {result,rs,dep,v,ac,acDep,days,methods,types,best,bestV};
 }
 function periodTitle(type,ref){return reportRange(type,ref).label.split(' \u00b7 ').slice(1).join(' \u00b7 ')||reportRange(type,ref).label}
 function periodShift(type,ref,dir){
@@ -793,7 +835,7 @@ function repControls(view,type,ref){
     .map(([v,l,id])=>`<button type="button" id="${id}" class="${view===v?'on':''}">${l}</button>`).join('');
   const segs=[['daily','Daily'],['weekly','Weekly'],['monthly','Monthly']]
     .map(([v,l])=>`<button type="button" data-tp="${v}" class="${type===v?'on':''}">${l}</button>`).join('');
-  return `<div class="rep-tabs">${tabs}</div><div class="rep-seg" id="repSeg">${segs}</div><div class="rep-bar"><button type="button" class="rep-nav" id="repPrev" aria-label="Previous period">\u2039</button><div class="formgroup rep-date"><input id="repDate" type="${isM?'month':'date'}" max="${isM?today().slice(0,7):today()}" value="${isM?ref.slice(0,7):ref}" aria-label="Period"></div><button type="button" class="rep-nav" id="repNext" aria-label="Next period" ${periodAtEnd(type,ref)?'disabled':''}>\u203a</button></div>`;
+  return `<div class="rep-deck"><div class="rep-tabs">${tabs}</div><div class="rep-seg" id="repSeg">${segs}</div><div class="rep-bar"><button type="button" class="rep-nav" id="repPrev" aria-label="Previous period">\u2039</button><div class="formgroup rep-date"><input id="repDate" type="${isM?'month':'date'}" max="${isM?today().slice(0,7):today()}" value="${isM?ref.slice(0,7):ref}" aria-label="Period"></div><button type="button" class="rep-nav" id="repNext" aria-label="Next period" ${periodAtEnd(type,ref)?'disabled':''}>\u203a</button></div></div>`;
 }
 function bindRepControls(go,type,ref){
   $$('#repSeg button').forEach(b=>b.onclick=()=>{const t=b.dataset.tp;go(t,t==='monthly'?ref.slice(0,7)+'-01':ref)});
@@ -804,8 +846,8 @@ function bindRepControls(go,type,ref){
 }
 /* One collapsible report section: closed until it is tapped, with a one-line
    summary in the header so the page still says what is inside it. */
-function repSection(title,sub,body){
-  return `<details class="repsec"><summary class="repsec-head"><span class="repsec-title">${esc(title)}</span>`
+function repSection(title,sub,body,icon){
+  return `<details class="repsec"><summary class="repsec-head"><span class="repsec-icon" aria-hidden="true">${icon||'\u25a6'}</span><span class="repsec-title">${esc(title)}</span>`
     +`<span class="small repsec-sub">${esc(sub)}</span><span class="repsec-chev"></span></summary>`
     +`<div class="repsec-body">${body}</div></details>`;
 }
@@ -814,9 +856,9 @@ function repSection(title,sub,body){
 function dayCard(r){
   const breakdown=[['Cash',r.cash],['Clearing / BFTN',r.clearing],['RTGS',r.rtgs],['NPSB',r.npsb],['Agent Outlet',r.agent]].filter(x=>num(x[1])>0).map(x=>x[0]+': \u09f3 '+money(x[1])).join(' \u00b7 ')||'No deposit breakdown';
   const accountInfo=accountRows(r).map(a=>{const c=num(a.count)||1;return a.category+(c>1?' ('+c+' a/c)':'')+': \u09f3 '+money(a.amount)}).join(' \u00b7 ')||'No new account';
-  const officers=(r.officers||[]).map((o,i)=>(i+1)+'. '+esc(o.name)+(o.designation?', '+esc(o.designation):'')).join(' \u00b7 ')||'No officer entered';
   const ac=accountsCount(r);
-  return `<details class="card daycard"><summary class="dayhead"><span class="daydate">${dateShort(r.date)}</span>`
+  const dsShort=dateShort(r.date), dnum=dsShort.split(' ')[0], dmon=dsShort.split(' ')[1];
+  return `<details class="card daycard"><summary class="dayhead"><span class="daydate"><b>${dnum}</b> <span class="daymon">${dmon}</span></span>`
     +`<span class="daymeta">${visits(r)} places \u00b7 ${ac} account${ac===1?'':'s'}</span>`
     +`<span class="dayamt">\u09f3 ${money(total(r))}</span><span class="repsec-chev"></span></summary>`
     +`<div class="daybody"><div class="daystats">`
@@ -824,7 +866,6 @@ function dayCard(r){
     +`<div class="daystat"><label>New Accounts</label><b>${ac}</b></div>`
     +`<div class="daystat"><label>A/C Deposit</label><b>\u09f3 ${money(accountsTotal(r))}</b></div></div>`
     +`<div class="detrow"><label>Deposit Details</label><div class="small">${breakdown}</div></div>`
-    +`<div class="detrow"><label>Officers</label><div class="small">${officers}</div></div>`
     +`<div class="detrow"><label>Account Details</label><div class="small">${accountInfo}</div></div></div></details>`;
 }
 function renderReports(type='monthly',ref=today()){
@@ -836,14 +877,13 @@ function renderReports(type='monthly',ref=today()){
   const depTotal=d.dep||0;
   const depRows=Object.entries(d.methods).map(([k,x])=>{
     const share=depTotal>0?x/depTotal*100:0;
-    return `<div class="deprow"><div class="lbl"><span>${k}</span><b>\u09f3 ${money(x)}<small> \u00b7 ${share.toFixed(0)}%</small></b></div><div class="dep-track"><i class="dep-fill" style="width:${share.toFixed(1)}%"></i></div></div>`;
+    return `<div class="deprow"><div class="lbl"><span>${k}</span><b>\u09f3 ${money(x)}<small>${share.toFixed(0)}%</small></b></div><div class="dep-track"><i class="dep-fill" style="width:${share.toFixed(1)}%"></i></div></div>`;
   }).join('');
   const typeChips=Object.entries(d.types).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No detailed visits</span>';
-  const offChips=Object.entries(d.officerCount).map(([k,v])=>`<span class="chip">${esc(k)} <b>${v}</b></span>`).join('')||'<span class="small">No officer data</span>';
-  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.dep)}</div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''} \u00b7 ${lac(d.dep)}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>${repSection('Summary',d.rs.length+' recorded day'+(d.rs.length===1?'':'s')+' \u00b7 '+d.ac+' accounts \u00b7 '+lac(d.dep),`<div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>`)}
-${repSection('Deposit by method',Object.keys(d.methods).length+' methods \u00b7 '+lac(d.dep),`<div class="card">${depRows}</div>`)}
-${repSection('Activity',Object.keys(d.officerCount).length+' officer'+(Object.keys(d.officerCount).length===1?'':'s')+' \u00b7 '+Object.keys(d.types).length+' visit type'+(Object.keys(d.types).length===1?'':'s'),`<div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div><label style="margin-top:12px">Officer Activity</label><div class="chips">${offChips}</div></div>`)}
-${repSection('Daily details',d.rs.length+' day'+(d.rs.length===1?'':'s')+' \u00b7 \u09f3 '+money(d.dep),[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`)}
+  $('#reports').innerHTML=`<div class="sectionhead"><div><h2>Reports & Analytics</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('statement',type,ref)}<div class="rep-hero"><div class="rh-label">Statement period</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amtrow"><span class="rh-amount">\u09f3 ${money(d.dep)}</span><span class="rh-lac">${lac(d.dep)}</span></div><div class="rh-sub">Total deposit${d.rs.length?` across ${d.rs.length} recorded day${d.rs.length>1?'s':''}`:''}</div>${isM?(settings.target?`<div class="rh-progwrap"><div class="rh-prog"><i style="width:${pct.toFixed(1)}%"></i></div><div class="rh-sub">${pct.toFixed(1)}% of \u09f3 ${money(settings.target)} target \u00b7 \u09f3 ${money(rem)} remaining</div></div>`:`<div class="rh-sub">Monthly target not set \u2014 add one in Settings</div>`):`<div class="rh-sub">Average \u09f3 ${money(d.dep/d.days)} per recorded day</div>`}</div><div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>${repSection('Summary',d.rs.length+' recorded day'+(d.rs.length===1?'':'s')+' \u00b7 '+d.ac+' accounts \u00b7 '+lac(d.dep),`<div class="grid metrics rep-metrics"><article class="card metric"><label>New Accounts</label><strong>${d.ac}</strong><small>${(d.ac/d.days).toFixed(1)} per recorded day</small></article><article class="card metric"><label>Account Deposit</label><strong>\u09f3 ${money(d.acDep)}</strong><small>${lac(d.acDep)}</small></article><article class="card metric"><label>Recorded Days</label><strong>${d.rs.length}</strong><small>of ${calDays} days in period</small></article><article class="card metric"><label>Average Deposit</label><strong>\u09f3 ${money(d.dep/d.days)}</strong><small>per recorded day</small></article><article class="card metric"><label>Best Day</label><strong>${d.best?'\u09f3 '+money(total(d.best)):'\u2014'}</strong><small>${d.best?dateText(d.best.date):'no entries yet'}</small></article></div>`,'📊')}
+${repSection('Deposit by method',Object.keys(d.methods).length+' methods \u00b7 '+lac(d.dep),`<div class="card">${depRows}</div>`,'💰')}
+${repSection('Activity',Object.keys(d.types).length+' visit type'+(Object.keys(d.types).length===1?'':'s'),`<div class="card"><label>Visit Types</label><div class="chips">${typeChips}</div></div>`,'📍')}
+${repSection('Daily details',d.rs.length+' day'+(d.rs.length===1?'':'s')+' \u00b7 \u09f3 '+money(d.dep),[...d.rs].sort((a,b)=>b.date.localeCompare(a.date)).map(dayCard).join('')||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u0995\u09cb\u09a8\u09cb saved record \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`,'📅')}
 <div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderReports,type,ref);
   $('#marketingPage').onclick=()=>renderReports(type,ref);
@@ -860,10 +900,10 @@ function renderAccountReport(type='monthly',ref=today()){
   const acItem=a=>`<article class="card record aitem"><div class="recordtop"><span>${dateText(a.date)}</span><span class="pill">\u09f3 ${money(a.amount)}</span></div><h3>${esc(a.category||'\u2014')}</h3><div class="rec-meta"><div><label>Initial Deposit</label><b>\u09f3 ${money(a.amount)}</b></div><div><label>No. of A/C</label><b>${num(a.count)||1}</b></div><div><label>Share of the day\u2019s new-account deposit</label><b>${(dayTotal[a.date]>0?num(a.amount)/dayTotal[a.date]*100:0).toFixed(0)}%</b></div></div></article>`;
   const daySections=Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).map(dt=>{
     const list=byDate[dt],n=list.reduce((a,x)=>a+(num(x.count)||1),0);
-    return repSection(dateText(dt),n+' account'+(n===1?'':'s')+' \u00b7 \u09f3 '+money(dayTotal[dt]),list.map(acItem).join(''));
+    return repSection(dateText(dt),n+' account'+(n===1?'':'s')+' \u00b7 \u09f3 '+money(dayTotal[dt]),list.map(acItem).join(''),'🏦');
   }).join('');
   $('#reports').innerHTML=`<div class="sectionhead"><div><h2>New Account Report</h2></div><button class="outline pdf-dl" id="downloadPDF" aria-label="Download PDF">\u2b07 PDF</button></div>${repControls('accounts',type,ref)}
-  <div class="rep-hero"><div class="rh-label">New account report</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amount">\u09f3 ${money(d.acDep)}</div><div class="rh-sub">${d.ac} accounts across ${d.rs.length} recorded day${d.rs.length===1?'':'s'} \u00b7 ${lac(d.acDep)}</div></div>
+  <div class="rep-hero"><div class="rh-label">New account report</div><div class="rh-period">${esc(periodTitle(type,ref))}</div><div class="rh-amtrow"><span class="rh-amount">\u09f3 ${money(d.acDep)}</span><span class="rh-lac">${lac(d.acDep)}</span></div><div class="rh-sub">${d.ac} accounts across ${d.rs.length} recorded day${d.rs.length===1?'':'s'}</div></div>
   ${daySections||`<div class="empty">\u098f\u0987 \u09b8\u09ae\u09df\u09c7\u09b0 \u0995\u09cb\u09a8\u09cb \u09a8\u09a4\u09c1\u09a8 account \u09aa\u09be\u0993\u09df\u09be \u09af\u09be\u09df\u09a8\u09bf\u0964<br><button class="outline" id="repEmptyEntry" style="margin-top:12px">Go to Data Entry</button></div>`}
   <div class="actions" style="margin-top:14px"><button class="primary pdf-dl">\u26a1 Generate Report (Preview &amp; Download)</button></div>`;
   bindRepControls(renderAccountReport,type,ref);
@@ -873,6 +913,17 @@ function renderAccountReport(type='monthly',ref=today()){
   const ee=$('#repEmptyEntry');if(ee)ee.onclick=()=>nav('entry');
 }
 function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20-\x7E]/g,'?')}
+/* Base-14 font widths (per 1000 units) so header text can be centred exactly. */
+const PDF_W={
+Helvetica:{32:278,45:333,46:278,48:556,49:556,50:556,51:556,52:556,53:556,54:556,55:556,56:556,57:556,58:278,59:278,63:556,91:333,92:278,93:333,124:278,65:667,66:667,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:500,75:667,76:556,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,97:556,98:556,99:500,100:556,101:556,102:278,103:556,104:556,105:222,106:222,107:500,108:222,109:833,110:556,111:556,112:556,113:556,114:333,115:500,116:278,117:556,118:500,119:722,120:500,121:500,122:500},
+'Helvetica-Bold':{32:278,45:333,46:278,48:556,49:556,50:556,51:556,52:556,53:556,54:556,55:556,56:556,57:556,58:278,59:278,63:611,124:278,65:722,66:722,67:722,68:722,69:722,70:667,71:778,72:778,73:333,74:667,75:722,76:611,77:889,78:778,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,97:556,98:611,99:556,100:611,101:556,102:333,103:611,104:611,105:278,106:278,107:556,108:278,109:889,110:611,111:611,112:611,113:611,114:389,115:556,116:333,117:611,118:556,119:778,120:556,121:556,122:500}
+};
+function pdfTextWidth(text,fontName,size,ts){
+  const W=PDF_W[fontName]||PDF_W.Helvetica;
+  const s=String(text);let w=0;
+  for(let i=0;i<s.length;i++)w+=(W[s.charCodeAt(i)]||500);
+  return w/1000*size+Math.max(0,s.length-1)*(ts||0);
+}
 /* Offline PDF export: the file bytes are assembled right here in the browser
    and handed to the OS through a blob URL \u2014 no server, no library, no network.
    The download works in airplane mode; the preview on screen is the exact
@@ -880,9 +931,59 @@ function pdfEscape(s){return String(s).replace(/[\\()]/g,'\\$&').replace(/[^\x20
 function savePdf(lines,filename,layout){
   const L=Object.assign({font:'Helvetica',size:10,leading:17,width:595,height:842,x:50,top:790,linesPerPage:42},layout||{});
   const font=L.font==='Courier'?'Courier':'Helvetica';
+  const bold=font==='Courier'?'Courier-Bold':'Helvetica-Bold';
+  const FM={F1:font,F2:bold,F3:'Helvetica',F4:'Helvetica-Bold'};
   const chunks=[];for(let i=0;i<lines.length;i+=L.linesPerPage)chunks.push(lines.slice(i,i+L.linesPerPage));
   if(!chunks.length)chunks.push(['']);
-  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];chunks.forEach(page=>{let content='BT\n/F1 '+L.size+' Tf\n'+L.x+' '+L.top+' Td\n';page.forEach((line,i)=>{content+=(i?'0 -'+L.leading+' Td\n':'')+'('+pdfEscape(line)+') Tj\n'});content+='ET';let contentId=objects.length+1;objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');let pageId=objects.length+1;objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+L.width+' '+L.height+'] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /'+font+' >> >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId+' 0 R')});objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});let xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  /* Modern statement look: navy header block on a soft blue panel, a blue
+     accent bar, a logo tile and a bold TOTAL. The line text is untouched —
+     one Tj per statement line, in order — so the file still holds exactly
+     the table, only typeset with hierarchy and colour. */
+  const BLUE='0.118 0.435 0.851',NAVY='0.071 0.137 0.239',INK='0.122 0.161 0.216',GREY='0.420 0.447 0.502',RULE='0.635 0.663 0.706',SOFT='0.933 0.957 0.988';
+  const MONTH=/^(0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) /;
+  function styleOf(line,gi,head){
+    if(head){
+      if(gi===0)return{f:'F4',s:13,c:NAVY,center:1};
+      if(gi===1)return{f:'F3',s:9.5,c:GREY,center:1};
+      if(gi===2)return{f:'F4',s:9,c:BLUE,center:1,ts:2};
+      if(gi===3)return{f:'F3',s:10.5,c:INK,center:1};
+      if(gi===4)return{f:'F3',s:7.5,c:GREY,center:1};
+      if(gi===5)return{f:'F4',s:8.5,c:NAVY,center:1};
+    }
+    if(line.trim()==='')return null;
+    if(/^(-+ )*(-*)$/.test(line))return{f:'F1',s:L.size,c:RULE};
+    if(/^Date /.test(line)&&/Places/.test(line))return{f:'F2',s:L.size,c:NAVY};
+    if(/^TOTAL/.test(line))return{f:'F2',s:L.size,c:NAVY};
+    return{f:'F1',s:L.size,c:MONTH.test(line)?INK:GREY};
+  }
+  let objects=['<< /Type /Catalog /Pages 2 0 R >>',''];let pageIds=[];
+  chunks.forEach((page,pi)=>{
+    const head=pi===0&&/^FIRST SECURITY/.test(page[0]||'');
+    let deco=BLUE+' rg 0 '+(L.height-6)+' '+L.width+' 6 re f\n';
+    if(head){
+      const bottom=L.top-8*L.leading-8;
+      deco+=SOFT+' rg 0 '+bottom+' '+L.width+' '+(L.height-bottom)+' re f\n';
+    }
+    deco+='0.800 0.827 0.863 rg '+L.x+' 24 '+(L.width-2*L.x)+' 1 re f\n'+BLUE+' rg '+(L.width-L.x-12)+' 19 12 12 re f\n';
+    let content=deco+'BT\n';
+    page.forEach((line,i)=>{
+      const st=styleOf(line,i,head);
+      if(!st)return;
+      const x=st.center?(L.width-pdfTextWidth(line,FM[st.f],st.s,st.ts))/2:L.x+(st.dx||0),y=L.top-i*L.leading;
+      content+=(st.ts?st.ts:'0')+' Tc\n'+st.c+' rg\n/'+st.f+' '+st.s+' Tf\n1 0 0 1 '+x+' '+y+' Tm\n('+pdfEscape(line)+') Tj\n';
+    });
+    content+='ET';
+    let contentId=objects.length+1;
+    objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream');
+    let pageId=objects.length+1;
+    objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+L.width+' '+L.height+'] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /'+font+' >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /'+bold+' >> /F3 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F4 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents '+contentId+' 0 R >>');
+    pageIds.push(pageId+' 0 R');
+  });
+  objects[1]='<< /Type /Pages /Kids ['+pageIds.join(' ')+'] /Count '+pageIds.length+' >>';
+  let pdf='%PDF-1.4\n',offsets=[0];
+  objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});
+  let xref=pdf.length;
+  pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')+'\ntrailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
   const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
   const a=document.createElement('a');
   a.href=url;a.download=filename;
@@ -898,16 +999,14 @@ const STATEMENT_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','O
 function statementLayout(){return {font:'Courier',size:8,leading:11,width:842,height:595,x:16,top:568,linesPerPage:48}}
 function statementColumns(){
   return [
-    {key:'date',label:'Date',width:6,align:'left'},
-    {key:'places',label:'Places',width:6,align:'right'},
-    {key:'cash',label:'Cash',width:12,align:'right'},
-    {key:'clearing',label:'Clr/BFTN',width:12,align:'right'},
-    {key:'rtgs',label:'RTGS',width:11,align:'right'},
-    {key:'npsb',label:'NPSB',width:11,align:'right'},
-    {key:'agent',label:'Agent',width:12,align:'right'},
-    {key:'officers',label:'Officers',width:22,align:'left'},
-    {key:'visits',label:'Visits',width:36,align:'left'},
-    {key:'accounts',label:'Accounts',width:28,align:'left'}
+    {key:'date',label:'Date',width:8,align:'left'},
+    {key:'places',label:'Places',width:10,align:'right'},
+    {key:'cash',label:'Cash',width:15,align:'right'},
+    {key:'clearing',label:'Clr/BFTN',width:15,align:'right'},
+    {key:'rtgs',label:'RTGS',width:14,align:'right'},
+    {key:'npsb',label:'NPSB',width:14,align:'right'},
+    {key:'agent',label:'Agent',width:15,align:'right'},
+    {key:'accounts',label:'Accounts',width:70,align:'left'}
   ];
 }
 function monthDates(ref){
@@ -936,19 +1035,6 @@ function statementPreviewTitle(type){return statementKind(type)==='daily'?'Daily
 function statementDayLabel(iso){return iso.slice(8,10)+' '+(STATEMENT_MONTHS[(+iso.slice(5,7)||1)-1]||'')}
 function amountCell(v){if(v===undefined||v===null||String(v).trim()==='')return '';const n=num(v);return n?money(n):''}
 function placesCell(r){if(!r||r.places===undefined||r.places===null||String(r.places).trim()==='')return '';const n=num(r.places);return n?String(n):''}
-function officersCell(r){if(!r)return [];return (r.officers||[]).map(o=>[o.name,o.designation].map(x=>String(x||'').trim()).filter(Boolean).join(', ')).filter(Boolean)}
-function visitsCell(r){
-  if(!r)return [];
-  const lines=[];
-  (r.visits||[]).forEach(v=>{
-    if(![v.officer,v.name,v.address,v.mobile].some(x=>String(x||'').trim()))return;
-    const who=[v.officer,v.type].map(x=>String(x||'').trim()).filter(Boolean).join(' | ');
-    const place=String(v.name||'').trim();
-    const where=[v.address,v.mobile].map(x=>String(x||'').trim()).filter(Boolean).join(' | ');
-    [who,place,where].filter(Boolean).forEach(x=>lines.push(x));
-  });
-  return lines;
-}
 function accountsCell(r){if(!r)return [];return (r.accounts||[]).filter(a=>num(a.amount)).map(a=>{const bits=[a.category].map(x=>String(x||'').trim()).filter(Boolean);const c=num(a.count)||1;if(c>1)bits.push('x'+c);if(num(a.amount))bits.push(money(a.amount));return bits.join(' ')}).filter(Boolean)}
 function fitCell(text,width){
   text=String(text==null?'':text).replace(/\s+/g,' ').trim();
@@ -1031,8 +1117,6 @@ function statementLines(ref, type){
       [amountCell(r&&r.rtgs)],
       [amountCell(r&&r.npsb)],
       [amountCell(r&&r.agent)],
-      officersCell(r),
-      visitsCell(r),
       accountsCell(r)
     ],cols));
   });
@@ -1045,7 +1129,7 @@ function statementLines(ref, type){
     [sums.rtgs?money(sums.rtgs):''],
     [sums.npsb?money(sums.npsb):''],
     [sums.agent?money(sums.agent):''],
-    [],[],[ac?ac+' a/c':'']
+    [ac?ac+' a/c':'']
   ],cols));
   groups.push([rule]);
   return packStatement(header,groups,statementLayout().linesPerPage);
@@ -1104,7 +1188,7 @@ function renderSettings(){
     </div>
   </details>
   <details class="settings-card"><summary class="settings-head"><span class="sectiontitle" data-icon="💬">WhatsApp template</span><span class="small settings-hsub">${esc(tplFirst)}</span><span class="settings-chev"></span></summary>
-    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(currentTemplate())}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}, {{officers}}</span><span class="small">Money goes out in <b>lakh</b>. Account figures — how many were opened and what they brought in — are not shared.</span></div></div>
+    <div class="settings-body"><div class="formgroup"><label for="sTemplate">Message Template</label><textarea id="sTemplate" rows="9">${esc(currentTemplate())}</textarea><span class="small">Available fields: {{date}}, {{team}}, {{zone}}, {{branches}}, {{branch}}, {{visits}}, {{deposit}}, {{depositLac}}, {{manager}}, {{managerDesignation}}</span><span class="small">Money goes out in <b>lakh</b>. Account figures — how many were opened and what they brought in — are not shared.</span></div></div>
   </details>
   <details class="settings-card security-card"><summary class="security-head"><span class="security-title"><span class="security-icon">🔒</span><span><h3>App security</h3><p>Protect access on this device</p></span></span><span class="security-state ${getPin()?'':'off'}">${getPin()?'PIN ACTIVE':'NOT SET'}</span><span class="settings-chev"></span></summary>
     <div class="settings-body"><div class="security-copy">${getPin()?'Your app is protected with a 4-digit PIN. You can change it or lock the app now.':'Add a 4-digit PIN to prevent others from opening this app.'}</div><div class="settings-actions"><button class="primary" id="setPin">${getPin()?'Change PIN':'Set PIN'}</button>${getPin()?'<button class="secondary" id="lockNow">Lock Now</button><button class="outline" id="removePin">Remove PIN</button>':''}</div></div>
@@ -2426,4 +2510,4 @@ _initPromise.then(()=>{
      the cloud has comes down. */
   if(navigator.onLine&&!uploadsHeld())setTimeout(()=>{syncNow('startup').catch(()=>{});},700);
 }).catch(e=>{console.error('local db init failed',e);updateSyncUI();});
-</script></body></html>
+</script></body></html>></body></html>
